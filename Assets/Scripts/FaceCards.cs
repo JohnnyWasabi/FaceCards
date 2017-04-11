@@ -24,7 +24,12 @@ public class FaceCards : MonoBehaviour {
 		public Sprite sprite;
 		public Texture2D texture;
 		int randSortOrder;
-		
+		public float secondsPerLetter;  // how much time user spent typing in the letters they typed.
+		public int countWrongChars;     // How manny chars typed wrong while typing the name.
+		public int countRevealed;       // How many chars were revealed for free (with right-arrow or Enter keys).
+		public bool wasFullNameDisplayed;   // Flag turns true when full name displayed (whether by typing or reveals). After this is true, scoring stops for this face.
+		public float timeStarted;		// game time in seconds when Face first shown.
+
 		public int CompareTo(object obj)
 		{
 			if (obj == null) return 1;
@@ -37,6 +42,7 @@ public class FaceCards : MonoBehaviour {
 		public void RandomizeOrder()
 		{
 			randSortOrder = Random.Range(0, 1000);
+			
 		}
 	}
 	public List<FaceSprite> faceSprites;
@@ -55,6 +61,8 @@ public class FaceCards : MonoBehaviour {
     float secondsCursorOff = 1f;
     float secondsBlinkCycle = 0;
     public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
+
+	int TotalNameCharacters;
 
     // Use this for initialization
     IEnumerator Start()
@@ -146,6 +154,7 @@ public class FaceCards : MonoBehaviour {
 		string path = System.IO.Path.Combine(Application.streamingAssetsPath, "Faces");
 		DirectoryInfo dir = new DirectoryInfo(path);
 		FileInfo[] info = dir.GetFiles("*");
+		TotalNameCharacters = 0;
 		foreach (FileInfo f in info)
 		{
 			if (f.FullName.EndsWith(".png") || f.FullName.EndsWith(".jpg"))
@@ -175,8 +184,12 @@ public class FaceCards : MonoBehaviour {
 				string[] nameParts = nameCode.Split('_');
 				if (nameParts.Length == 3)
 				{
-					faceSprites.Add(new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture));
-					//spriteRenderer.sprite = sprite;
+					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture);
+					if (faceSprite != null)
+					{
+						faceSprites.Add(faceSprite);
+						TotalNameCharacters += faceSprite.fullName.Length;
+					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
 			}
