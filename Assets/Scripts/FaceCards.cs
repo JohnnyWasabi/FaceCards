@@ -5,48 +5,10 @@ using System.IO;
 
 public class FaceCards : MonoBehaviour {
 
-	public class FaceSprite: System.IComparable
-	{
-		public FaceSprite(string first, string last, string role, Sprite sprite, Texture2D texture)
-		{
-			firstName = first;
-			lastName = last;
-			fullName = first + " " + last;
-			this.role = role;
-			this.sprite = sprite;
-			this.texture = texture;
-			RandomizeOrder();
-		}
-		public string firstName;
-		public string lastName;
-		public string fullName;
-		public string role;
-		public Sprite sprite;
-		public Texture2D texture;
-		int randSortOrder;
-		public float secondsPerLetter;  // how much time user spent typing in the letters they typed.
-		public int countWrongChars;     // How manny chars typed wrong while typing the name.
-		public int countRevealed;       // How many chars were revealed for free (with right-arrow or Enter keys).
-		public bool wasFullNameDisplayed;   // Flag turns true when full name displayed (whether by typing or reveals). After this is true, scoring stops for this face.
-		public float timeStarted;		// game time in seconds when Face first shown.
-
-		public int CompareTo(object obj)
-		{
-			if (obj == null) return 1;
-			FaceSprite faceSprite = obj as FaceSprite;
-			if (faceSprite != null)
-				return this.randSortOrder.CompareTo(faceSprite.randSortOrder);
-			else
-				throw new System.ArgumentException("Object is not a FaceSprite");
-		}
-		public void RandomizeOrder()
-		{
-			randSortOrder = Random.Range(0, 1000);
-			
-		}
-	}
 	public List<FaceSprite> faceSprites;
+	public YearBook yearBook;
 	public SpriteRenderer spriteRenderer;
+	public GameObject cubeBG;
 	public GUIText guiTextName;
 	public GUIText guiTextNofM;
 	public GUIText guiTextBadChar;
@@ -54,7 +16,8 @@ public class FaceCards : MonoBehaviour {
 	bool doneLoading;
 	FaceSprite faceSpriteCrnt = null;
 	int iFaceSprite;
-	public float widthFace = 256.0f;
+	public float faceHeightAsScreenHeightPercent = 0.5f * 0.75f;
+	float heightFaceDisplay;
 	public Color colorCorrect = new Color(0, 1, 0, 1);
     private GUIStyle guiStyleName = new GUIStyle(); //create a new variable
     float secondsCursorOn = 1f;
@@ -63,27 +26,25 @@ public class FaceCards : MonoBehaviour {
     public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
 
 	int TotalNameCharacters;
+	float yDelta;
 
-    // Use this for initialization
-    IEnumerator Start()
+	// Use this for initialization
+	IEnumerator Start()
 	{
+		float yInitial = cubeBG.transform.position.y;
+		float yDesired = Camera.main.transform.position.y - Screen.height * 0.5f + cubeBG.transform.localScale.y * 0.5f;
+		yDelta = (yDesired - yInitial);
+		transform.position = new Vector3(0, transform.position.y + yDelta, 0);
+		cubeBG.transform.localScale = new Vector3(Screen.width, cubeBG.transform.localScale.y, 1);
+		heightFaceDisplay = Screen.height * faceHeightAsScreenHeightPercent;
+		Camera.main.orthographicSize = Screen.height * 0.5f;
+
         guiStyleName.font = guiTextName.font;
         guiStyleName.fontSize = guiTextName.fontSize;
         guiStyleName.normal.textColor = cursorColor;
-//		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
         guiTextName.text = "Loading ...";
-//		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f - 64);
-		//guiTextBadChar.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f - 64);
 		guiTextBadChar.text = "";
 
-        GameObject goRole = new GameObject();
-        guiTextRole = goRole.AddComponent<GUIText>();
-//        guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f - 32);
-        guiTextRole.text = "";
-        guiTextRole.font = guiTextName.font;
-        guiTextRole.fontSize = guiTextName.fontSize;
-        guiTextRole.anchor = guiTextName.anchor;
-        guiTextRole.alignment = guiTextName.alignment;
 
         UpdateGUITextPositions();
 
@@ -101,9 +62,9 @@ public class FaceCards : MonoBehaviour {
 
     void UpdateGUITextPositions()
     {
-        guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
-        guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f - 32);
-        guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f - 64);
+		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y);  
+		guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 32); 
+		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
     }
     void DisplayFaceSprite()
 	{
@@ -112,8 +73,8 @@ public class FaceCards : MonoBehaviour {
 		guiTextName.text = "";
 		guiTextNofM.text = (iFaceSprite + 1).ToString() + "/" + faceSprites.Count.ToString();
 		guiTextBadChar.text = "";
-		float scale = widthFace / (float)faceSpriteCrnt.texture.width;
-		transform.localScale = new Vector3(scale, scale, 1);
+		float scale = heightFaceDisplay / (float)faceSpriteCrnt.texture.height; // widthFace / (float)faceSpriteCrnt.texture.width;
+		spriteRenderer.transform.localScale = new Vector3(scale, scale, 1);
 		guiTextName.color = new Color(1, 1, 1, 1);
         guiTextRole.text = "";
     }
@@ -176,7 +137,7 @@ public class FaceCards : MonoBehaviour {
 		Texture2D texture = localFile.texture as Texture2D;
 		if (texture != null)
 		{
-			Sprite sprite = Sprite.Create(texture as Texture2D, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0f));
+			Sprite sprite = Sprite.Create(texture as Texture2D, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0f), 1.0f);
 			if (sprite != null)
 			{
 				string fileName = absoluteImagePath.Substring(LastSlash(absoluteImagePath) + 1);
@@ -189,6 +150,12 @@ public class FaceCards : MonoBehaviour {
 					{
 						faceSprites.Add(faceSprite);
 						TotalNameCharacters += faceSprite.fullName.Length;
+
+						GameObject goYearbook = new GameObject();
+						faceSprite.spriteRenderYearbook = goYearbook.AddComponent<SpriteRenderer>();
+						faceSprite.spriteRenderYearbook.sprite = sprite;
+						//yearBook.AddFaceSprite(faceSprite);
+						faceSprite.spriteRenderYearbook.enabled = false;
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
@@ -210,6 +177,7 @@ public class FaceCards : MonoBehaviour {
 		return i;
 	}
 
+	Rect rectText;
 
 	// Update is called once per frame
 	void Update () {
@@ -245,10 +213,17 @@ public class FaceCards : MonoBehaviour {
 			{
 				if (guiTextName.text == faceSpriteCrnt.fullName)
 				{
+					FaceSprite faceSpriteCompleted = faceSpriteCrnt;
 					ShowNextFace();
+					if (faceSpriteCompleted.countRevealed == 0)
+					{
+						yearBook.AddFaceSprite(faceSpriteCompleted);
+						faceSpriteCompleted.spriteRenderYearbook.enabled = true;
+					}
 				}
 				else
 				{
+					faceSpriteCrnt.countRevealed += faceSpriteCrnt.fullName.Length - guiTextName.text.Length;
 					guiTextName.text = faceSpriteCrnt.fullName;
 					guiTextName.color = colorCorrect;
                     guiTextRole.text = faceSpriteCrnt.role;
@@ -256,7 +231,11 @@ public class FaceCards : MonoBehaviour {
             }
 			else if (Input.GetKeyDown(KeyCode.RightArrow))
 			{
-				AddChar();
+				if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
+				{
+					++faceSpriteCrnt.countRevealed;
+					AddChar();
+				}
 			}
 			else if (Input.GetKeyDown(KeyCode.LeftArrow))
 			{
@@ -271,6 +250,9 @@ public class FaceCards : MonoBehaviour {
                 ShowPrevFace(false);
             }
 		}
+
+
+
 	}
 
 	void RemoveChar()
@@ -305,25 +287,24 @@ public class FaceCards : MonoBehaviour {
      */
     void OnGUI()
 	{
-        UpdateGUITextPositions();
-        if (doneLoading)
+ 		if (doneLoading)
 		{
+			rectText = guiTextName.GetScreenRect(Camera.main);
+			if (guiTextName.text.Length == 0)
+			{
+				rectText.x = guiTextName.pixelOffset.x;
+			}
+			rectText.y = Screen.height - guiTextName.pixelOffset.y;
 
-            Rect rectText = guiTextName.GetScreenRect(null);
-            if (guiTextName.text.Length == 0)
-            {
-                rectText.x = guiTextName.pixelOffset.x;
-                rectText.y = guiTextName.pixelOffset.y;
-            }
-            secondsBlinkCycle += Time.deltaTime;
+			secondsBlinkCycle += Time.deltaTime;
             if (secondsBlinkCycle > secondsCursorOn + secondsCursorOff)
             {
                 secondsBlinkCycle -= (secondsCursorOn + secondsCursorOff);
             }
             guiStyleName.normal.textColor = cursorColor;
             string cursorStr = (secondsBlinkCycle > secondsCursorOn) ? " " : "|";
-            GUI.Label(new Rect(rectText.x + rectText.width, rectText.y + rectText.height, 16, 32), cursorStr, guiStyleName);
-            guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, rectText.y + rectText.height);
+            GUI.Label(new Rect(rectText.x + rectText.width, rectText.y , 16, 32), cursorStr, guiStyleName);
+            guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, rectText.y );
 
         }
     }
