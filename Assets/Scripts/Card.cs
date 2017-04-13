@@ -58,6 +58,7 @@ public class Card : MonoBehaviour {
 						Vector3 pos;
 						YearBook.Arrange(spriteRenderer.sprite, indexOrder, out scaleSprite, out pos);
 						SetScale(scaleSprite);
+						SetPos(pos);
 					}
 				}
 				goFlipper.transform.localScale = new Vector3(scaleFlip, 1, 1);
