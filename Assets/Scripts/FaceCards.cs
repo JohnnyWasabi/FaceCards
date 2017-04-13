@@ -6,7 +6,6 @@ using System.IO;
 public class FaceCards : MonoBehaviour {
 
 	public List<FaceSprite> faceSprites;
-	public YearBook yearBook;
 	public SpriteRenderer spriteRenderer;
 	public GameObject cubeBG;
 	public GUIText guiTextName;
@@ -31,6 +30,8 @@ public class FaceCards : MonoBehaviour {
 	// Use this for initialization
 	IEnumerator Start()
 	{
+		YearBook.Init();
+
 		float yInitial = cubeBG.transform.position.y;
 		float yDesired = Camera.main.transform.position.y - Screen.height * 0.5f + cubeBG.transform.localScale.y * 0.5f;
 		yDelta = (yDesired - yInitial);
@@ -48,12 +49,20 @@ public class FaceCards : MonoBehaviour {
 
         UpdateGUITextPositions();
 
+		foreach (Sprite sprite in LoadSprite(System.IO.Path.Combine(Application.streamingAssetsPath, "CardBack.png")))
+		{
+			FaceSprite.spriteCardBack = sprite;
+		}
+		 
         faceSprites = new List<FaceSprite>();
         doneLoading = false;
         yield return StartCoroutine(LoadFaces());
 		if (faceSprites.Count > 0)
 		{
-			faceSprites.Sort();
+			//faceSprites.Sort();
+			//for (int i = 0; i < faceSprites.Count; i++)
+			//	faceSprites[i].indexOrder = i;
+
 			iFaceSprite = 0;
 			DisplayFaceSprite();
 			doneLoading = true;
@@ -121,13 +130,13 @@ public class FaceCards : MonoBehaviour {
 			if (f.FullName.EndsWith(".png") || f.FullName.EndsWith(".jpg"))
 			{
 				//Debug.Log("file: " + f.FullName);
-				yield return LoadSprite(f.FullName);
+				yield return LoadFaceSprite(f.FullName);
 				guiTextNofM.text = faceSprites.Count.ToString();
 			}
 		}
 	}
 
-	public IEnumerator LoadSprite(string absoluteImagePath)
+	public IEnumerator LoadFaceSprite(string absoluteImagePath)
 	{
 		string url =  @"file:///" + absoluteImagePath;
 		WWW localFile = new WWW(url);
@@ -148,19 +157,42 @@ public class FaceCards : MonoBehaviour {
 					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture);
 					if (faceSprite != null)
 					{
+						faceSprite.indexOrder = faceSprites.Count;
 						faceSprites.Add(faceSprite);
 						TotalNameCharacters += faceSprite.fullName.Length;
 
 						GameObject goYearbook = new GameObject();
-						faceSprite.spriteRenderYearbook = goYearbook.AddComponent<SpriteRenderer>();
-						faceSprite.spriteRenderYearbook.sprite = sprite;
-						//yearBook.AddFaceSprite(faceSprite);
-						faceSprite.spriteRenderYearbook.enabled = false;
+						faceSprite.cardYearbook = goYearbook.AddComponent<Card>();
+						faceSprite.spriteRenderYearbook = goYearbook.GetComponent<SpriteRenderer>();
+						faceSprite.cardYearbook.Init(faceSprite, sprite, FaceSprite.spriteCardBack, Vector3.zero);
+						YearBook.ArrangeFaceSprite(faceSprite, faceSprite.indexOrder);
+						//if (faceSprite.indexOrder == 0)
+						faceSprite.cardYearbook.Flip(1.0f);
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
 			}
 		}
+	}
+
+
+	public IEnumerable<Sprite> LoadSprite(string absoluteImagePath)
+	{
+		Sprite sprite = null;
+		string url = @"file:///" + absoluteImagePath;
+		WWW localFile = new WWW(url);
+
+		while (!localFile.isDone)
+			yield return null;
+
+		//yield return localFile as Sprite;
+
+		Texture2D texture = localFile.texture as Texture2D;
+		if (texture != null)
+		{
+			sprite = Sprite.Create(texture as Texture2D, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0f), 1.0f);
+		}
+		yield return sprite;
 	}
 
 	// Returns position of last path separator slash (/ or \). Returns -1 if no slashes.
@@ -217,8 +249,8 @@ public class FaceCards : MonoBehaviour {
 					ShowNextFace();
 					if (faceSpriteCompleted.countRevealed == 0)
 					{
-						yearBook.AddFaceSprite(faceSpriteCompleted);
-						faceSpriteCompleted.spriteRenderYearbook.enabled = true;
+						//yearBook.AddFaceSprite(faceSpriteCompleted);
+						//faceSpriteCompleted.spriteRenderYearbook.enabled = true;
 					}
 				}
 				else
