@@ -14,25 +14,23 @@ public class YearBook {
 		rows = Screen.height / picHeight;
 	}
 	
-	static public void ArrangeFaceSprite(FaceSprite faceSprite, int index)
+	static public void Arrange(Sprite sprite, int index, out float scale, out Vector3 pos)
 	{
 		int row = index / cols;
 		int col = index % cols;
 		float x = col * picWidth;
 		float y = row * picHeight;
 
-		float scaleX = (float)picWidth / faceSprite.spriteRenderYearbook.sprite.texture.width; // faceSprite.texture.width;
-		float scaleY = (float)picHeight / faceSprite.spriteRenderYearbook.sprite.texture.height; //faceSprite.texture.height;
-		float scale = Mathf.Min(scaleX, scaleY);
+		float scaleX = (float)picWidth / sprite.texture.width; // faceSprite.texture.width;
+		float scaleY = (float)picHeight / sprite.texture.height; //faceSprite.texture.height;
+		scale = Mathf.Min(scaleX, scaleY);
 
 		x += Camera.main.transform.position.x - Screen.width * 0.5f;
-		x += faceSprite.spriteRenderYearbook.sprite.pivot.x * scale;
+		x += sprite.pivot.x * scale;
 		y = Screen.height - y + Camera.main.transform.position.y - Screen.height * 0.5f;
-		y -= picHeight - faceSprite.spriteRenderYearbook.sprite.pivot.y * scale;
+		y -= picHeight - sprite.pivot.y * scale;
 
-		faceSprite.spriteRenderYearbook.gameObject.transform.localScale = new Vector3(scale, scale, 1f);
-		//faceSprite.spriteRenderYearbook.gameObject.transform.position = new Vector3(x, y, 0.1f);
-		faceSprite.cardYearbook.SetPos(new Vector3(x, y, 0.1f));
+		pos = new Vector3(x, y, 0.1f);
 
 	}
 }

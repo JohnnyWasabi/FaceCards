@@ -21,7 +21,6 @@ public class FaceSprite : System.IComparable
 	public Sprite sprite;
 	public Texture2D texture;
 	int randSortOrder;	// big random number
-	public int indexOrder;		// 0 to N for yearbook order
 
 	public float secondsPerLetter;  // how much time user spent typing in the letters they typed.
 	public int countWrongChars;     // How manny chars typed wrong while typing the name.
@@ -29,8 +28,7 @@ public class FaceSprite : System.IComparable
 	public bool wasFullNameDisplayed;   // Flag turns true when full name displayed (whether by typing or reveals). After this is true, scoring stops for this face.
 	public float timeStarted;       // game time in seconds when Face first shown.
 
-	public Card cardYearbook;
-	public SpriteRenderer spriteRenderYearbook; // The sprite renderer on the gameobject  for the yearbook grid belonging to this sprite (not the render of the currently displayed sprite for guessing).
+	public Card card;
 	public static Sprite spriteCardBack;
 
 	public int CompareTo(object obj)

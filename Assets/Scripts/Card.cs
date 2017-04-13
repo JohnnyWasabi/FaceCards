@@ -5,12 +5,12 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class Card : MonoBehaviour {
 
-	public FaceSprite faceSprite;
 	public Sprite spriteFace;
 	public Sprite spriteBack;
-	SpriteRenderer spriteRenderer;
+	public SpriteRenderer spriteRenderer;
 	public GameObject goFlipper;	// Generated parent object for flipping.
-	
+	public int indexOrder;
+
 	public enum FlipState{
 		none,
 		toEdge,	// starting flip, shrinking to thin edge
@@ -25,9 +25,8 @@ public class Card : MonoBehaviour {
 		spriteRenderer = GetComponent<SpriteRenderer>();
 	}
 
-	public void Init(FaceSprite faceSprite, Sprite face, Sprite back, Vector2 pos)
+	public void Init(Sprite face, Sprite back, Vector2 pos)
 	{
-		this.faceSprite = faceSprite;
 		spriteFace = face;
 		spriteBack = back;
 		goFlipper.transform.position = pos;
@@ -47,18 +46,21 @@ public class Card : MonoBehaviour {
 			if (timeElapsed < flipDuration)
 			{
 				float radians = Mathf.PI * timeElapsed / flipDuration;
-				float scale = Mathf.Cos(radians);
-				if (scale <= 0)
+				float scaleFlip = Mathf.Cos(radians);
+				if (scaleFlip <= 0)
 				{
-					scale = -scale;
+					scaleFlip = -scaleFlip;
 					if (flipState != FlipState.toFlat)
 					{
 						flipState = FlipState.toFlat;
 						spriteRenderer.sprite = (spriteRenderer.sprite == spriteFace) ? spriteBack : spriteFace;
-						YearBook.ArrangeFaceSprite(faceSprite, faceSprite.indexOrder);
+						float scaleSprite;
+						Vector3 pos;
+						YearBook.Arrange(spriteRenderer.sprite, indexOrder, out scaleSprite, out pos);
+						SetScale(scaleSprite);
 					}
 				}
-				goFlipper.transform.localScale = new Vector3(scale, 1, 1);
+				goFlipper.transform.localScale = new Vector3(scaleFlip, 1, 1);
 			}
 			else
 			{
@@ -72,6 +74,10 @@ public class Card : MonoBehaviour {
 	{
 		goFlipper.transform.position = pos;
 	}
+	void SetScale(float scale)
+	{
+		transform.localScale = new Vector3(scale, scale, 1);
+	}
 
 	public void Flip(float duration = 0.5f)
 	{
@@ -79,5 +85,14 @@ public class Card : MonoBehaviour {
 		flipDuration = duration;
 		flipState = FlipState.toEdge;
 
+	}
+
+	public void ArrangeOnYearbook()
+	{
+		float scale;
+		Vector3 pos;
+		YearBook.Arrange(spriteRenderer.sprite, indexOrder, out scale, out pos);
+		SetScale(scale);
+		SetPos(pos);
 	}
 }

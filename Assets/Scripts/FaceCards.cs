@@ -157,17 +157,16 @@ public class FaceCards : MonoBehaviour {
 					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture);
 					if (faceSprite != null)
 					{
-						faceSprite.indexOrder = faceSprites.Count;
+						int indexOrder = faceSprites.Count;
 						faceSprites.Add(faceSprite);
 						TotalNameCharacters += faceSprite.fullName.Length;
 
 						GameObject goYearbook = new GameObject();
-						faceSprite.cardYearbook = goYearbook.AddComponent<Card>();
-						faceSprite.spriteRenderYearbook = goYearbook.GetComponent<SpriteRenderer>();
-						faceSprite.cardYearbook.Init(faceSprite, sprite, FaceSprite.spriteCardBack, Vector3.zero);
-						YearBook.ArrangeFaceSprite(faceSprite, faceSprite.indexOrder);
-						//if (faceSprite.indexOrder == 0)
-						faceSprite.cardYearbook.Flip(1.0f);
+						faceSprite.card = goYearbook.AddComponent<Card>();
+						faceSprite.card.indexOrder = indexOrder;
+						faceSprite.card.Init(sprite, FaceSprite.spriteCardBack, Vector3.zero);
+						faceSprite.card.ArrangeOnYearbook();
+						faceSprite.card.Flip(1.0f);
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
