@@ -195,7 +195,7 @@ public class Card : MonoBehaviour {
 		if (!stretch)
 		{
 			scaleX = scaleY = scaleMin;
-			spriteRenderer.transform.localPosition =  new Vector3 ( (dimCard.x - spriteRenderer.sprite.texture.width * scaleX) * 0.5f,  (dimCard.y - spriteRenderer.sprite.texture.height * scaleY) * 0.5f, spriteRenderer.transform.localPosition.z);
+			spriteRenderer.transform.localPosition =  new Vector3 ( 0,  (dimCard.y - spriteRenderer.sprite.texture.height * scaleY) * 0.5f, spriteRenderer.transform.localPosition.z);
 		}
 		spriteRenderer.gameObject.transform.localScale = new Vector3(scaleX, scaleY, 1);
 

@@ -28,11 +28,18 @@ public class FaceCards : MonoBehaviour {
 	int TotalNameCharacters;
 	float yDelta;
 
+	// For doing key repeating
+	float timeKeyDown;
+	public float secondsKeyRepeatStartDelay = 0.6f;
+	public float secondsKeyRepeatInterval = 0.03333f;
+	float keyRepeatDelay;  // initial delay
+
 	// Use this for initialization
 	IEnumerator Start()
 	{
 		YearBook.Init();
 
+		keyRepeatDelay = secondsKeyRepeatStartDelay;
 		float yInitial = cubeBG.transform.position.y;
 		float yDesired = Camera.main.transform.position.y - Screen.height * 0.5f + cubeBG.transform.localScale.y * 0.5f;
 		yDelta = (yDesired - yInitial);
@@ -70,16 +77,17 @@ public class FaceCards : MonoBehaviour {
         yield return StartCoroutine(LoadFaces());
 		if (faceSprites.Count > 0)
 		{
-			//faceSprites.Sort();
-			//for (int i = 0; i < faceSprites.Count; i++)
-			//	faceSprites[i].indexOrder = i;
-
-			iFaceSprite = 0;
-			DisplayFaceSprite();
-			doneLoading = true;
+			Invoke("Randomize", 1.5f);
+			Invoke("StartGame", 2.5f);
 		}
 	}
 
+	void StartGame()
+	{
+		iFaceSprite = 0;
+		DisplayFaceSprite();
+		doneLoading = true;
+	}
     void UpdateGUITextPositions()
     {
 		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y);  
@@ -107,33 +115,38 @@ public class FaceCards : MonoBehaviour {
         guiTextRole.text = "";
     }
 
-    void ShowNextFace(bool randomizeOnWrap = true)
+    void ShowNextFace()
 	{
 		if (++iFaceSprite >= faceSprites.Count)
 		{
-            if (randomizeOnWrap)
-            {
-                for (int i = 0; i < faceSprites.Count; i++)
-                    faceSprites[i].RandomizeOrder();
-
-                faceSprites.Sort();
-            }
 			iFaceSprite = 0;
 		}
 		DisplayFaceSprite();
 	}
 
-    void ShowPrevFace(bool randomizeOnWrap = true)
+	public void Randomize()
+	{
+		for (int i = 0; i < faceSprites.Count; i++)
+			faceSprites[i].RandomizeOrder();
+		faceSprites.Sort();
+		for (int i = 0; i < faceSprites.Count; i++)
+		{
+			faceSprites[i].card.indexOrder = i;
+			if (faceSprites[i] == faceSpriteCrnt)
+				iFaceSprite = i;
+		}
+
+		for (int i = 0; i < faceSprites.Count; i++)
+		{
+			if (faceSprites[i] != faceSpriteCrnt)
+				faceSprites[i].card.ArrangeOnYearbook();
+		}
+	}
+
+	void ShowPrevFace()
     {
         if (--iFaceSprite < 0)
         {
-            if (randomizeOnWrap)
-            {
-                for (int i = 0; i < faceSprites.Count; i++)
-                    faceSprites[i].RandomizeOrder();
-
-                faceSprites.Sort();
-            }
             iFaceSprite = faceSprites.Count-1;
         }
         DisplayFaceSprite();
@@ -284,7 +297,7 @@ public class FaceCards : MonoBehaviour {
                     guiTextRole.text = faceSpriteCrnt.role;
                 }
             }
-			else if (Input.GetKeyDown(KeyCode.RightArrow))
+			else if (GetKeyRepeatable(KeyCode.RightArrow))
 			{
 				if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
 				{
@@ -292,26 +305,34 @@ public class FaceCards : MonoBehaviour {
 					AddChar();
 				}
 			}
-			else if (Input.GetKeyDown(KeyCode.LeftArrow))
+			else if (GetKeyRepeatable(KeyCode.LeftArrow))
 			{
 				RemoveChar();
 			}
-            else if (Input.GetKeyDown(KeyCode.PageDown))
+            else if (GetKeyRepeatable(KeyCode.PageDown) )
             {
 				ReturnFaceToYearbook();
-                ShowNextFace(false);
+                ShowNextFace();
             }
-            else if (Input.GetKeyDown(KeyCode.PageUp))
+            else if (GetKeyRepeatable(KeyCode.PageUp))
             {
 				ReturnFaceToYearbook();
-				ShowPrevFace(false);
+				ShowPrevFace();
             }
 		}
-
-
-
 	}
 
+	public bool GetKeyRepeatable(KeyCode keyCode)
+	{
+		bool keyDown = Input.GetKeyDown(keyCode);
+		if (keyDown || (Input.GetKey(keyCode) && Time.time - timeKeyDown >= keyRepeatDelay))
+		{
+			keyRepeatDelay = (keyDown) ? secondsKeyRepeatStartDelay : secondsKeyRepeatInterval;
+			timeKeyDown = Time.time;
+			return true;
+		}
+		return false;
+	}
 	void ReturnFaceToYearbook()
 	{
 		if (faceSpriteCrnt.countRevealed > 0 || guiTextName.text != faceSpriteCrnt.fullName || !faceSpriteCrnt.collected)
@@ -369,8 +390,12 @@ public class FaceCards : MonoBehaviour {
             guiStyleName.normal.textColor = cursorColor;
             string cursorStr = (secondsBlinkCycle > secondsCursorOn) ? " " : "|";
             GUI.Label(new Rect(rectText.x + rectText.width, rectText.y , 16, 32), cursorStr, guiStyleName);
-            guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, rectText.y );
+            guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, Screen.height- rectText.y );
 
+			if (GUI.Button(new Rect(0, Screen.height - 32, 64, 32), "Shuffle"))
+			{
+				Randomize();
+			}
         }
     }
 }
