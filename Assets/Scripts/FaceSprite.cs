@@ -27,6 +27,7 @@ public class FaceSprite : System.IComparable
 	public int countRevealed;       // How many chars were revealed for free (with right-arrow or Enter keys).
 	public bool wasFullNameDisplayed;   // Flag turns true when full name displayed (whether by typing or reveals). After this is true, scoring stops for this face.
 	public float timeStarted;       // game time in seconds when Face first shown.
+	public bool collected;			// True if player got name right and added this card to their collection.
 
 	public Card card;
 	public static Sprite spriteCardBack;

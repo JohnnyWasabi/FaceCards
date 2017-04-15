@@ -53,7 +53,7 @@ public class Card : MonoBehaviour {
 	float timeFlipStart;
 	float flipDuration;
 
-
+	bool bShowingFront;
 
 	// Use this for initialization
 	void Awake () {
@@ -69,6 +69,7 @@ public class Card : MonoBehaviour {
 		spriteRendererCard.sprite = front;
 		spriteRendererFace.sprite = face;
 		spriteRendererFaceFrame.sprite = frontFrame;
+		bShowingFront = true;
 	}
 
 	// Update is called once per frame
@@ -89,28 +90,7 @@ public class Card : MonoBehaviour {
 						flipState = FlipState.toFlat;
 						Sprite spriteOld = spriteRendererCard.sprite;
 						spriteRendererCard.sprite = (spriteRendererCard.sprite == spriteFront) ? spriteBack : spriteFront;
-						spriteRendererFace.enabled = 
-							spriteRendererFaceFrame.enabled = (spriteRendererCard.sprite == spriteFront);
-						if (isMoving)
-						{
-							float width = scaleMoveEnd * spriteOld.texture.width;
-							float height = scaleMoveEnd * spriteOld.texture.height;
-
-							float scaleSprite;
-							Vector3 pos;
-							//YearBook.ArrangeAt(spriteRenderer.sprite, posMoveEnd.x, posMoveEnd.y, out scaleSprite, out pos);
-							//posMoveEnd = pos;
-							//scaleMoveEnd = scaleSprite;
-
-						}
-						else
-						{
-							float scaleSprite;
-							Vector3 pos;
-							//YearBook.ArrangeAt(spriteRenderer.sprite, posMoveEnd.x, posMoveEnd.y, out scaleSprite, out pos);
-							//SetScale(scaleSprite);
-							//SetPos(pos);
-						}
+						spriteRendererFace.enabled = spriteRendererFaceFrame.enabled = (spriteRendererCard.sprite == spriteFront);
 					}
 				}
 				transform.localScale = new Vector3(scaleFlip, 1, 1);
@@ -119,6 +99,7 @@ public class Card : MonoBehaviour {
 			{
 				flipState = FlipState.none;
 				transform.localScale = new Vector3(1, 1, 1);
+				bShowingFront = spriteRendererCard.sprite == spriteFront;
 			}
 		}
 		if (isMoving)
@@ -158,11 +139,23 @@ public class Card : MonoBehaviour {
 
 	public void Flip(float duration = 0.5f)
 	{
-		timeFlipStart = Time.time;
-		flipDuration = duration;
-		flipState = FlipState.toEdge;
+		if (flipState == FlipState.none)
+		{
+			timeFlipStart = Time.time;
+			flipDuration = duration;
+			flipState = FlipState.toEdge;
+		}
 	}
-
+	public void FlipShowFront(float duration = 0.5f)
+	{
+		if (!bShowingFront)
+			Flip(duration);
+	}
+	public void FlipShowBack(float duration = 0.5f)
+	{
+		if (bShowingFront)
+			Flip(duration);
+	}
 	public void ArrangeOnYearbook(float moveDuration = 0.5f)
 	{
 		float scale;

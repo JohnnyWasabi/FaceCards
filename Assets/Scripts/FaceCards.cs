@@ -90,15 +90,19 @@ public class FaceCards : MonoBehaviour {
 	{
 		faceSpriteCrnt = faceSprites[iFaceSprite];
 		spriteRenderer.sprite = faceSpriteCrnt.sprite;
-		guiTextName.text = "";
+		guiTextName.text = faceSpriteCrnt.collected ? faceSpriteCrnt.fullName : "";
 		guiTextNofM.text = (iFaceSprite + 1).ToString() + "/" + faceSprites.Count.ToString();
 		guiTextBadChar.text = "";
 		float scale = heightFaceDisplay / (float)faceSpriteCrnt.texture.height; // widthFace / (float)faceSpriteCrnt.texture.width;
 		spriteRenderer.transform.localScale = new Vector3(scale, scale, 1);
 
+		if (!faceSpriteCrnt.collected)
+		{
+			faceSpriteCrnt.countRevealed = 0;
+		}
 		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCardVert1 * 256f, 0.5f);
-		faceSpriteCrnt.card.Flip();
-
+		faceSpriteCrnt.card.FlipShowFront();
+		
 		guiTextName.color = new Color(1, 1, 1, 1);
         guiTextRole.text = "";
     }
@@ -183,7 +187,7 @@ public class FaceCards : MonoBehaviour {
 						faceSprite.card.SetHeight(heightFaceDisplay);
 						faceSprite.card.SetPos(transform.position);
 						faceSprite.card.ArrangeOnYearbook();
-						faceSprite.card.Flip(1.0f);
+						faceSprite.card.FlipShowBack(1.0f);
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
@@ -261,13 +265,16 @@ public class FaceCards : MonoBehaviour {
 			{
 				if (guiTextName.text == faceSpriteCrnt.fullName)
 				{
-					FaceSprite faceSpriteCompleted = faceSpriteCrnt;
-					ShowNextFace();
-					if (faceSpriteCompleted.countRevealed > 0)
+					if (faceSpriteCrnt.countRevealed > 0)
 					{
-						faceSpriteCompleted.card.Flip();
+						faceSpriteCrnt.card.FlipShowBack();
 					}
-					faceSpriteCompleted.card.ArrangeOnYearbook();
+					else
+					{
+						faceSpriteCrnt.collected = true;
+					}
+					faceSpriteCrnt.card.ArrangeOnYearbook();
+					ShowNextFace();
 				}
 				else
 				{
@@ -291,11 +298,13 @@ public class FaceCards : MonoBehaviour {
 			}
             else if (Input.GetKeyDown(KeyCode.PageDown))
             {
+				ReturnFaceToYearbook();
                 ShowNextFace(false);
             }
             else if (Input.GetKeyDown(KeyCode.PageUp))
             {
-                ShowPrevFace(false);
+				ReturnFaceToYearbook();
+				ShowPrevFace(false);
             }
 		}
 
@@ -303,6 +312,14 @@ public class FaceCards : MonoBehaviour {
 
 	}
 
+	void ReturnFaceToYearbook()
+	{
+		if (faceSpriteCrnt.countRevealed > 0 || guiTextName.text != faceSpriteCrnt.fullName || !faceSpriteCrnt.collected)
+		{
+			faceSpriteCrnt.card.FlipShowBack();
+		}
+		faceSpriteCrnt.card.ArrangeOnYearbook();
+	}
 	void RemoveChar()
 	{
 		if (guiTextName.text.Length != 0)
