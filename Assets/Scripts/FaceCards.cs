@@ -5,6 +5,7 @@ using System.IO;
 
 public class FaceCards : MonoBehaviour {
 
+	public GameObject faceCardPrefab;
 	public List<FaceSprite> faceSprites;
 	public SpriteRenderer spriteRenderer;
 	public GameObject cubeBG;
@@ -53,8 +54,18 @@ public class FaceCards : MonoBehaviour {
 		{
 			FaceSprite.spriteCardBack = sprite;
 		}
-		 
-        faceSprites = new List<FaceSprite>();
+		foreach (Sprite sprite in LoadSprite(System.IO.Path.Combine(Application.streamingAssetsPath, "CardFrontFrame.png")))
+		{
+			FaceSprite.spriteCardFrontFrame = sprite;
+		}
+		foreach (Sprite sprite in LoadSprite(System.IO.Path.Combine(Application.streamingAssetsPath, "CardFrontBG.png")))
+		{
+			FaceSprite.spriteCardFrontBG = sprite;
+		}
+		FaceSprite.spriteCardFrontFrame.texture.filterMode = FilterMode.Point;
+		//FaceSprite.spriteCardFrontFrame.texture;
+
+		faceSprites = new List<FaceSprite>();
         doneLoading = false;
         yield return StartCoroutine(LoadFaces());
 		if (faceSprites.Count > 0)
@@ -84,6 +95,10 @@ public class FaceCards : MonoBehaviour {
 		guiTextBadChar.text = "";
 		float scale = heightFaceDisplay / (float)faceSpriteCrnt.texture.height; // widthFace / (float)faceSpriteCrnt.texture.width;
 		spriteRenderer.transform.localScale = new Vector3(scale, scale, 1);
+
+		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCardVert1 * 256f, 0.5f);
+		faceSpriteCrnt.card.Flip();
+
 		guiTextName.color = new Color(1, 1, 1, 1);
         guiTextRole.text = "";
     }
@@ -161,10 +176,12 @@ public class FaceCards : MonoBehaviour {
 						faceSprites.Add(faceSprite);
 						TotalNameCharacters += faceSprite.fullName.Length;
 
-						GameObject goYearbook = new GameObject();
-						faceSprite.card = goYearbook.AddComponent<Card>();
+						GameObject goFaceCard = Instantiate(faceCardPrefab);
+						faceSprite.card = goFaceCard.GetComponent<Card>();
 						faceSprite.card.indexOrder = indexOrder;
-						faceSprite.card.Init(sprite, FaceSprite.spriteCardBack, Vector3.zero);
+						faceSprite.card.Init(sprite, FaceSprite.spriteCardBack, FaceSprite.spriteCardFrontBG, FaceSprite.spriteCardFrontFrame, Vector3.zero);
+						faceSprite.card.SetHeight(heightFaceDisplay);
+						faceSprite.card.SetPos(transform.position);
 						faceSprite.card.ArrangeOnYearbook();
 						faceSprite.card.Flip(1.0f);
 					}
@@ -246,11 +263,11 @@ public class FaceCards : MonoBehaviour {
 				{
 					FaceSprite faceSpriteCompleted = faceSpriteCrnt;
 					ShowNextFace();
-					if (faceSpriteCompleted.countRevealed == 0)
+					if (faceSpriteCompleted.countRevealed > 0)
 					{
-						//yearBook.AddFaceSprite(faceSpriteCompleted);
-						//faceSpriteCompleted.spriteRenderYearbook.enabled = true;
+						faceSpriteCompleted.card.Flip();
 					}
+					faceSpriteCompleted.card.ArrangeOnYearbook();
 				}
 				else
 				{

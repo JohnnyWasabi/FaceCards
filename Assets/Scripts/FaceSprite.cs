@@ -30,6 +30,8 @@ public class FaceSprite : System.IComparable
 
 	public Card card;
 	public static Sprite spriteCardBack;
+	public static Sprite spriteCardFrontFrame;
+	public static Sprite spriteCardFrontBG;
 
 	public int CompareTo(object obj)
 	{
