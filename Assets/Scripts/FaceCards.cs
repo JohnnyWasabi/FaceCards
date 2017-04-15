@@ -77,8 +77,8 @@ public class FaceCards : MonoBehaviour {
         yield return StartCoroutine(LoadFaces());
 		if (faceSprites.Count > 0)
 		{
-			Invoke("Randomize", 1.5f);
-			Invoke("StartGame", 2.5f);
+			Invoke("Randomize", 1.25f);
+			Invoke("StartGame", 1.75f);
 		}
 	}
 
@@ -141,6 +141,17 @@ public class FaceCards : MonoBehaviour {
 			if (faceSprites[i] != faceSpriteCrnt)
 				faceSprites[i].card.ArrangeOnYearbook();
 		}
+	}
+	public void RestartGame()
+	{
+		Randomize();
+		faceSpriteCrnt.card.ArrangeOnYearbook();
+		for (int i = 0; i < faceSprites.Count; i++)
+		{
+			faceSprites[i].card.FlipShowBack();
+			faceSprites[i].collected = false;
+		}
+		Invoke("StartGame", 0.6f);
 	}
 
 	void ShowPrevFace()
@@ -319,6 +330,10 @@ public class FaceCards : MonoBehaviour {
 				ReturnFaceToYearbook();
 				ShowPrevFace();
             }
+			else if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				Application.Quit();
+			}
 		}
 	}
 
@@ -396,6 +411,14 @@ public class FaceCards : MonoBehaviour {
 			{
 				Randomize();
 			}
-        }
+			if (GUI.Button(new Rect(72, Screen.height -32, 64, 32), "Restart"))
+			{
+				RestartGame();
+			}
+			if (GUI.Button(new Rect(Screen.width - 64, Screen.height - 32, 64, 32), "Exit"))
+			{
+				Application.Quit();
+			}
+		}
     }
 }
