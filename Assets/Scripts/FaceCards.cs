@@ -13,6 +13,10 @@ public class FaceCards : MonoBehaviour {
 	public GUIText guiTextNofM;
 	public GUIText guiTextBadChar;
     public GUIText guiTextRole;
+	public GameObject goHangMan;
+	public GUIText guiTextTheMan;
+	public GUIText guiTextGallows;
+
 	bool doneLoading;
 	FaceSprite faceSpriteCrnt = null;
 	int iFaceSprite;
@@ -77,8 +81,8 @@ public class FaceCards : MonoBehaviour {
         yield return StartCoroutine(LoadFaces());
 		if (faceSprites.Count > 0)
 		{
-			Invoke("Randomize", 1.25f);
-			Invoke("StartGame", 1.75f);
+			Invoke("Randomize", 1.00f);
+			Invoke("StartGame", 1.50f);
 		}
 	}
 
@@ -93,8 +97,10 @@ public class FaceCards : MonoBehaviour {
 		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y);  
 		guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 32); 
 		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
-    }
-    void DisplayFaceSprite()
+		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.7f, Screen.height * 0.5f + transform.position.y-16);
+		guiTextGallows.pixelOffset = guiTextTheMan.pixelOffset;
+	}
+	void DisplayFaceSprite()
 	{
 		faceSpriteCrnt = faceSprites[iFaceSprite];
 		spriteRenderer.sprite = faceSpriteCrnt.sprite;
@@ -281,6 +287,7 @@ public class FaceCards : MonoBehaviour {
 						else
 						{
 							guiTextBadChar.text += c.ToString();
+							faceSpriteCrnt.countWrongChars++;
 						}
 					}
 				}
@@ -335,6 +342,8 @@ public class FaceCards : MonoBehaviour {
 				Application.Quit();
 			}
 		}
+
+		UpdateHangMan();
 	}
 
 	public bool GetKeyRepeatable(KeyCode keyCode)
@@ -376,7 +385,7 @@ public class FaceCards : MonoBehaviour {
             }
         }
 	}
-    /*
+	/*
      *    ######
      *    |    #
      *    O    #
@@ -386,6 +395,93 @@ public class FaceCards : MonoBehaviour {
      *   addLmN
      *   
      */
+	static string[] TheManBody =
+   {
+		@"" + "\n" +
+		@"" + "\n" +
+		@"" + "\n" +
+		@"" ,		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"" + "\n" +
+		@"" ,
+
+		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"  █" + "\n" +
+		@"" ,
+
+		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"/ █" + "\n" +
+		@"" ,
+
+		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"/ █ \" + "\n" +
+		@"" ,
+
+		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"/ █ \" + "\n" +
+		@" /" ,
+
+		@"" + "\n" +
+		@" ☻" + "\n" +
+		@"/ █ \" + "\n" +
+		@"  | |" ,
+
+		@"" + "\n" +
+		@"  ☻" + "\n" +
+		@" |█|" + "\n" +
+		@" /  \" ,
+
+		@"" + "\n" +
+		@"\☻ /" + "\n" +
+		@"  █" + "\n" +
+		@" /  \" ,
+
+				@"" + "\n" +
+		@"  ☻" + "\n" +
+		@" |█|" + "\n" +
+		@"  | |" ,
+	};
+
+	float timeTwitchedHangManDeath;
+	int countHangManAnim;
+	void UpdateHangMan()
+	{
+		int index = 0;
+		if (doneLoading && faceSpriteCrnt != null)
+		{
+			index = faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countWrongChars + faceSpriteCrnt.countRevealed;
+			index = Mathf.Min(6, index);
+			if (index < 6)
+			{
+				countHangManAnim = -1;
+			}
+			else if (countHangManAnim == -1)
+			{
+				countHangManAnim = 0;
+				timeTwitchedHangManDeath = Time.time;
+			}
+			else 
+			{
+				if (Time.time - timeTwitchedHangManDeath > 0.1f)
+				{
+					++countHangManAnim;
+					timeTwitchedHangManDeath = Time.time;
+				}
+				if (countHangManAnim < 6)
+					index = 6 + (countHangManAnim & 1);
+				else if (countHangManAnim < 8)
+					index = 8;
+				else
+					index = 9;
+			}
+		}
+
+		guiTextTheMan.text = TheManBody[index];
+	}
     void OnGUI()
 	{
  		if (doneLoading)
@@ -415,7 +511,7 @@ public class FaceCards : MonoBehaviour {
 			{
 				RestartGame();
 			}
-			if (GUI.Button(new Rect(Screen.width - 64, Screen.height - 32, 64, 32), "Exit"))
+			if (GUI.Button(new Rect(Screen.width , Screen.height - 32, 64, 32), "Exit"))
 			{
 				Application.Quit();
 			}
