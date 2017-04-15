@@ -53,7 +53,7 @@ public class Card : MonoBehaviour {
 	float timeFlipStart;
 	float flipDuration;
 
-	bool bShowingFront;
+	bool bShowFront;
 
 	// Use this for initialization
 	void Awake () {
@@ -69,7 +69,7 @@ public class Card : MonoBehaviour {
 		spriteRendererCard.sprite = front;
 		spriteRendererFace.sprite = face;
 		spriteRendererFaceFrame.sprite = frontFrame;
-		bShowingFront = true;
+		bShowFront = true;
 	}
 
 	// Update is called once per frame
@@ -89,8 +89,8 @@ public class Card : MonoBehaviour {
 					{
 						flipState = FlipState.toFlat;
 						Sprite spriteOld = spriteRendererCard.sprite;
-						spriteRendererCard.sprite = (spriteRendererCard.sprite == spriteFront) ? spriteBack : spriteFront;
-						spriteRendererFace.enabled = spriteRendererFaceFrame.enabled = (spriteRendererCard.sprite == spriteFront);
+						spriteRendererCard.sprite = (bShowFront) ? spriteFront : spriteBack;
+						spriteRendererFace.enabled = spriteRendererFaceFrame.enabled = bShowFront;
 					}
 				}
 				transform.localScale = new Vector3(scaleFlip, 1, 1);
@@ -99,7 +99,6 @@ public class Card : MonoBehaviour {
 			{
 				flipState = FlipState.none;
 				transform.localScale = new Vector3(1, 1, 1);
-				bShowingFront = spriteRendererCard.sprite == spriteFront;
 			}
 		}
 		if (isMoving)
@@ -139,21 +138,29 @@ public class Card : MonoBehaviour {
 
 	public void Flip(float duration = 0.5f)
 	{
+		bShowFront = !bShowFront;
 		if (flipState == FlipState.none)
 		{
 			timeFlipStart = Time.time;
 			flipDuration = duration;
 			flipState = FlipState.toEdge;
 		}
+		else 
+		{
+			float timeElapsed = Time.time - timeFlipStart;
+			timeFlipStart = Time.time - (flipDuration- timeElapsed);
+			flipState = (flipState == FlipState.toEdge) ? FlipState.toFlat : FlipState.toEdge;
+		}
 	}
+
 	public void FlipShowFront(float duration = 0.5f)
 	{
-		if (!bShowingFront)
+		if (!bShowFront)
 			Flip(duration);
 	}
 	public void FlipShowBack(float duration = 0.5f)
 	{
-		if (bShowingFront)
+		if (bShowFront)
 			Flip(duration);
 	}
 	public void ArrangeOnYearbook(float moveDuration = 0.5f)
