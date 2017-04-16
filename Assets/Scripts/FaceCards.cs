@@ -43,6 +43,8 @@ public class FaceCards : MonoBehaviour {
 	{
 		YearBook.Init();
 
+		guiTextGallows.enabled = false;
+
 		keyRepeatDelay = secondsKeyRepeatStartDelay;
 		float yInitial = cubeBG.transform.position.y;
 		float yDesired = Camera.main.transform.position.y - Screen.height * 0.5f + cubeBG.transform.localScale.y * 0.5f;
@@ -79,6 +81,7 @@ public class FaceCards : MonoBehaviour {
 		faceSprites = new List<FaceSprite>();
         doneLoading = false;
         yield return StartCoroutine(LoadFaces());
+		guiTextName.text = "Type Full Name Here";
 		if (faceSprites.Count > 0)
 		{
 			Invoke("Randomize", 1.00f);
@@ -113,14 +116,22 @@ public class FaceCards : MonoBehaviour {
 		if (!faceSpriteCrnt.collected)
 		{
 			faceSpriteCrnt.countRevealed = 0;
+			faceSpriteCrnt.countWrongChars = 0;
 		}
 		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCardVert1 * 256f, 0.5f);
 		faceSpriteCrnt.card.FlipShowFront();
 		
 		guiTextName.color = new Color(1, 1, 1, 1);
         guiTextRole.text = "";
+
+		Invoke("ShowGallows", 0.5f);
+		
     }
 
+	void ShowGallows()
+	{
+		guiTextGallows.enabled = true;
+	}
     void ShowNextFace()
 	{
 		if (++iFaceSprite >= faceSprites.Count)
@@ -272,7 +283,7 @@ public class FaceCards : MonoBehaviour {
 				{
 					if (c == "\b"[0])
 					{
-						RemoveChar();
+						//RemoveChar();
 					}
 					else if (c == "\n"[0] || c == "\r"[0])
 					{
@@ -296,7 +307,7 @@ public class FaceCards : MonoBehaviour {
 			{
 				if (guiTextName.text == faceSpriteCrnt.fullName)
 				{
-					if (faceSpriteCrnt.countRevealed > 0)
+					if (IsHangManDead())
 					{
 						faceSpriteCrnt.card.FlipShowBack();
 					}
@@ -446,16 +457,19 @@ public class FaceCards : MonoBehaviour {
 		@"  | |" ,
 	};
 
+	int indexHangMan;
 	float timeTwitchedHangManDeath;
 	int countHangManAnim;
+	bool IsHangManDead() { return indexHangMan >= 6; }
 	void UpdateHangMan()
 	{
-		int index = 0;
+		indexHangMan = 0;
 		if (doneLoading && faceSpriteCrnt != null)
 		{
-			index = faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countWrongChars + faceSpriteCrnt.countRevealed;
-			index = Mathf.Min(6, index);
-			if (index < 6)
+			//indexHangMan = faceSpriteCrnt.collected ? 0 : (faceSpriteCrnt.countRevealed == 0 ? faceSpriteCrnt.countWrongChars : 6);		// Lose for any reveal
+			indexHangMan = faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countRevealed * 3 + faceSpriteCrnt.countWrongChars;	// Reveal cost 3 body parts.
+			indexHangMan = Mathf.Min(6, indexHangMan);
+			if (indexHangMan < 6)
 			{
 				countHangManAnim = -1;
 			}
@@ -472,16 +486,17 @@ public class FaceCards : MonoBehaviour {
 					timeTwitchedHangManDeath = Time.time;
 				}
 				if (countHangManAnim < 6)
-					index = 6 + (countHangManAnim & 1);
+					indexHangMan = 6 + (countHangManAnim & 1);
 				else if (countHangManAnim < 8)
-					index = 8;
+					indexHangMan = 8;
 				else
-					index = 9;
+					indexHangMan = 9;
 			}
 		}
 
-		guiTextTheMan.text = TheManBody[index];
+		guiTextTheMan.text = TheManBody[indexHangMan];
 	}
+
     void OnGUI()
 	{
  		if (doneLoading)
