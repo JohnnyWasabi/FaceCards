@@ -64,7 +64,7 @@ public class Card : MonoBehaviour {
 		spriteFace = face;
 		spriteBack = back;
 		spriteFront = front;    // Todo: get a different im
-		dimCard = YearBook.dimCard;
+		dimCard = YearBook.dimPhoto;
 		SetPos(pos);
 		spriteRendererCard.sprite = front;
 		spriteRendererFace.sprite = face;
@@ -132,7 +132,7 @@ public class Card : MonoBehaviour {
 
 	public void SetHeight(float height)
 	{
-		dimCard = YearBook.aspectCardVert1 * height;
+		dimCard = YearBook.aspectCorrectHeight1 * height;
 		UpdateSpritesScales();
 	}
 
@@ -165,17 +165,14 @@ public class Card : MonoBehaviour {
 	}
 	public void ArrangeOnYearbook(float moveDuration = 0.5f)
 	{
-		float scale;
-		Vector3 pos;
-		YearBook.Arrange(spriteRendererCard.sprite, indexOrder, out scale, out pos);
+		Vector3 pos = YearBook.GetPosOfCard(spriteRendererCard.sprite, indexOrder);
 		if (moveDuration > 0)
 		{
-			MoveTo(pos, new Vector2(YearBook.picWidth, YearBook.picHeight), moveDuration);
+			MoveTo(pos, YearBook.dimPhoto, moveDuration);
 		}
 		else
 		{
-			//SetScale(scale);
-			dimCard = YearBook.dimCard;
+			dimCard = YearBook.dimPhoto;
 			SetPos(pos);
 		}
 	}

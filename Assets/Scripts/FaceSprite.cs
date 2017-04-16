@@ -13,7 +13,13 @@ public class FaceSprite : System.IComparable
 		this.sprite = sprite;
 		this.texture = texture;
 		RandomizeOrder();
+		collected = false;
+		++numCreated;
 	}
+	static int numCollected = 0;
+	static int numCreated = 0;
+	static public int GetNumCollected() { return numCollected;  }
+	static public bool AreAllCollected() { return numCollected == numCreated; }
 	public string firstName;
 	public string lastName;
 	public string fullName;
@@ -27,13 +33,27 @@ public class FaceSprite : System.IComparable
 	public int countRevealed;       // How many chars were revealed for free (with right-arrow or Enter keys).
 	public bool wasFullNameDisplayed;   // Flag turns true when full name displayed (whether by typing or reveals). After this is true, scoring stops for this face.
 	public float timeStarted;       // game time in seconds when Face first shown.
-	public bool collected;			// True if player got name right and added this card to their collection.
+	public bool _collected;     // True if player got name right and added this card to their collection.
+	public bool collected { get { return _collected; }
+		set {
+			if (_collected != value)
+			{
+				_collected = value;
+				numCollected += _collected ? 1 : -1;
+			}
+		}
+	}			// True if player got name right and added this card to their collection.
 
 	public Card card;
 	public static Sprite spriteCardBack;
 	public static Sprite spriteCardFrontFrame;
 	public static Sprite spriteCardFrontBG;
 
+	void OnDestroy()
+	{
+		collected = false;
+		--numCreated;
+	}
 	public int CompareTo(object obj)
 	{
 		if (obj == null) return 1;
