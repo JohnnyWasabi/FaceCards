@@ -322,7 +322,7 @@ public class FaceCards : MonoBehaviour {
 				{
 					faceSpriteCrnt.countRevealed += faceSpriteCrnt.fullName.Length - guiTextName.text.Length;
 					guiTextName.text = faceSpriteCrnt.fullName;
-					guiTextName.color = colorCorrect;
+					guiTextName.color = Color.yellow;
                     guiTextRole.text = faceSpriteCrnt.role;
                 }
             }
@@ -332,6 +332,8 @@ public class FaceCards : MonoBehaviour {
 				{
 					++faceSpriteCrnt.countRevealed;
 					AddChar();
+					if (IsHangManDead())
+						guiTextName.color = Color.yellow;
 				}
 			}
 			else if (GetKeyRepeatable(KeyCode.LeftArrow))
@@ -460,14 +462,18 @@ public class FaceCards : MonoBehaviour {
 	int indexHangMan;
 	float timeTwitchedHangManDeath;
 	int countHangManAnim;
-	bool IsHangManDead() { return indexHangMan >= 6; }
+	int GetHangManLimbCount()
+	{
+		//return faceSpriteCrnt.collected ? 0 : (faceSpriteCrnt.countRevealed == 0 ? faceSpriteCrnt.countWrongChars : 6);		// Lose for any reveal
+		return faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countRevealed * 3 + faceSpriteCrnt.countWrongChars; // Reveal cost 3 body parts.
+	}
+	bool IsHangManDead() { return GetHangManLimbCount() >= 6; }
 	void UpdateHangMan()
 	{
 		indexHangMan = 0;
 		if (doneLoading && faceSpriteCrnt != null)
 		{
-			//indexHangMan = faceSpriteCrnt.collected ? 0 : (faceSpriteCrnt.countRevealed == 0 ? faceSpriteCrnt.countWrongChars : 6);		// Lose for any reveal
-			indexHangMan = faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countRevealed * 3 + faceSpriteCrnt.countWrongChars;	// Reveal cost 3 body parts.
+			indexHangMan = GetHangManLimbCount();
 			indexHangMan = Mathf.Min(6, indexHangMan);
 			if (indexHangMan < 6)
 			{
