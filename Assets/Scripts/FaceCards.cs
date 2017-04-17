@@ -563,6 +563,11 @@ public class FaceCards : MonoBehaviour {
 		@"" ,
 
 		@"" + "\n" +
+		@"" + "\n" +
+		@"" + "\n" +
+		@"" ,
+
+		@"" + "\n" +
 		@" ☻" + "\n" +
 		@"" + "\n" +
 		@"" ,
@@ -608,6 +613,7 @@ public class FaceCards : MonoBehaviour {
 		@"  | |" ,
 	};
 
+	const int iHangmanDead = 7;
 	int indexHangMan;
 	float timeTwitchedHangManDeath;
 	int countHangManAnim;
@@ -623,8 +629,8 @@ public class FaceCards : MonoBehaviour {
 		if (doneLoading && faceSpriteCrnt != null)
 		{
 			indexHangMan = GetHangManLimbCount();
-			indexHangMan = Mathf.Min(6, indexHangMan);
-			if (indexHangMan < 6)
+			indexHangMan = Mathf.Min(iHangmanDead, indexHangMan);
+			if (indexHangMan < iHangmanDead)
 			{
 				countHangManAnim = -1;
 			}
@@ -640,12 +646,12 @@ public class FaceCards : MonoBehaviour {
 					++countHangManAnim;
 					timeTwitchedHangManDeath = Time.time;
 				}
-				if (countHangManAnim < 6)
-					indexHangMan = 6 + (countHangManAnim & 1);
-				else if (countHangManAnim < 8)
-					indexHangMan = 8;
+				if (countHangManAnim < iHangmanDead)
+					indexHangMan = iHangmanDead + (countHangManAnim & 1);
+				else if (countHangManAnim < iHangmanDead+2)
+					indexHangMan = iHangmanDead+2;
 				else
-					indexHangMan = 9;
+					indexHangMan = iHangmanDead+3;
 			}
 		}
 
