@@ -37,6 +37,7 @@ public class FaceCards : MonoBehaviour {
 
 	int typedGood;
 	int typedBad;
+	int typedGoodWrongCase;
 	float timeGameStarted;
 	float timeGameEnded;
 	bool doneLoading;
@@ -61,12 +62,13 @@ public class FaceCards : MonoBehaviour {
 	float keyRepeatDelay;  // initial delay
 
 	bool showAllFaces;
-
+	bool caseSensitive;
 
 	// Use this for initialization
 	IEnumerator Start()
 	{
 		roles = new List<string>();
+		caseSensitive = true;
 
 		guiTextGallows.enabled = false;
 
@@ -140,7 +142,7 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
-		comboBoxControl = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing, Screen.height - btnHeightSpaced, 128, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+		comboBoxControl = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing*2, Screen.height - btnHeightSpaced, 128, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
 	}
 
 	void StartGame()
@@ -151,6 +153,7 @@ public class FaceCards : MonoBehaviour {
 		timeGameStarted = Time.time + timeTransitionShowFace;
 		typedGood = 0;
 		typedBad = 0;
+		typedGoodWrongCase = 0;
 	}
     void UpdateGUITextPositions()
     {
@@ -229,7 +232,6 @@ public class FaceCards : MonoBehaviour {
 	}
 	public void RestartGame(bool clearCollected = true)
 	{
-		showAllFaces = false;
 		guiTextBadChar.text = "";
 		guiTextName.text = "";
 		guiTextNofM.text = "";
@@ -238,6 +240,7 @@ public class FaceCards : MonoBehaviour {
 		//		faceSpriteCrnt.card.ArrangeOnYearbook();
 		if (clearCollected)
 		{
+			showAllFaces = false;
 			for (int i = 0; i < faceSprites.Count; i++)
 			{
 				faceSprites[i].card.FlipShowBack();
@@ -420,10 +423,17 @@ public class FaceCards : MonoBehaviour {
 					}
 					else if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
 					{
-						if (faceSpriteCrnt.fullName[guiTextName.text.Length] == c)
+						char nextNameChar = faceSpriteCrnt.fullName[guiTextName.text.Length];
+						if (nextNameChar == c)
 						{
 							AddChar();
 							++typedGood;
+						}
+						else if ( !caseSensitive && (nextNameChar == char.ToUpper(c) || nextNameChar == char.ToLower(c)) )
+						{
+							AddChar();
+							guiTextBadChar.text += c.ToString();
+							++typedGoodWrongCase;
 						}
 						else
 						{
@@ -439,7 +449,7 @@ public class FaceCards : MonoBehaviour {
 			{
 				if (guiTextName.text == faceSpriteCrnt.fullName)
 				{
-					if (IsHangManDead())
+					if (IsHangManDead() || showAllFaces)
 					{
 						//faceSpriteCrnt.card.FlipShowBack();
 
@@ -532,6 +542,8 @@ public class FaceCards : MonoBehaviour {
 		{
 			if (!AreAllCollected() && !showAllFaces)
 				fs.card.FlipShowBack();
+			else
+				fs.card.FlipShowFront();
 		}
 		fs.card.ArrangeOnYearbook();
 	}
@@ -710,17 +722,24 @@ public class FaceCards : MonoBehaviour {
 				RestartGame();
 			}
 
+			const float caseBtnWidth = 110;
+			caseSensitive = GUI.Toggle(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
+
 			bool showAllFacesBefore = showAllFaces;
-			showAllFaces = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Reveal");
+			showAllFaces = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Show All");
 			if (showAllFaces != showAllFacesBefore)
 			{
 				if (showAllFaces)
 				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
 					foreach (FaceSprite facesprite in faceSprites)
 						facesprite.card.FlipShowFront();
+					DisplayFaceSprite();
 				}
 				else
 				{
+					guiTextName.text = "";
+					guiTextRole.text = "";
 					foreach (FaceSprite facesprite in faceSprites)
 						if (!facesprite.collected && iFaceSprite != facesprite.card.indexOrder)
 							facesprite.card.FlipShowBack();
@@ -736,7 +755,7 @@ public class FaceCards : MonoBehaviour {
 			// Accuracy
 			if (timeGameStarted <= Time.time)
 			{
-				int typedTotal = typedGood + typedBad;
+				int typedTotal = typedGood + typedBad + typedGoodWrongCase;
 				//if (typedTotal > 0)
 				{
 					float accuracy = (float)typedGood / (float)typedTotal * 100.0f;
