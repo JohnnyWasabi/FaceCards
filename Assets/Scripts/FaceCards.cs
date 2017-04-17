@@ -245,9 +245,18 @@ public class FaceCards : MonoBehaviour {
 			}
 		}
 		if (!AreAllCollected())
-			Invoke("StartGame", 0.6f);
-		timeGameStarted = Time.time + 10; // Just put it way in the future so display will show 0 until game actually starts (in StartGame()).
-		FilterByDepartment(0);
+		{
+			if (clearCollected)
+			{ 
+				Invoke("StartGame", 0.6f);
+				timeGameStarted = Time.time + 10; // Just put it way in the future so display will show 0 until game actually starts (in StartGame()).
+			}
+			else
+			{
+				iFaceSprite = faceSprites.Count - 1;
+				ShowNextFace();
+			}
+		}
 	}
 
 	void FilterByDepartment(int ifilter)
@@ -421,6 +430,7 @@ public class FaceCards : MonoBehaviour {
 							guiTextBadChar.text += c.ToString();
 							faceSpriteCrnt.countWrongChars++;
 							++typedBad;
+							guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
 						}
 					}
 				}
@@ -454,7 +464,7 @@ public class FaceCards : MonoBehaviour {
 				{
 					faceSpriteCrnt.countRevealed += faceSpriteCrnt.fullName.Length - guiTextName.text.Length;
 					guiTextName.text = faceSpriteCrnt.fullName;
-					guiTextName.color = Color.yellow;
+					guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
                     guiTextRole.text = faceSpriteCrnt.role;
                 }
             }
@@ -540,7 +550,7 @@ public class FaceCards : MonoBehaviour {
 			guiTextName.text += faceSpriteCrnt.fullName[guiTextName.text.Length];
 			if (guiTextName.text.Length == faceSpriteCrnt.fullName.Length)
 			{
-				guiTextName.color = colorCorrect;
+				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
                 guiTextRole.text = faceSpriteCrnt.role;
             }
         }
@@ -619,10 +629,10 @@ public class FaceCards : MonoBehaviour {
 	int countHangManAnim;
 	int GetHangManLimbCount()
 	{
-		//return faceSpriteCrnt.collected ? 0 : (faceSpriteCrnt.countRevealed == 0 ? faceSpriteCrnt.countWrongChars : 6);		// Lose for any reveal
+		//return faceSpriteCrnt.collected ? 0 : (faceSpriteCrnt.countRevealed == 0 ? faceSpriteCrnt.countWrongChars : iHangmanDead);		// Lose for any reveal
 		return faceSpriteCrnt.collected ? 0 : faceSpriteCrnt.countRevealed * 3 + faceSpriteCrnt.countWrongChars; // Reveal cost 3 body parts.
 	}
-	bool IsHangManDead() { return GetHangManLimbCount() >= 6; }
+	bool IsHangManDead() { return GetHangManLimbCount() >= iHangmanDead; }
 	void UpdateHangMan()
 	{
 		indexHangMan = 0;
