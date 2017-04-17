@@ -19,7 +19,6 @@ public class FaceSprite : System.IComparable
 	static int numCollected = 0;
 	static int numCreated = 0;
 	static public int GetNumCollected() { return numCollected;  }
-	static public bool AreAllCollected() { return numCollected == numCreated; }
 	public string firstName;
 	public string lastName;
 	public string fullName;
