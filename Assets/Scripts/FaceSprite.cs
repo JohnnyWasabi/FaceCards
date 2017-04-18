@@ -6,7 +6,7 @@ public class FaceSprite : System.IComparable
 {
 	public FaceSprite(string first, string last, string role, Sprite sprite, Texture2D texture)
 	{
-		guessNames = new string[3];
+		guessNames = new string[4];
 		firstName = first;
 		lastName = last;
 		fullName = first + " " + last;
@@ -25,7 +25,7 @@ public class FaceSprite : System.IComparable
 	public string firstName		{ get { return guessNames[1]; } set { guessNames[1] = value; } }
 	public string lastName		{ get { return guessNames[2]; } set { guessNames[2] = value; } }
 	public string fullName		{ get { return guessNames[0]; } set { guessNames[0] = value; } }
-	public string role;
+	public string role			{ get { return guessNames[3]; } set { guessNames[3] = value; } }
 	// The actual string they need to guess.
 	public string guessName		{ get { return guessNames[iGuessNameIndex]; } set { } }	
 	public Sprite sprite;

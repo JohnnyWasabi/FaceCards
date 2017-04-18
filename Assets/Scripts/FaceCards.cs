@@ -150,10 +150,11 @@ public class FaceCards : MonoBehaviour {
 	
 			
 		// What part of name they need to enter
-		comboBoxListName = new GUIContent[3];
+		comboBoxListName = new GUIContent[4];
 		comboBoxListName[0] = new GUIContent("First & Last");
 		comboBoxListName[1] = new GUIContent("First Name");
 		comboBoxListName[2] = new GUIContent("Last Name");
+		comboBoxListName[3] = new GUIContent("Department");
 		comboBoxControlName = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing * 2 + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
 
 	}
@@ -194,7 +195,7 @@ public class FaceCards : MonoBehaviour {
 		faceSpriteCrnt.card.FlipShowFront();
 		
 		guiTextName.color = new Color(1, 1, 1, 1);
-        guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.role :  "";
+        guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
 
 		//Invoke("ShowGallows", timeTransitionShowFace);
 		
@@ -486,7 +487,7 @@ public class FaceCards : MonoBehaviour {
 					faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
 					guiTextName.text = faceSpriteCrnt.guessName;
 					guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-                    guiTextRole.text = faceSpriteCrnt.role;
+                    guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
                 }
             }
 			else if (GetKeyRepeatable(KeyCode.RightArrow))
@@ -574,7 +575,7 @@ public class FaceCards : MonoBehaviour {
 			if (guiTextName.text.Length == faceSpriteCrnt.guessName.Length)
 			{
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-                guiTextRole.text = faceSpriteCrnt.role;
+                guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
             }
         }
 	}
