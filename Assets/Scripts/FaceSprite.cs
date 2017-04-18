@@ -6,6 +6,7 @@ public class FaceSprite : System.IComparable
 {
 	public FaceSprite(string first, string last, string role, Sprite sprite, Texture2D texture)
 	{
+		guessNames = new string[3];
 		firstName = first;
 		lastName = last;
 		fullName = first + " " + last;
@@ -18,11 +19,15 @@ public class FaceSprite : System.IComparable
 	}
 	static int numCollected = 0;
 	static int numCreated = 0;
+	static public int iGuessNameIndex = 0;
 	static public int GetNumCollected() { return numCollected;  }
-	public string firstName;
-	public string lastName;
-	public string fullName;
+	public string[] guessNames;
+	public string firstName		{ get { return guessNames[1]; } set { guessNames[1] = value; } }
+	public string lastName		{ get { return guessNames[2]; } set { guessNames[2] = value; } }
+	public string fullName		{ get { return guessNames[0]; } set { guessNames[0] = value; } }
 	public string role;
+	// The actual string they need to guess.
+	public string guessName		{ get { return guessNames[iGuessNameIndex]; } set { } }	
 	public Sprite sprite;
 	public Texture2D texture;
 	int randSortOrder;	// big random number

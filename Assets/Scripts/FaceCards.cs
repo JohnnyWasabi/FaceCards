@@ -19,6 +19,10 @@ public class FaceCards : MonoBehaviour {
 	private ComboBox comboBoxControl;// = new ComboBox();
 	private GUIStyle listStyle = new GUIStyle();
 
+
+	GUIContent[] comboBoxListName;
+	private ComboBox comboBoxControlName;// = new ComboBox();
+
 	public int debugMaxCards = 0;	// greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
 	public List<FaceSprite> faceSprites;
@@ -142,7 +146,16 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
-		comboBoxControl = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing*2, Screen.height - btnHeightSpaced, 128, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+		comboBoxControl = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing*2, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+	
+			
+		// What part of name they need to enter
+		comboBoxListName = new GUIContent[3];
+		comboBoxListName[0] = new GUIContent("First & Last");
+		comboBoxListName[1] = new GUIContent("First Name");
+		comboBoxListName[2] = new GUIContent("Last Name");
+		comboBoxControlName = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing * 2 + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
+
 	}
 
 	void StartGame()
@@ -161,18 +174,16 @@ public class FaceCards : MonoBehaviour {
 		guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 32); 
 		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
 		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.64f, Screen.height * 0.5f + transform.position.y-16);
-		guiTextGallows.pixelOffset = guiTextTheMan.pixelOffset;
+		guiTextGallows.pixelOffset = new Vector2(guiTextTheMan.pixelOffset.x + 2, guiTextTheMan.pixelOffset.y);
+	
 	}
 	void DisplayFaceSprite()
 	{
 		faceSpriteCrnt = faceSprites[iFaceSprite];
 		spriteRenderer.sprite = faceSpriteCrnt.sprite;
-		guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.fullName : "";
-		//guiTextNofM.text = (iFaceSprite + 1).ToString() + "/" + faceSprites.Count.ToString();
+		guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.guessName : "";
 		guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
 		guiTextBadChar.text = "";
-//		float scale = heightFaceDisplay / (float)faceSpriteCrnt.texture.height; // widthFace / (float)faceSpriteCrnt.texture.width;
-//		spriteRenderer.transform.localScale = new Vector3(scale, scale, 1);
 
 		if (!faceSpriteCrnt.collected)
 		{
@@ -421,9 +432,9 @@ public class FaceCards : MonoBehaviour {
 					{
 
 					}
-					else if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
+					else if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
 					{
-						char nextNameChar = faceSpriteCrnt.fullName[guiTextName.text.Length];
+						char nextNameChar = faceSpriteCrnt.guessName[guiTextName.text.Length];
 						if (nextNameChar == c)
 						{
 							AddChar();
@@ -447,7 +458,7 @@ public class FaceCards : MonoBehaviour {
 			}
 			if (Input.GetKeyDown(KeyCode.Return))
 			{
-				if (guiTextName.text == faceSpriteCrnt.fullName)
+				if (guiTextName.text == faceSpriteCrnt.guessName)
 				{
 					if (IsHangManDead() || showAllFaces)
 					{
@@ -472,15 +483,15 @@ public class FaceCards : MonoBehaviour {
 				}
 				else if (!AreAllCollected())
 				{
-					faceSpriteCrnt.countRevealed += faceSpriteCrnt.fullName.Length - guiTextName.text.Length;
-					guiTextName.text = faceSpriteCrnt.fullName;
+					faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
+					guiTextName.text = faceSpriteCrnt.guessName;
 					guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
                     guiTextRole.text = faceSpriteCrnt.role;
                 }
             }
 			else if (GetKeyRepeatable(KeyCode.RightArrow))
 			{
-				if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
+				if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
 				{
 					++faceSpriteCrnt.countRevealed;
 					AddChar();
@@ -537,7 +548,7 @@ public class FaceCards : MonoBehaviour {
 	}
 	void ReturnFaceToYearbook(FaceSprite fs)
 	{
-		//if (fs.countRevealed > 0 || guiTextName.text != fs.fullName || !fs.collected)
+		//if (fs.countRevealed > 0 || guiTextName.text != fs.guessName || !fs.collected)
 		if (!fs.collected)
 		{
 			if (!AreAllCollected() && !showAllFaces)
@@ -557,10 +568,10 @@ public class FaceCards : MonoBehaviour {
 	}
 	void AddChar()
 	{
-		if (guiTextName.text.Length < faceSpriteCrnt.fullName.Length)
+		if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
 		{
-			guiTextName.text += faceSpriteCrnt.fullName[guiTextName.text.Length];
-			if (guiTextName.text.Length == faceSpriteCrnt.fullName.Length)
+			guiTextName.text += faceSpriteCrnt.guessName[guiTextName.text.Length];
+			if (guiTextName.text.Length == faceSpriteCrnt.guessName.Length)
 			{
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
                 guiTextRole.text = faceSpriteCrnt.role;
@@ -686,11 +697,28 @@ public class FaceCards : MonoBehaviour {
  		if (doneLoading)
 		{
 
-			
+			// Department Selector
 			int selectedItemIndex = comboBoxControl.Show();
 			if (selectedItemIndex != iDeptFilter)
 			{
 				FilterByDepartment(selectedItemIndex);
+			}
+
+			// Name part to Guess selector
+			selectedItemIndex = comboBoxControlName.Show();
+			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
+			{
+				FaceSprite.iGuessNameIndex = selectedItemIndex;
+				if (!showAllFaces)
+					RestartGame();
+				else
+				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
+					guiTextName.text = "";
+					guiTextRole.text = "";
+					if (!AreAllCollected())
+						DisplayFaceSprite();
+				}
 			}
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
@@ -762,7 +790,7 @@ public class FaceCards : MonoBehaviour {
 					string accuracyPercent = (typedGood == typedTotal) ? "100" : accuracy.ToString("00");
 					if (typedTotal == 0)
 						accuracyPercent = "__";
-					GUI.Label(new Rect(Screen.width * 0.75f, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
+					GUI.Label(new Rect(Screen.width * 0.72f, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
 				}
 			}
 
@@ -774,7 +802,7 @@ public class FaceCards : MonoBehaviour {
 				string minutes = Mathf.Floor(secondsElapsed / 60).ToString("00");
 				string seconds = Mathf.Floor(secondsElapsed % 60).ToString("00");
 
-				GUI.Label(new Rect(/*72+64+8*/ Screen.width*0.25f, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
+				GUI.Label(new Rect(/*72+64+8*/ Screen.width*0.30f, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
 			}
 		}
     }
