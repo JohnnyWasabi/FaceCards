@@ -68,6 +68,14 @@ public class FaceCards : MonoBehaviour {
 	bool showAllFaces;
 	bool caseSensitive;
 
+	public int widthCardSlot = 74;
+	public int heightPaddingCardSlot = 8;
+
+	public int widthYearbookNameLabel = 140;
+	public int heightYearBookNameLabel = 32;
+	bool isYearBookMode = false;
+
+
 	// Use this for initialization
 	IEnumerator Start()
 	{
@@ -108,7 +116,7 @@ public class FaceCards : MonoBehaviour {
 		}
 		FaceSprite.spriteCardFrontFrame.texture.filterMode = FilterMode.Point;
 
-		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height);
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
 		
 		faceSprites = new List<FaceSprite>();
 		faceSpritesFiltered = new List<FaceSprite>();
@@ -257,6 +265,7 @@ public class FaceCards : MonoBehaviour {
 			{
 				faceSprites[i].card.FlipShowBack();
 				faceSprites[i].collected = false;
+				faceSprites[i].card.uiTextName.gameObject.SetActive(false);
 			}
 		}
 		if (!AreAllCollected())
@@ -373,6 +382,8 @@ public class FaceCards : MonoBehaviour {
 						faceSprite.card.SetPos(transform.position);
 						faceSprite.card.ArrangeOnYearbook();
 						faceSprite.card.FlipShowBack(1.0f);
+						faceSprite.card.uiTextName.gameObject.SetActive(false);
+
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
@@ -526,6 +537,29 @@ public class FaceCards : MonoBehaviour {
 					ReturnFaceToYearbook(faceSpriteCrnt);
 					iFaceSprite = index;
 					DisplayFaceSprite();
+				}
+			}
+			else if (Input.GetKeyDown(KeyCode.F2))
+			{
+				isYearBookMode = !isYearBookMode;
+				if (isYearBookMode)
+				{
+					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel);
+					foreach (FaceSprite fs in faceSprites)
+					{
+						fs.card.uiTextName.gameObject.SetActive(true);
+						fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
+						fs.collected = true;
+						fs.card.FlipShowFront();
+					}
+					showAllFaces = true;
+					RestartGame(false);
+				}
+				else
+				{
+					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
+					showAllFaces = false;
+					RestartGame();
 				}
 			}
 		}
