@@ -27,8 +27,13 @@ PageUp 		= Show previous person
 PageDown 	= Show next person.
 
 Buttons:
-Reveal		= Display all cards face up.
-Restart		= Shuffles the cards and restarts the game.
+Show All	= Display all cards face up and show name/info of current card.
+Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
 Shuffle		= Shuffles the cards and redeals the 1st card (does not restart game).
+Restart		= Shuffles the cards and restarts the game.
 All Depts	= This is a selector that lets you filter to show a single department (or All Departments).
+First & Last	= This is a selector of what name you have to type in to collect the card: First, Last, Department, or First & Last.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
+
+
+Note: Best viewed at 1024x768 resolution.
