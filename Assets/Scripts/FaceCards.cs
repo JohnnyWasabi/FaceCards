@@ -256,10 +256,10 @@ public class FaceCards : MonoBehaviour {
 		guiTextName.text = "";
 		guiTextNofM.text = "";
 		ReturnFaceToYearbook(faceSpriteCrnt);
-		Randomize();
 		//		faceSpriteCrnt.card.ArrangeOnYearbook();
 		if (clearCollected)
 		{
+			Randomize();
 			showAllFaces = false;
 			for (int i = 0; i < faceSprites.Count; i++)
 			{
@@ -552,6 +552,7 @@ public class FaceCards : MonoBehaviour {
 						fs.collected = true;
 						fs.card.FlipShowFront();
 					}
+					SortByGuessName();
 					showAllFaces = true;
 					RestartGame(false);
 				}
@@ -570,6 +571,31 @@ public class FaceCards : MonoBehaviour {
 		UpdateHangMan();
 	}
 
+	public void SortByGuessName()
+	{
+		faceSprites.Sort(delegate (FaceSprite fs1, FaceSprite fs2)
+		{
+			switch (FaceSprite.iGuessNameIndex)
+			{
+			case 0: // Full Name
+				return string.Compare(fs1.fullName, fs2.fullName);
+			case 1: // First Name
+				return string.Compare(fs1.firstName, fs2.firstName);
+			case 2: // Last Name
+				return string.Compare(fs1.lastName, fs2.lastName);
+			case 3: // Department
+				return string.Compare(fs1.role, fs2.role);
+			}
+			return (fs1.card.indexOrder - fs2.card.indexOrder);
+		});
+		for (int i = 0; i < faceSprites.Count; i++)
+		{
+			faceSprites[i].card.indexOrder = i;
+			if (faceSprites[i] == faceSpriteCrnt)
+				iFaceSprite = i;
+			faceSprites[i].card.ArrangeOnYearbook();
+		}
+	}
 	public bool GetKeyRepeatable(KeyCode keyCode)
 	{
 		bool keyDown = Input.GetKeyDown(keyCode);
@@ -737,6 +763,7 @@ public class FaceCards : MonoBehaviour {
 			if (selectedItemIndex != iDeptFilter)
 			{
 				FilterByDepartment(selectedItemIndex);
+				SortByGuessName();
 			}
 
 			// Name part to Guess selector
@@ -754,6 +781,7 @@ public class FaceCards : MonoBehaviour {
 					if (!AreAllCollected())
 						DisplayFaceSprite();
 				}
+				SortByGuessName();
 			}
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
