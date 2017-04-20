@@ -25,6 +25,7 @@ Left Arrow	= Erase last letter from name entry. In case you want to back up and 
 Backspace 	= Effectively nothing, except clear the display of the last wrong letter you typed. 
 PageUp 		= Show previous person
 PageDown 	= Show next person.
+F2		= Toggle Yearbook display (shows names/dept under each picture)
 
 Buttons:
 Show All	= Display all cards face up and show name/info of current card.
@@ -36,4 +37,4 @@ First & Last	= This is a selector of what name you have to type in to collect th
 Exit		= Quits the app without a confirmation (because this is a deadly game).
 
 
-Note: Best viewed at 1024x768 resolution.
+Note: Best played at at least 1600x1024 resolution.  For Yearbook display at least 1600x1024.
