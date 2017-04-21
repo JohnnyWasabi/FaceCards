@@ -12,6 +12,8 @@ public class FaceCards : MonoBehaviour {
 	const float btnHSpacing = 4;
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
 
+	public ColorPicker bgColorPicker;	// Background color picker
+
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
 
@@ -59,6 +61,8 @@ public class FaceCards : MonoBehaviour {
     float secondsBlinkCycle = 0;
     public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
 
+	private GUIStyle guiStyleVersion = new GUIStyle(); //create a new variable
+
 	float yDelta;
 
 	// For doing key repeating
@@ -101,8 +105,11 @@ public class FaceCards : MonoBehaviour {
         guiTextName.text = "Loading ...";
 		guiTextBadChar.text = "";
 
+		guiStyleVersion.font = guiTextName.font;
+		guiStyleVersion.fontSize = 12;
+		guiStyleVersion.normal.textColor = Color.gray;
 
-        UpdateGUITextPositions();
+		UpdateGUITextPositions();
 
 		foreach (Sprite sprite in LoadSprite(System.IO.Path.Combine(Application.streamingAssetsPath, "CardBack.png")))
 		{
@@ -186,6 +193,9 @@ public class FaceCards : MonoBehaviour {
 		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
 		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.64f, Screen.height * 0.5f + transform.position.y-16);
 		guiTextGallows.pixelOffset = new Vector2(guiTextTheMan.pixelOffset.x + 2, guiTextTheMan.pixelOffset.y);
+
+		bgColorPicker.startPos.x = (Screen.width - ColorPicker.sizeFull) * 0.5f;
+		bgColorPicker.startPos.y = Screen.height * 0.5f - transform.position.y - ColorPicker.sizeFull - ColorPicker.alphaGradientHeight;
 	
 	}
 	void DisplayFaceSprite()
@@ -561,27 +571,7 @@ public class FaceCards : MonoBehaviour {
 			}
 			else if (Input.GetKeyDown(KeyCode.F2))
 			{
-				isYearBookMode = !isYearBookMode;
-				if (isYearBookMode)
-				{
-					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel);
-					foreach (FaceSprite fs in faceSprites)
-					{
-						fs.card.uiTextName.gameObject.SetActive(true);
-						fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
-						fs.collected = true;
-						fs.card.FlipShowFront();
-					}
-					SortByGuessName();
-					showAllFaces = true;
-					RestartGame(false);
-				}
-				else
-				{
-					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
-					showAllFaces = false;
-					RestartGame();
-				}
+
 			}
 		}
 
@@ -591,6 +581,31 @@ public class FaceCards : MonoBehaviour {
 		UpdateHangMan();
 	}
 
+
+	void ChangeYearBookMode(bool isYearBook)
+	{
+		isYearBookMode = isYearBook;
+		if (isYearBookMode)
+		{
+			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel);
+			foreach (FaceSprite fs in faceSprites)
+			{
+				fs.card.uiTextName.gameObject.SetActive(true);
+				fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
+				fs.collected = true;
+				fs.card.FlipShowFront();
+			}
+			SortByGuessName();
+			showAllFaces = true;
+			RestartGame(false);
+		}
+		else
+		{
+			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
+			showAllFaces = false;
+			RestartGame();
+		}
+	}
 	public void SortByGuessName()
 	{
 		faceSprites.Sort(delegate (FaceSprite fs1, FaceSprite fs2)
@@ -848,6 +863,11 @@ public class FaceCards : MonoBehaviour {
 			const float caseBtnWidth = 110;
 			caseSensitive = GUI.Toggle(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
+			bool yearBookModeNew = GUI.Toggle(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
+			if (yearBookModeNew != isYearBookMode)
+				ChangeYearBookMode(yearBookModeNew);
+
+
 			bool showAllFacesBefore = showAllFaces;
 			showAllFaces = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Show All");
 			if (showAllFaces != showAllFacesBefore)
@@ -870,7 +890,7 @@ public class FaceCards : MonoBehaviour {
 
 			}
 
-			if (GUI.Button(new Rect(Screen.width-btnWidthSpaced, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
+			if (GUI.Button(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
 			{
 				Application.Quit();
 			}
@@ -899,6 +919,9 @@ public class FaceCards : MonoBehaviour {
 
 				GUI.Label(new Rect(/*72+64+8*/ Screen.width*0.30f, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
 			}
+
+			// Version
+			GUI.Label(new Rect(Screen.width-40, Screen.height-16, 48, 16), "V 1.0", guiStyleVersion);
 		}
     }
 }
