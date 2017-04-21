@@ -37,7 +37,9 @@ public class FaceCards : MonoBehaviour {
 	public GUIText guiTextTheMan;
 	public GUIText guiTextGallows;
 
-	const float timeTransitionShowFace = 0.5f;
+    int iGuessnamePrevious = 0;
+
+    const float timeTransitionShowFace = 0.5f;
 
 	int typedGood;
 	int typedBad;
@@ -531,13 +533,31 @@ public class FaceCards : MonoBehaviour {
 			}
 			else if (Input.GetMouseButtonDown(0))
 			{
-				int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
-				if (index >= 0 && index < faceSprites.Count && index != iFaceSprite)
-				{
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					iFaceSprite = index;
-					DisplayFaceSprite();
-				}
+                // First check if clicked on Big version of pic
+                Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
+                float xMouseWorld = Input.mousePosition.x - Screen.width*0.5f;
+                float yMouseWorld = Input.mousePosition.y - Screen.height*0.5f;
+                bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
+                    && (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
+                        && xMouseWorld <= transform.position.x + displayFaceSize.x*0.5f
+                        && yMouseWorld <= transform.position.y + displayFaceSize.y
+                        && yMouseWorld >= transform.position.y
+                    );
+                Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+                if (clickedDisplayFace)
+                {
+                    ReturnFaceToYearbook(faceSpriteCrnt);
+                }
+                else
+                {
+                    int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
+                    if (index >= 0 && index < faceSprites.Count) // && index != iFaceSprite)
+                    {
+                        ReturnFaceToYearbook(faceSpriteCrnt);
+                        iFaceSprite = index;
+                        DisplayFaceSprite();
+                    }
+                }
 			}
 			else if (Input.GetKeyDown(KeyCode.F2))
 			{
@@ -578,15 +598,23 @@ public class FaceCards : MonoBehaviour {
 			switch (FaceSprite.iGuessNameIndex)
 			{
 			case 0: // Full Name
-				return string.Compare(fs1.fullName, fs2.fullName);
-			case 1: // First Name
-				return string.Compare(fs1.firstName, fs2.firstName);
+            case 1: // First Name
+                return string.Compare(fs1.fullName, fs2.fullName);
 			case 2: // Last Name
-				return string.Compare(fs1.lastName, fs2.lastName);
-			case 3: // Department
-				return string.Compare(fs1.role, fs2.role);
-			}
-			return (fs1.card.indexOrder - fs2.card.indexOrder);
+				return string.Compare(fs1.lastName+fs1.firstName, fs2.lastName+fs2.firstName);
+			case 3: // Department 
+                    // Sort secondarily by the previous sorting criteria.
+                    switch(iGuessnamePrevious)
+                    {
+                        case 0: // Full Name
+                        case 1: // First Name
+                            return string.Compare(fs1.role + fs1.fullName, fs2.role + fs2.fullName);
+                        case 2: // Last Name
+                            return string.Compare(fs1.role + fs1.lastName + fs1.firstName, fs2.role + fs2.lastName + fs2.firstName);
+                    }
+                    return string.Compare(fs1.role, fs2.role); // This should actually never get reached.
+            }
+            return (fs1.card.indexOrder - fs2.card.indexOrder); // This should actually never get reached.
 		});
 		for (int i = 0; i < faceSprites.Count; i++)
 		{
@@ -609,10 +637,12 @@ public class FaceCards : MonoBehaviour {
 	}
 	void ReturnFaceToYearbook(FaceSprite fs)
 	{
+        guiTextName.text = "";
+        guiTextRole.text = "";
 		//if (fs.countRevealed > 0 || guiTextName.text != fs.guessName || !fs.collected)
-		if (!fs.collected)
+		//if (!fs.collected)
 		{
-			if (!AreAllCollected() && !showAllFaces)
+			if (!fs.collected && !showAllFaces) //!AreAllCollected() && !showAllFaces)
 				fs.card.FlipShowBack();
 			else
 				fs.card.FlipShowFront();
@@ -770,6 +800,7 @@ public class FaceCards : MonoBehaviour {
 			selectedItemIndex = comboBoxControlName.Show();
 			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
 			{
+                iGuessnamePrevious = FaceSprite.iGuessNameIndex;
 				FaceSprite.iGuessNameIndex = selectedItemIndex;
 				if (!showAllFaces)
 					RestartGame();
@@ -806,7 +837,8 @@ public class FaceCards : MonoBehaviour {
 
 			if (GUI.Button(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*2, 64, btnHeight), "Shuffle"))
 			{
-				RestartGame(false);
+                Randomize();
+                RestartGame(false);
 			}
 			if (GUI.Button(new Rect(btnHSpacing, Screen.height - btnHeightSpaced, 64, btnHeight), "Restart"))
 			{
