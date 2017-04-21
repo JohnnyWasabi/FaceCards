@@ -215,13 +215,14 @@ public class FaceCards : MonoBehaviour {
 		faceSpriteCrnt.card.FlipShowFront();
 		
 		guiTextName.color = new Color(1, 1, 1, 1);
-        guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
+        //guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
+        guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 
-		//Invoke("ShowGallows", timeTransitionShowFace);
-		
+        //Invoke("ShowGallows", timeTransitionShowFace);
+
     }
 
-	void ShowGallows()
+    void ShowGallows()
 	{
 		guiTextGallows.enabled = true;
 	}
@@ -817,17 +818,21 @@ public class FaceCards : MonoBehaviour {
 			{
                 iGuessnamePrevious = FaceSprite.iGuessNameIndex;
 				FaceSprite.iGuessNameIndex = selectedItemIndex;
-				if (!showAllFaces)
-					RestartGame();
-				else
-				{
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					guiTextName.text = "";
-					guiTextRole.text = "";
-					if (!AreAllCollected())
-						DisplayFaceSprite();
-				}
-				SortByGuessName();
+                if (!showAllFaces)
+                {
+                    Randomize();
+                    RestartGame();
+                }
+                else
+                {
+                    ReturnFaceToYearbook(faceSpriteCrnt);
+                    guiTextName.text = "";
+                    guiTextRole.text = "";
+                    if (!AreAllCollected())
+                        DisplayFaceSprite();
+                }
+                if (showAllFaces || isYearBookMode)
+				    SortByGuessName();
 			}
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
@@ -921,7 +926,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40, Screen.height-16, 48, 16), "V 1.0", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40, Screen.height-16, 48, 16), "V 1.1", guiStyleVersion);
 		}
     }
 }
