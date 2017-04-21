@@ -8,7 +8,7 @@ Play Instructions:
 -----------------
 Type the full name of the person shown. 
 Correct letters are added as you type; wrong letters appear in red to the right of the cursor and make a hangman progress 1 step closer to his gruesome death.  
-The name turns green when complete, and their company department is revealed.
+The name turns green when complete.
 Press Enter key to advance to next person. 
 Press Right-Arrow to reveal the next letter, but it costs you 3 hangman parts!
 Pressing Enter before the name is complete reveals the full name (each revealed letter costs 3 hangman parts).
