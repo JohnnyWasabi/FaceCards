@@ -80,7 +80,6 @@ public class FaceCards : MonoBehaviour {
 	public int heightYearBookNameLabel = 32;
 	bool isYearBookMode = false;
 
-
 	// Use this for initialization
 	IEnumerator Start()
 	{
@@ -978,7 +977,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.3", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.4", guiStyleVersion);
 		}
     }
 }

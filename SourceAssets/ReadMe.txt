@@ -43,6 +43,6 @@ All Depts	= This is a selector that lets you filter to show a single department 
 First & Last	= This is a selector of what name you have to type in to collect the card: First, Last, Department, or First & Last.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
 Cards/Faces	= Click on any card to display it front & center.  Click on the front & center card to send it back to the grid.
-
+Background	= Right-click with mouse on background to access color-picker dialog for changing the background color.
 
 Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 1600x1024.

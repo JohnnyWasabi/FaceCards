@@ -12,6 +12,7 @@ public class ColorPicker : MonoBehaviour {
 	public GameObject receiver;
 	public string colorSetFunctionName = "OnSetNewColor";
 	public string colorGetFunctionName = "OnGetColor";
+	public string colorGetDefaultFunctionName = "OnGetDefaultColor";
 	public bool useExternalDrawer = false;
 	public int drawOrder = 0;
 	public bool showAlpha = true;
@@ -275,9 +276,19 @@ public class ColorPicker : MonoBehaviour {
 			}
 			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + sizeFull - 20 - 8, 60, 20), "Cancel"))
 			{
+
 				SetColor(OriginalColor);
-				receiver.SendMessage(colorSetFunctionName, OriginalColor, SendMessageOptions.DontRequireReceiver);
+				if (receiver)
+					receiver.SendMessage(colorSetFunctionName, OriginalColor, SendMessageOptions.DontRequireReceiver);
 				mState = ESTATE.Hidding;
+			}
+			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + sizeFull + (-20 - 8)*2, 60, 20), "Default"))
+			{
+				if (receiver)
+				{
+					receiver.SendMessage(colorGetDefaultFunctionName, this, SendMessageOptions.DontRequireReceiver);
+					receiver.SendMessage(colorSetFunctionName, SelectedColor, SendMessageOptions.DontRequireReceiver);
+				}
 			}
 			GUIStyle labelStyleRGBA = new GUIStyle(GUI.skin.label);
 			labelStyleRGBA.normal.textColor = Color.white;
