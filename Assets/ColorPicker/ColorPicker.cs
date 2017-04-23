@@ -36,13 +36,19 @@ public class ColorPicker : MonoBehaviour {
 	public int sizeHidden = 20;
 	float animTime = 0.25f;
 	float dt = 0;
+	int widthSidePanel = (128 + 32);
 
 	float sizeCurr = 0;
 	public const float alphaGradientHeight = 16;
 
 	GUIStyle titleStyle = null;
-	Color textColor = Color.black;
+	Color textColor = Color.white;
+	Color dialogBGColor = Color.gray;
+
 	Texture2D txColorDisplay;
+	Texture2D txDialogBG;
+	Texture2D txGrayScale;
+	const int widthGrayScale = 12;
 
 	string txtR, txtG, txtB, txtA;
 	float valR, valG, valB, valA;
@@ -60,7 +66,20 @@ public class ColorPicker : MonoBehaviour {
 		sizeCurr = sizeHidden;
 
 		txColorDisplay = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-		if(receiver)
+		txDialogBG = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+		txDialogBG.SetPixel(0, 0, dialogBGColor);
+		txDialogBG.Apply();
+		txGrayScale = new Texture2D(widthGrayScale, 256, TextureFormat.ARGB32, false);
+		Color32[] colorsGrayScale = new Color32[widthGrayScale * 256];
+		byte ic = 255;
+		int iPixel = 0;
+		for (int y = 0; y < 256; y++, ic--)
+			for (int x = 0; x < widthGrayScale; x++)
+				colorsGrayScale[iPixel++] = new Color32(ic, ic, ic, 255);
+		txGrayScale.SetPixels32(colorsGrayScale);
+		txGrayScale.Apply();
+
+		if (receiver)
 		{
 			receiver.SendMessage(colorGetFunctionName, this, SendMessageOptions.DontRequireReceiver);
 		}
@@ -179,6 +198,7 @@ public class ColorPicker : MonoBehaviour {
 		if (titleStyle == null) {
 			titleStyle = new GUIStyle (GUI.skin.label);
 			titleStyle.normal.textColor = textColor;
+			titleStyle.fontSize = 18;
 		}
 
 		//update scaling states
@@ -209,22 +229,32 @@ public class ColorPicker : MonoBehaviour {
 
 		if(mState == ESTATE.Showed)
 		{
-			GUI.Label(new Rect(startPos.x + sizeCurr + 60, startPos.y, 200, 30), Title, titleStyle);
+			float startXSidePanel = startPos.x + sizeCurr;
+			GUI.DrawTexture(new Rect(startXSidePanel, startPos.y, widthSidePanel, sizeFull), txDialogBG);		// Dialog background rectangle
 
-			GUI.DrawTexture(new Rect(startPos.x + sizeCurr + 10, startPos.y, 40, 20), txColorDisplay);
+			GUI.Label(new Rect(startPos.x + sizeCurr + 10, startPos.y, 200, 30), Title, titleStyle);
+
+			//GUI.DrawTexture(new Rect(startPos.x + sizeCurr + 10, startPos.y, 40, 20), txColorDisplay);
 
 			string txtOldR = txtR;
 			string txtOldG = txtG;
 			string txtOldB = txtB;
 			string txtOldA = txtA;
-			txtR = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 30, 40, 20), txtR, 3);
-			txtG = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 60, 40, 20), txtG, 3);
-			txtB = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 90, 40, 20), txtB, 3);
+			float startXTextVals = startPos.x + sizeCurr + 10;
+			float widthTextVals = 40;
+			txtR = GUI.TextField(new Rect(startXTextVals, startPos.y + 30, widthTextVals, 20), txtR, 3);
+			txtG = GUI.TextField(new Rect(startXTextVals, startPos.y + 60, widthTextVals, 20), txtG, 3);
+			txtB = GUI.TextField(new Rect(startXTextVals, startPos.y + 90, widthTextVals, 20), txtB, 3);
 			if (showAlpha)
-				txtA = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 120, 40, 20), txtA, 3);
-			valR = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 35, 60, 20), valR, 0.0f, 1.0f);
-			valG = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 65, 60, 20), valG, 0.0f, 1.0f);
-			valB = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 95, 60, 20), valB, 0.0f, 1.0f);
+				txtA = GUI.TextField(new Rect(startXTextVals, startPos.y + 120, widthTextVals, 20), txtA, 3);
+
+			float startXSliders = startXTextVals + widthTextVals + 8; // startPos.x + sizeCurr + 50;
+			float widthSliders = startXSidePanel + widthSidePanel - startXSliders - 28;
+			valR = GUI.HorizontalSlider(new Rect(startXSliders, startPos.y + 35, widthSliders, 20), valR, 0.0f, 1.0f);
+			valG = GUI.HorizontalSlider(new Rect(startXSliders, startPos.y + 65, widthSliders, 20), valG, 0.0f, 1.0f);
+			valB = GUI.HorizontalSlider(new Rect(startXSliders, startPos.y + 95, widthSliders, 20), valB, 0.0f, 1.0f);
+			if (showAlpha)
+				valA = GUI.HorizontalSlider(new Rect(startXSliders, startPos.y + 125, widthSliders, 20), valA, 0.0f, 1.0f);
 
 			if (txtOldR != txtR || txtOldG != txtG || txtOldB != txtB || txtOldA != txtA)
 			{
@@ -233,9 +263,7 @@ public class ColorPicker : MonoBehaviour {
 				SetColor(new Color(valR, valG, valB, valA));
 				ApplyColor();
 			}
-			if (showAlpha)
-				valA = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 125, 60, 20), valA, 0.0f, 1.0f);
-			if(GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + 150, 60, 20), "OK"))
+			if(GUI.Button(new Rect(startPos.x + sizeCurr + widthSidePanel - 10 - 60, startPos.y + sizeFull - 20-8, 60, 20), "OK"))
 			{
 				ApplyColor();
 				SelectedColor = TempColor;
@@ -245,7 +273,7 @@ public class ColorPicker : MonoBehaviour {
 				}
 				mState = ESTATE.Hidding;
 			}
-			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + 150 + 30, 60, 20), "Cancel"))
+			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + sizeFull - 20 - 8, 60, 20), "Cancel"))
 			{
 				SetColor(OriginalColor);
 				receiver.SendMessage(colorSetFunctionName, OriginalColor, SendMessageOptions.DontRequireReceiver);
@@ -253,17 +281,20 @@ public class ColorPicker : MonoBehaviour {
 			}
 			GUIStyle labelStyleRGBA = new GUIStyle(GUI.skin.label);
 			labelStyleRGBA.normal.textColor = Color.white;
-			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 30, 20, 20), "R", labelStyleRGBA);
-			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 60, 20, 20), "G", labelStyleRGBA);
-			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 90, 20, 20), "B", labelStyleRGBA);
+			float startXValLetters = startXSliders + widthSliders + 8;
+			GUI.Label(new Rect(startXValLetters, startPos.y + 30, 20, 20), "R", labelStyleRGBA);
+			GUI.Label(new Rect(startXValLetters, startPos.y + 60, 20, 20), "G", labelStyleRGBA);
+			GUI.Label(new Rect(startXValLetters, startPos.y + 90, 20, 20), "B", labelStyleRGBA);
 			if (showAlpha)
-				GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 120, 20, 20), "A", labelStyleRGBA);
+				GUI.Label(new Rect(startXValLetters, startPos.y + 120, 20, 20), "A", labelStyleRGBA);
 		}
 
 
 		//draw color picker
 		Rect rect = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
 		GUI.DrawTexture(rect, colorSpace);
+		Rect rectGray = new Rect(startPos.x - widthGrayScale * currentScale, startPos.y, widthGrayScale * currentScale, sizeCurr);
+		GUI.DrawTexture(rectGray, txGrayScale);
 
 //		Rect rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
 
@@ -323,10 +354,18 @@ public class ColorPicker : MonoBehaviour {
 				Vector2 localImagePos = (mousePos - startPos);
 				Color res = colorSpace.GetPixel((int)(coeffX * localImagePos.x), colorSpace.height - (int)(coeffY * localImagePos.y)-1);
 				SetColor(res);
-				//if(isLeftMBtnDragging )
-				{
-					ApplyColor();
-				}
+				ApplyColor();
+				UpdateColorEditFields(false);
+				UpdateColorSliders(false);
+			}
+			else if (rectGray.Contains(e.mousePosition) && (isLeftMBtnClicked || isLeftMBtnDragging))
+			{
+				float localImageY  = (mousePos.y - startPos.y);
+				float grayVal = localImageY / (float)(txGrayScale.height-1);
+				grayVal = Mathf.Clamp(grayVal, 0.0f, 1.0f);
+				Color grayColor = new Color(grayVal, grayVal, grayVal);
+				SetColor(grayColor);
+				ApplyColor();
 				UpdateColorEditFields(false);
 				UpdateColorSliders(false);
 			}

@@ -557,7 +557,7 @@ public class FaceCards : MonoBehaviour {
 				{
 					Application.Quit();
 				}
-				else if (Input.GetMouseButtonDown(0))
+				else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
 				{
 					// First check if clicked on Big version of pic
 					Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
@@ -573,18 +573,27 @@ public class FaceCards : MonoBehaviour {
 					int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
 					if (clickedDisplayFace)
 					{
-						ReturnFaceToYearbook(faceSpriteCrnt);
+						if (Input.GetMouseButtonDown(0))
+							ReturnFaceToYearbook(faceSpriteCrnt);
 					}
 					else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
 					{
-						ReturnFaceToYearbook(faceSpriteCrnt);
-						iFaceSprite = index;
-						DisplayFaceSprite();
+						if (Input.GetMouseButtonDown(0))
+						{
+							ReturnFaceToYearbook(faceSpriteCrnt);
+							iFaceSprite = index;
+							DisplayFaceSprite();
+						}
 					}
 					else if (yMouseWorld > transform.position.y)
 					{
-						bgColorPicker.Show();
+						if (Input.GetMouseButtonDown(1))
+							bgColorPicker.Show();
 					}
+				}
+				else if (Input.GetMouseButtonDown(1))
+				{
+
 				}
 			}
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
