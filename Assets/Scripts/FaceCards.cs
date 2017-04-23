@@ -91,13 +91,6 @@ public class FaceCards : MonoBehaviour {
 		guiTextGallows.enabled = false;
 
 		keyRepeatDelay = secondsKeyRepeatStartDelay;
-		float yInitial = cubeBG.transform.position.y;
-		float yDesired = Camera.main.transform.position.y - Screen.height * 0.5f + cubeBG.transform.localScale.y * 0.5f;
-		yDelta = (yDesired - yInitial);
-		transform.position = new Vector3(0, transform.position.y + yDelta, 0);
-		cubeBG.transform.localScale = new Vector3(Screen.width, cubeBG.transform.localScale.y, 1);
-//		heightFaceDisplay = Screen.height * faceHeightAsScreenHeightPercent;
-		Camera.main.orthographicSize = Screen.height * 0.5f;
 
 		guiStyleStats.font = guiTextName.font;
         guiStyleStats.fontSize = guiTextName.fontSize;
@@ -110,6 +103,7 @@ public class FaceCards : MonoBehaviour {
 		guiStyleVersion.normal.textColor = Color.gray;
 
 		UpdateGUITextPositions();
+
 
 		foreach (Sprite sprite in LoadSprite(System.IO.Path.Combine(Application.streamingAssetsPath, "CardBack.png")))
 		{
@@ -133,6 +127,7 @@ public class FaceCards : MonoBehaviour {
         yield return StartCoroutine(LoadFaces());
 		SetupRolesComboBox();
 
+
 		guiTextName.text = "Type Full Name Here";
 		guiTextNofM.text = "";
 
@@ -142,6 +137,8 @@ public class FaceCards : MonoBehaviour {
 			Invoke("StartGame", 1.50f);
 		}
 		Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
+
+
 	}
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
@@ -186,17 +183,30 @@ public class FaceCards : MonoBehaviour {
 		typedBad = 0;
 		typedGoodWrongCase = 0;
 	}
-    void UpdateGUITextPositions()
+
+	void UpdateGUITextPositions()
     {
+		transform.position = new Vector3(0, Screen.height *-0.5f + 90, 0);
+		cubeBG.transform.localScale = new Vector3(Screen.width, cubeBG.transform.localScale.y, 1);
+		Camera.main.orthographicSize = Screen.height * 0.5f;
+
 		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y);  
 		guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 32); 
 		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
 		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.64f, Screen.height * 0.5f + transform.position.y-16);
 		guiTextGallows.pixelOffset = new Vector2(guiTextTheMan.pixelOffset.x + 2, guiTextTheMan.pixelOffset.y);
 
+		if (comboBoxControl != null)
+		{
+			const int xCombo = 128;
+			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
+			comboBoxControlName.Reposition(new Rect(xCombo + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight));
+		}
+
 		bgColorPicker.startPos.x = (Screen.width - ColorPicker.sizeFull) * 0.5f;
 		bgColorPicker.startPos.y = Screen.height * 0.5f - transform.position.y - ColorPicker.sizeFull - ColorPicker.alphaGradientHeight;
 	
+
 	}
 	void DisplayFaceSprite()
 	{
@@ -439,7 +449,9 @@ public class FaceCards : MonoBehaviour {
 	}
 
 	Rect rectText;
-
+	float oldScreenWidth = 0;
+	float oldScreenHeight = 0;
+	bool needScreenLayoutUpdate = false;
 	// Update is called once per frame
 	void Update() {
 		if (doneLoading)
@@ -554,7 +566,7 @@ public class FaceCards : MonoBehaviour {
                         && yMouseWorld <= transform.position.y + displayFaceSize.y
                         && yMouseWorld >= transform.position.y
                     );
-                Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+                //Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
                 if (clickedDisplayFace)
                 {
                     ReturnFaceToYearbook(faceSpriteCrnt);
@@ -570,9 +582,36 @@ public class FaceCards : MonoBehaviour {
                     }
                 }
 			}
-			else if (Input.GetKeyDown(KeyCode.F2))
-			{
 
+			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
+			{
+				needScreenLayoutUpdate = true;
+				oldScreenWidth = Screen.width;
+				oldScreenHeight = Screen.height;
+			}
+
+			UpdateGUITextPositions();
+			if (needScreenLayoutUpdate)
+			{
+				if (!(Input.mousePosition.x == 0 || Input.mousePosition.y == 0 || Input.mousePosition.x == Screen.width-1 || Input.mousePosition.y == Screen.height-1))
+				{
+					//Mouse is inside the screen by 1 pixel or more, so can't be outside of window, therefore is over the game screen
+					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot); // make it update it's Screen-size based values.
+					if (!isYearBookMode)
+					{
+						foreach (FaceSprite fs in faceSprites)
+						{
+							fs.card.ArrangeOnYearbook(0.25f);
+						}
+						//DisplayFaceSprite();
+						faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, 0.25f);// timeTransitionShowFace);
+					}
+					else
+					{
+						ChangeYearBookMode(isYearBookMode);
+					}
+					needScreenLayoutUpdate = false;
+				}
 			}
 		}
 
@@ -855,20 +894,10 @@ public class FaceCards : MonoBehaviour {
 				guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, Screen.height - rectText.y);
 			}
 
-			if (GUI.Button(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*2, 64, btnHeight), "Shuffle"))
-			{
-                Randomize();
-                RestartGame(false);
-			}
-			if (GUI.Button(new Rect(btnHSpacing, Screen.height - btnHeightSpaced, 64, btnHeight), "Restart"))
-			{
-				RestartGame();
-			}
-
 			const float caseBtnWidth = 110;
-			caseSensitive = GUI.Toggle(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
+			caseSensitive = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 1, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
-			bool yearBookModeNew = GUI.Toggle(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
+			bool yearBookModeNew = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
 			if (yearBookModeNew != isYearBookMode)
 				ChangeYearBookMode(yearBookModeNew);
 
@@ -895,7 +924,17 @@ public class FaceCards : MonoBehaviour {
 
 			}
 
-			if (GUI.Button(new Rect(Screen.width - caseBtnWidth, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
+			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, 64, btnHeight), "Shuffle"))
+			{
+				Randomize();
+				RestartGame(false);
+			}
+			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, 64, btnHeight), "Restart"))
+			{
+				RestartGame();
+			}
+
+			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
 			{
 				Application.Quit();
 			}
@@ -910,7 +949,7 @@ public class FaceCards : MonoBehaviour {
 					string accuracyPercent = (typedGood == typedTotal) ? "100" : accuracy.ToString("00");
 					if (typedTotal == 0)
 						accuracyPercent = "__";
-					GUI.Label(new Rect(Screen.width * 0.72f, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
+					GUI.Label(new Rect(Screen.width * 0.5f + 128, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
 				}
 			}
 
@@ -922,11 +961,11 @@ public class FaceCards : MonoBehaviour {
 				string minutes = Mathf.Floor(secondsElapsed / 60).ToString("00");
 				string seconds = Mathf.Floor(secondsElapsed % 60).ToString("00");
 
-				GUI.Label(new Rect(/*72+64+8*/ Screen.width*0.30f, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
+				GUI.Label(new Rect(Screen.width * 0.5f - 128 - 58, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40, Screen.height-16, 48, 16), "V 1.1", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.2", guiStyleVersion);
 		}
     }
 }
