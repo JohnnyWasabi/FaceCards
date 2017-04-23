@@ -7,6 +7,8 @@ public class ColorPicker : MonoBehaviour {
 	public Texture2D alphaGradient;
 	public string Title = "Color Picker";
 	public Vector2 startPos = new Vector2(20, 20);
+	public Vector2 anchorPos = new Vector2(0.5f, 1.0f);
+	public Vector2 originPos = new Vector2(20, 20);
 	public GameObject receiver;
 	public string colorSetFunctionName = "OnSetNewColor";
 	public string colorGetFunctionName = "OnGetColor";
@@ -28,6 +30,7 @@ public class ColorPicker : MonoBehaviour {
 		Hidding
 	}; 
 	ESTATE mState = ESTATE.Hidden;
+	public bool IsActive() { return mState != ESTATE.Hidden; }
 	
 	public int sizeFull = 200;
 	public int sizeHidden = 20;
@@ -170,20 +173,46 @@ public class ColorPicker : MonoBehaviour {
 	// Update is called once per frame
 	public void _DrawGUI () 
 	{
+		if (activeColorPicker != this)
+			return;
+
 		if (titleStyle == null) {
 			titleStyle = new GUIStyle (GUI.skin.label);
 			titleStyle.normal.textColor = textColor;
 		}
 
+		//update scaling states
+		if (mState == ESTATE.Showing)
+		{
+			sizeCurr = Mathf.Lerp(sizeHidden, sizeFull, dt / animTime);
+			if (dt / animTime > 1.0f)
+			{
+				mState = ESTATE.Showed;
+			}
+			dt += Time.deltaTime;
+		}
+		if (mState == ESTATE.Hidding)
+		{
+			sizeCurr = Mathf.Lerp(sizeFull, sizeHidden, dt / animTime);
+			if (dt / animTime > 1.0f)
+			{
+				mState = ESTATE.Hidden;
+			}
+			dt += Time.deltaTime;
+		}
+
+		float currentScale = sizeCurr / sizeFull;
+		startPos = new Vector2(originPos.x - sizeFull*currentScale*anchorPos.x, originPos.y - sizeFull*currentScale*anchorPos.y);
+
 		Rect rectColorEdit = new Rect(startPos.x + sizeCurr + 10, startPos.y + 30, 40, 140);
 		Rect rectColorSlider = new Rect(startPos.x + sizeCurr + 50, startPos.y + 30, 60, 140);
 
-		GUI.Label(new Rect(startPos.x + sizeCurr + 60, startPos.y, 200, 30), Title, titleStyle);
-
-		GUI.DrawTexture(new Rect(startPos.x + sizeCurr + 10, startPos.y, 40, 20), txColorDisplay);
-
 		if(mState == ESTATE.Showed)
 		{
+			GUI.Label(new Rect(startPos.x + sizeCurr + 60, startPos.y, 200, 30), Title, titleStyle);
+
+			GUI.DrawTexture(new Rect(startPos.x + sizeCurr + 10, startPos.y, 40, 20), txColorDisplay);
+
 			string txtOldR = txtR;
 			string txtOldG = txtG;
 			string txtOldB = txtB;
@@ -197,7 +226,7 @@ public class ColorPicker : MonoBehaviour {
 			valG = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 65, 60, 20), valG, 0.0f, 1.0f);
 			valB = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 95, 60, 20), valB, 0.0f, 1.0f);
 
-			if (txtOldR != txtR || txtOldG != txtG || txtOldB != txtB)
+			if (txtOldR != txtR || txtOldG != txtG || txtOldB != txtB || txtOldA != txtA)
 			{
 				UpdateColorEditFields(true);
 				UpdateColorSliders(false);
@@ -231,29 +260,12 @@ public class ColorPicker : MonoBehaviour {
 				GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 120, 20, 20), "A", labelStyleRGBA);
 		}
 
-		//update scaling states
-		if(mState == ESTATE.Showing)
-		{
-			sizeCurr = Mathf.Lerp(sizeHidden, sizeFull, dt/animTime);
-			if(dt/animTime > 1.0f) {
-				mState = ESTATE.Showed;
-			}
-			dt += Time.deltaTime;
-		}
-		if(mState == ESTATE.Hidding)
-		{
-			sizeCurr = Mathf.Lerp(sizeFull, sizeHidden, dt/animTime);
-			if(dt/animTime > 1.0f) {
-				mState = ESTATE.Hidden;
-			}
-			dt += Time.deltaTime;
-		}
+
 		//draw color picker
 		Rect rect = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
-//		if (mState != ESTATE.Hidden) // jma
-			GUI.DrawTexture(rect, colorSpace);
+		GUI.DrawTexture(rect, colorSpace);
 
-		Rect rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
+//		Rect rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
 
 		float alphaGradHeight = alphaGradientHeight * (sizeCurr / sizeFull);
 		Vector2 startPosAlpha = startPos + new Vector2(0, sizeCurr);
@@ -263,7 +275,7 @@ public class ColorPicker : MonoBehaviour {
 			if (mState != ESTATE.Hidden) // jma
 				GUI.DrawTexture(rectAlpha, alphaGradient);
 
-			rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr + alphaGradHeight);
+//			rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr + alphaGradHeight);
 		}
 
 		Vector2 mousePos = Event.current.mousePosition;

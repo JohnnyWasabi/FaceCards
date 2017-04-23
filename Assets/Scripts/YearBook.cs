@@ -51,8 +51,15 @@ public class YearBook {
 	{
 		y = Screen.height - 1 - y;
 		int row = y / slotHeight;
-		int col = x / slotWidth;
+		int col = (x-dxCentered) / slotWidth;
 		int index = row * cols + col;
+
+		
+		float xcardCenter = col * slotWidth + slotWidth * 0.5f + dxCentered;
+		float halfPhotoWidth = dimPhoto.x * 0.5f;
+		if (x < xcardCenter - halfPhotoWidth || x > xcardCenter + halfPhotoWidth)
+			index = -1;
+
 		return index;
 	}
 }
