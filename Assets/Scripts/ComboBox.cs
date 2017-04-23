@@ -86,7 +86,10 @@ public class ComboBox
 		this.boxStyle = boxStyle;
 		this.listStyle = listStyle;
 	}
-
+	public void Reposition(Rect rect)
+	{
+		this.rect = rect;
+	}
 	public int Show()
 	{
 		if (forceToUnShow)
