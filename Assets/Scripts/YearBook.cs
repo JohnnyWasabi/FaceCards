@@ -5,7 +5,7 @@ using UnityEngine;
 public class YearBook {
 
 	static int cols;
-	static int rows;
+//	static int rows;
 	static public Vector2 aspectCorrectWidth1 = new Vector2(1.0f, 9f / 8f);	// multiply this by a width you want your result to be, and the height will be at correct aspect ratio.
 	static public Vector2 aspectCorrectHeight1 = new Vector2(8f/9f, 1.0f);   // multiply this by a height you want your result to be, and the width will be at correct aspect ratio.
 	static public Vector2 dimPhoto = new Vector2(64, 72);   // Dimensions of picture  as it appears in yearbook layout.
@@ -27,7 +27,7 @@ public class YearBook {
 		slotWidth = Mathf.Max((int)dimPhoto.x, nameWidth);
 		slotHeight = (int)dimPhoto.y + nameHeight;
 		cols = (int)(Screen.width / slotWidth);
-		rows = (int)(Screen.height / slotHeight);
+//		rows = (int)(Screen.height / slotHeight);
 
 		dxCentered = (Screen.width - (cols * slotWidth)) / 2;
 	}

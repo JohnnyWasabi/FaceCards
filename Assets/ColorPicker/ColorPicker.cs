@@ -12,9 +12,11 @@ public class ColorPicker : MonoBehaviour {
 	public string colorGetFunctionName = "OnGetColor";
 	public bool useExternalDrawer = false;
 	public int drawOrder = 0;
+	public bool showAlpha = true;
 
 	private Color TempColor; 
 	private Color SelectedColor;
+	private Color OriginalColor;
 
 	static ColorPicker activeColorPicker = null;
 
@@ -27,8 +29,8 @@ public class ColorPicker : MonoBehaviour {
 	}; 
 	ESTATE mState = ESTATE.Hidden;
 	
-	public const int sizeFull = 200;
-	public const int sizeHidden = 20;
+	public int sizeFull = 200;
+	public int sizeHidden = 20;
 	float animTime = 0.25f;
 	float dt = 0;
 
@@ -82,6 +84,7 @@ public class ColorPicker : MonoBehaviour {
 		else
 		{
 			SetColor(new Color(valR, valG, valB, valA));
+			ApplyColor();
 		}
 	}
 
@@ -89,10 +92,10 @@ public class ColorPicker : MonoBehaviour {
 	{
 		if(!isFocused)
 		{
-			txtR = (255 * TempColor.r).ToString();
-			txtG = (255 * TempColor.g).ToString();
-			txtB = (255 * TempColor.b).ToString();
-			txtA = (255 * TempColor.a).ToString();
+			txtR = ((int)(255f * TempColor.r)).ToString();
+			txtG = ((int)(255f * TempColor.g)).ToString();
+			txtB = ((int)(255f * TempColor.b)).ToString();
+			txtA = ((int)(255f * TempColor.a)).ToString();
 		}
 		else
 		{
@@ -101,18 +104,66 @@ public class ColorPicker : MonoBehaviour {
 			byte b = 0;
 			byte a = 0;
 			if(!string.IsNullOrEmpty(txtR)) {
-				r = byte.Parse(txtR, System.Globalization.NumberStyles.Any);
+				int rInt;
+				if (!int.TryParse(txtR, out rInt))
+				{
+					r = (byte)(255f * TempColor.r);
+				}
+				else
+					r = (byte)Mathf.Clamp(rInt, 0, 255);
+
+				txtR = r.ToString();
+				//r = byte.Parse(txtR, System.Globalization.NumberStyles.Any);
 			}
 			if(!string.IsNullOrEmpty(txtG)) {
-				g = byte.Parse(txtG, System.Globalization.NumberStyles.Any);
+				int gInt;
+				if (!int.TryParse(txtG, out gInt))
+				{
+					g = (byte)(255f * TempColor.g);
+				}
+				else
+					g = (byte)Mathf.Clamp(gInt, 0, 255);
+
+				txtG = g.ToString();
+				//g = byte.Parse(txtG, System.Globalization.NumberStyles.Any);
 			}
 			if(!string.IsNullOrEmpty(txtB)) {
-				b = byte.Parse(txtB, System.Globalization.NumberStyles.Any);
+				int bInt;
+				if (!int.TryParse(txtB, out bInt))
+				{
+					b = (byte)(255f * TempColor.b);
+				}
+				else
+					b = (byte)Mathf.Clamp(bInt, 0, 255);
+
+				txtB = b.ToString();
+				//b = byte.Parse(txtB, System.Globalization.NumberStyles.Any);
 			}
 			if(!string.IsNullOrEmpty(txtA)) {
-				a = byte.Parse(txtA, System.Globalization.NumberStyles.Any);
+				int aInt;
+				if (!int.TryParse(txtA, out aInt))
+				{
+					a = (byte)(255f * TempColor.a);
+				}
+				else
+					a = (byte)Mathf.Clamp(aInt, 0, 255);
+
+				txtA = a.ToString();
+				//a = byte.Parse(txtA, System.Globalization.NumberStyles.Any);
 			}
 			SetColor(new Color32(r, g, b, a));
+		}
+	}
+
+	public void Show()
+	{
+		if (mState == ESTATE.Hidden)
+		{
+			mState = ESTATE.Showing;
+			activeColorPicker = this;
+			dt = 0;
+			OriginalColor = GetColor();
+			SetColor(OriginalColor);
 		}
 	}
 
@@ -133,15 +184,29 @@ public class ColorPicker : MonoBehaviour {
 
 		if(mState == ESTATE.Showed)
 		{
+			string txtOldR = txtR;
+			string txtOldG = txtG;
+			string txtOldB = txtB;
+			string txtOldA = txtA;
 			txtR = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 30, 40, 20), txtR, 3);
 			txtG = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 60, 40, 20), txtG, 3);
 			txtB = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 90, 40, 20), txtB, 3);
-			txtA = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 120, 40, 20), txtA, 3);
+			if (showAlpha)
+				txtA = GUI.TextField(new Rect(startPos.x + sizeCurr + 10, startPos.y + 120, 40, 20), txtA, 3);
 			valR = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 35, 60, 20), valR, 0.0f, 1.0f);
 			valG = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 65, 60, 20), valG, 0.0f, 1.0f);
 			valB = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 95, 60, 20), valB, 0.0f, 1.0f);
-			valA = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 125, 60, 20), valA, 0.0f, 1.0f);
-			if(GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + 150, 60, 20), "Apply"))
+
+			if (txtOldR != txtR || txtOldG != txtG || txtOldB != txtB)
+			{
+				UpdateColorEditFields(true);
+				UpdateColorSliders(false);
+				SetColor(new Color(valR, valG, valB, valA));
+				ApplyColor();
+			}
+			if (showAlpha)
+				valA = GUI.HorizontalSlider(new Rect(startPos.x + sizeCurr + 50, startPos.y + 125, 60, 20), valA, 0.0f, 1.0f);
+			if(GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + 150, 60, 20), "OK"))
 			{
 				ApplyColor();
 				SelectedColor = TempColor;
@@ -149,14 +214,21 @@ public class ColorPicker : MonoBehaviour {
 				{
 					receiver.SendMessage(colorSetFunctionName, SelectedColor, SendMessageOptions.DontRequireReceiver);
 				}
+				mState = ESTATE.Hidding;
 			}
-
+			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + 150 + 30, 60, 20), "Cancel"))
+			{
+				SetColor(OriginalColor);
+				receiver.SendMessage(colorSetFunctionName, OriginalColor, SendMessageOptions.DontRequireReceiver);
+				mState = ESTATE.Hidding;
+			}
 			GUIStyle labelStyleRGBA = new GUIStyle(GUI.skin.label);
 			labelStyleRGBA.normal.textColor = Color.white;
 			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 30, 20, 20), "R", labelStyleRGBA);
 			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 60, 20, 20), "G", labelStyleRGBA);
 			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 90, 20, 20), "B", labelStyleRGBA);
-			GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 120, 20, 20), "A", labelStyleRGBA);
+			if (showAlpha)
+				GUI.Label(new Rect(startPos.x + sizeCurr + 110, startPos.y + 120, 20, 20), "A", labelStyleRGBA);
 		}
 
 		//update scaling states
@@ -181,20 +253,26 @@ public class ColorPicker : MonoBehaviour {
 //		if (mState != ESTATE.Hidden) // jma
 			GUI.DrawTexture(rect, colorSpace);
 
-		float alphaGradHeight = alphaGradientHeight * (sizeCurr/sizeFull);
+		Rect rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr);
+
+		float alphaGradHeight = alphaGradientHeight * (sizeCurr / sizeFull);
 		Vector2 startPosAlpha = startPos + new Vector2(0, sizeCurr);
 		Rect rectAlpha = new Rect(startPosAlpha.x, startPosAlpha.y, sizeCurr, alphaGradHeight);
-		if (mState != ESTATE.Hidden) // jma
-			GUI.DrawTexture(rectAlpha, alphaGradient);
+		if (showAlpha)
+		{
+			if (mState != ESTATE.Hidden) // jma
+				GUI.DrawTexture(rectAlpha, alphaGradient);
 
-		Rect rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr + alphaGradHeight);
+			rectFullSize = new Rect(startPos.x, startPos.y, sizeCurr, sizeCurr + alphaGradHeight);
+		}
 
 		Vector2 mousePos = Event.current.mousePosition;
 		Event e = Event.current;
 		bool isLeftMBtnClicked = e.type == EventType.mouseUp;
 		bool isLeftMBtnDragging = e.type == EventType.MouseDrag;
+#if false
 		bool openCondition = (rectFullSize.Contains(e.mousePosition) && (((e.type == EventType.MouseUp || e.type == EventType.mouseDrag || e.type == EventType.MouseMove) && e.isMouse)));
-		bool closeCondition = isLeftMBtnClicked || (!rectFullSize.Contains(e.mousePosition)) && (e.isMouse && (e.type == EventType.MouseMove || e.type == EventType.MouseDown));
+//		bool closeCondition = isLeftMBtnClicked || (!rectFullSize.Contains(e.mousePosition)) && (e.isMouse && (e.type == EventType.MouseMove || e.type == EventType.MouseDown));
 		if(openCondition && (activeColorPicker == null || activeColorPicker.mState == ESTATE.Hidden))
 		{
 			if(mState == ESTATE.Hidden)
@@ -202,8 +280,10 @@ public class ColorPicker : MonoBehaviour {
 				mState = ESTATE.Showing;
 				activeColorPicker = this;
 				dt = 0;
+				OriginalColor = GetColor();
 			}
 		}
+
 		if(closeCondition)
 		{
 			if(mState == ESTATE.Showed)
@@ -221,23 +301,24 @@ public class ColorPicker : MonoBehaviour {
 				dt = 0;
 			}
 		}
-		if(mState == ESTATE.Showed)
+#endif
+		if (mState == ESTATE.Showed)
 		{
-			if(rect.Contains(e.mousePosition))
+			if(rect.Contains(e.mousePosition) && (isLeftMBtnClicked || isLeftMBtnDragging))
 			{
 				float coeffX = colorSpace.width / sizeCurr;
 				float coeffY = colorSpace.height / sizeCurr;
 				Vector2 localImagePos = (mousePos - startPos);
 				Color res = colorSpace.GetPixel((int)(coeffX * localImagePos.x), colorSpace.height - (int)(coeffY * localImagePos.y)-1);
 				SetColor(res);
-				if(isLeftMBtnDragging )
+				//if(isLeftMBtnDragging )
 				{
 					ApplyColor();
 				}
 				UpdateColorEditFields(false);
 				UpdateColorSliders(false);
 			}
-			else if(rectAlpha.Contains(e.mousePosition))
+			else if(showAlpha && rectAlpha.Contains(e.mousePosition))
 			{
 				float coeffX = alphaGradient.width / sizeCurr;
 				float coeffY = alphaGradient.height / sizeCurr;

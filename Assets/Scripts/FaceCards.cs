@@ -29,7 +29,6 @@ public class FaceCards : MonoBehaviour {
 	public GameObject faceCardPrefab;
 	public List<FaceSprite> faceSprites;
 	public List<FaceSprite> faceSpritesFiltered;
-	public SpriteRenderer spriteRenderer;
 	public GameObject cubeBG;
 	public GUIText guiTextName;
 	public GUIText guiTextNofM;
@@ -136,9 +135,7 @@ public class FaceCards : MonoBehaviour {
 			Invoke("Randomize", 1.00f);
 			Invoke("StartGame", 1.50f);
 		}
-		Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
-
-
+		//Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
 	}
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
@@ -203,15 +200,14 @@ public class FaceCards : MonoBehaviour {
 			comboBoxControlName.Reposition(new Rect(xCombo + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight));
 		}
 
-		bgColorPicker.startPos.x = (Screen.width - ColorPicker.sizeFull) * 0.5f;
-		bgColorPicker.startPos.y = Screen.height * 0.5f - transform.position.y - ColorPicker.sizeFull - ColorPicker.alphaGradientHeight;
+		bgColorPicker.startPos.x = (Screen.width - bgColorPicker.sizeFull) * 0.5f;
+		bgColorPicker.startPos.y = Screen.height * 0.5f - transform.position.y - bgColorPicker.sizeFull; // - ColorPicker.alphaGradientHeight;
 	
 
 	}
 	void DisplayFaceSprite()
 	{
 		faceSpriteCrnt = faceSprites[iFaceSprite];
-		spriteRenderer.sprite = faceSpriteCrnt.sprite;
 		guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.guessName : "";
 		guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
 		guiTextBadChar.text = "";
@@ -566,21 +562,22 @@ public class FaceCards : MonoBehaviour {
                         && yMouseWorld <= transform.position.y + displayFaceSize.y
                         && yMouseWorld >= transform.position.y
                     );
-                //Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
-                if (clickedDisplayFace)
+				//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+				int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
+				if (clickedDisplayFace)
                 {
                     ReturnFaceToYearbook(faceSpriteCrnt);
                 }
-                else
+                else if (index >= 0 && index < faceSprites.Count) // && index != iFaceSprite)
                 {
-                    int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
-                    if (index >= 0 && index < faceSprites.Count) // && index != iFaceSprite)
-                    {
-                        ReturnFaceToYearbook(faceSpriteCrnt);
-                        iFaceSprite = index;
-                        DisplayFaceSprite();
-                    }
+                    ReturnFaceToYearbook(faceSpriteCrnt);
+                    iFaceSprite = index;
+                    DisplayFaceSprite();
                 }
+				else if (yMouseWorld > transform.position.y)
+				{
+					bgColorPicker.Show();
+				}
 			}
 
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
