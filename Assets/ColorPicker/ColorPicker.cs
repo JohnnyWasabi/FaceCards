@@ -163,7 +163,7 @@ public class ColorPicker : MonoBehaviour {
 			activeColorPicker = this;
 			dt = 0;
 			OriginalColor = GetColor();
-			SetColor(OriginalColor);
+			NotifyColor(OriginalColor);
 		}
 	}
 
