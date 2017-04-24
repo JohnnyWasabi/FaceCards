@@ -17,6 +17,8 @@ public class FaceCards : MonoBehaviour {
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
 
+	float score;
+
 	GUIContent[] comboBoxList;
 	private ComboBox comboBoxControl;// = new ComboBox();
 	private GUIStyle listStyle = new GUIStyle();
@@ -54,15 +56,14 @@ public class FaceCards : MonoBehaviour {
 	public float heightFaceDealStartDisplay = 128;
 	public float heightFaceGuessDislplay = 128;
 	public Color colorCorrect = new Color(0, 1, 0, 1);
-    private GUIStyle guiStyleStats = new GUIStyle(); //create a new variable
+	private GUIStyle guiStyleStats = new GUIStyle(); //create a new variable
+	private GUIStyle guiStyleScore = new GUIStyle(); //create a new variable
 	float secondsCursorOn = 1f;
     float secondsCursorOff = 1f;
     float secondsBlinkCycle = 0;
     public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
 
 	private GUIStyle guiStyleVersion = new GUIStyle(); //create a new variable
-
-	float yDelta;
 
 	// For doing key repeating
 	float timeKeyDown;
@@ -80,6 +81,8 @@ public class FaceCards : MonoBehaviour {
 	public int heightYearBookNameLabel = 32;
 	bool isYearBookMode = false;
 
+	float totalGuessNameChars;	// Total chars in the all the names to be guessed.
+
 	// Use this for initialization
 	IEnumerator Start()
 	{
@@ -93,6 +96,12 @@ public class FaceCards : MonoBehaviour {
 		guiStyleStats.font = guiTextName.font;
         guiStyleStats.fontSize = guiTextName.fontSize;
         guiStyleStats.normal.textColor = cursorColor;
+
+		guiStyleScore.font = guiStyleStats.font;
+		guiStyleScore.fontSize = guiStyleStats.fontSize;
+		guiStyleScore.normal.textColor = guiStyleStats.normal.textColor;
+		guiStyleScore.alignment = TextAnchor.UpperCenter;
+
         guiTextName.text = "Loading ...";
 		guiTextBadChar.text = "";
 
@@ -356,6 +365,7 @@ public class FaceCards : MonoBehaviour {
     }
     public IEnumerator LoadFaces()
 	{
+		totalGuessNameChars = 0;
 		string path = System.IO.Path.Combine(Application.streamingAssetsPath, "Faces");
 		DirectoryInfo dir = new DirectoryInfo(path);
 		FileInfo[] info = dir.GetFiles("*");
@@ -407,6 +417,7 @@ public class FaceCards : MonoBehaviour {
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
 
+						totalGuessNameChars += faceSprite.fullName.Length;
 					}
 				}
 				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
@@ -515,8 +526,9 @@ public class FaceCards : MonoBehaviour {
 							ShowNextFace();
 						else
 						{
-							guiTextName.text = "";
-							guiTextRole.text = "YOU WON!";
+							guiTextName.color = Color.white;
+							guiTextName.text = "YOU WON!";
+							guiTextRole.text = "";
 							//guiTextNofM.text = "";
 						}
 					}
@@ -951,29 +963,36 @@ public class FaceCards : MonoBehaviour {
 				Application.Quit();
 			}
 
-			// Accuracy
+			// Stats
 			if (timeGameStarted <= Time.time)
 			{
+				// Accuracy
 				int typedTotal = typedGood + typedBad + typedGoodWrongCase;
-				//if (typedTotal > 0)
-				{
-					float accuracy = (float)typedGood / (float)typedTotal * 100.0f;
-					string accuracyPercent = (typedGood == typedTotal) ? "100" : accuracy.ToString("00");
-					if (typedTotal == 0)
-						accuracyPercent = "__";
-					GUI.Label(new Rect(Screen.width * 0.5f + 128, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
-				}
-			}
+				float accuracy = (float)typedGood / (float)typedTotal;
+				string accuracyPercent = (typedGood == typedTotal) ? "100" : (accuracy * 100.0f).ToString("00");
+				if (typedTotal == 0)
+					accuracyPercent = "__";
+				GUI.Label(new Rect(Screen.width * 0.5f + 128, Screen.height - 32, 64, 32),  accuracyPercent + "%", guiStyleStats);
 
-			// Timer
-			if (timeGameStarted <= Time.time)
-			{
+				// Timer
+
 				float secondsElapsed = timeGameEnded - timeGameStarted;
 				if (secondsElapsed < 0) secondsElapsed = 0;
 				string minutes = Mathf.Floor(secondsElapsed / 60).ToString("00");
 				string seconds = Mathf.Floor(secondsElapsed % 60).ToString("00");
 
 				GUI.Label(new Rect(Screen.width * 0.5f - 128 - 58, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
+
+				// Score. Only displayed if guessing full name for all faces.
+				if (FaceSprite.iGuessNameIndex == 0 && iDeptFilter == 0 && AreAllCollected())
+				{
+					if (!AreAllCollected())
+						secondsElapsed = Mathf.Floor(secondsElapsed);
+					score = (secondsElapsed <= 0 || typedTotal == 0) ? 0 : (totalGuessNameChars / secondsElapsed) * (accuracy * accuracy * accuracy * accuracy) * totalGuessNameChars * 100f;
+					string scoreString = "Score: " + Mathf.Floor(score).ToString("0000000");
+				//	GUI.Label(new Rect(Screen.width * 0.5f + 128 + 64 + 163, Screen.height - 32, 256, 32), "Score: " + scoreString, guiStyleStats);
+					GUI.Label(new Rect(Screen.width * 0.5f, Screen.height * 0.5f - transform.position.y+32, 0, 32), scoreString, guiStyleScore);
+				}
 			}
 
 			// Version

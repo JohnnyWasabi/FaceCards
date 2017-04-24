@@ -7,17 +7,17 @@ public class CameraBgColor : MonoBehaviour {
 	const float bgDefaultG = 144 / 255f;
 	const float bgDefaultB = 70 / 255f;
 
-	public Camera camera;
+	public Camera cameraActive;
 
 	void Start()
 	{
 		Color bgColor = new Color(PlayerPrefs.GetFloat("bgColorR", bgDefaultR), PlayerPrefs.GetFloat("bgColorG", bgDefaultG), PlayerPrefs.GetFloat("bgColorB", bgDefaultB));
-		camera.backgroundColor = bgColor;
+		cameraActive.backgroundColor = bgColor;
 
 	}
 	void OnSetColor(Color color)
 	{
-		camera.backgroundColor = color;
+		cameraActive.backgroundColor = color;
 		PlayerPrefs.SetFloat("bgColorR", color.r);
 		PlayerPrefs.SetFloat("bgColorG", color.g);
 		PlayerPrefs.SetFloat("bgColorB", color.b);
