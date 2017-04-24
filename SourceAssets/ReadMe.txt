@@ -15,13 +15,14 @@ Pressing Enter before the name is complete reveals the full name (each revealed 
 
 Goal:
 ----
-Collect (turn over) all the face cards by typing their names in correctly. If the hangman dies you don't collect the card. But don't fret! The missed card will come around again.  See how quickly and accurately you can collect all the face cards.
+Collect (turn over) all the face cards by typing their names in correctly. If the hangman dies you don't collect the card. But don't fret! The missed card will come around again.  See how quickly and accurately you can collect all the face cards to achieve the highest score.
 
 Stats Display:
 -------------
-Time			= A timer displays elapsed game time. E.g. 00:44
+Time				= A timer displays elapsed game time. E.g. 00:44
 Collected Counter	= Displays number of cards collected over total cards. E.g. 3/97
-Accuracy %		= Displays percentage accuracy (Correctly typed letters divided by total letters typed). E.g. 96%
+Accuracy %			= Displays percentage accuracy (Correctly typed letters divided by total letters typed). E.g. 96%
+Score				= At the end of a full game (All Depts. and First & Last names) you get a score result from an formulat that incorporates the total characters in all the names, completion time, and percent accuracy.
 
 Special Keys:
 ------------
@@ -43,6 +44,6 @@ All Depts	= This is a selector that lets you filter to show a single department 
 First & Last	= This is a selector of what name you have to type in to collect the card: First, Last, Department, or First & Last.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
 Cards/Faces	= Click on any card to display it front & center.  Click on the front & center card to send it back to the grid.
-Background	= Right-click with mouse on background to access color-picker dialog for changing the background color.
+Background	= Right-click with mouse on background to access color-picker dialog for changing the background color. Color is saved in player prefs.
 
-Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 1600x1024.
+Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 1600x1024. However, in windowed mood you can resize the window as needed during the game.
