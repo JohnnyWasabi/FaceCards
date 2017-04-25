@@ -144,6 +144,10 @@ public class FaceCards : MonoBehaviour {
 			Invoke("StartGame", 1.50f);
 		}
 		//Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
+
+
+		Debug.Log("Local user name: " + System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments));
+		Debug.Log("Local user name: " + System.Environment.UserName);
 	}
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
