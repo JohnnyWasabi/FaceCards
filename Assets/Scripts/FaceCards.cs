@@ -81,7 +81,9 @@ public class FaceCards : MonoBehaviour {
 	public int heightYearBookNameLabel = 32;
 	bool isYearBookMode = false;
 
-	float totalGuessNameChars;	// Total chars in the all the names to be guessed.
+	float totalGuessNameChars;  // Total chars in the all the names to be guessed.
+
+	FaceSprite fsCurrentUser = null;
 
 	// Use this for initialization
 	IEnumerator Start()
@@ -146,8 +148,25 @@ public class FaceCards : MonoBehaviour {
 		//Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
 
 
+		// Identify picture of current user.
 		Debug.Log("Local user name: " + System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments));
 		Debug.Log("Local user name: " + System.Environment.UserName);
+		string envUserName = System.Environment.UserName;
+		if (!string.IsNullOrEmpty(envUserName) && envUserName.Length > 1)
+		{
+			char firstInitial = char.ToLower(envUserName[0]);
+			string lastName = envUserName.Substring(1).ToLower(); ;
+			foreach (FaceSprite fs in faceSprites)
+			{
+				if (fs.lastName.ToLower() == lastName && char.ToLower(fs.firstName[0]) == firstInitial)
+				{
+					fsCurrentUser = fs;
+					Debug.Log("Found current user picture: " + fs.firstName + " " + fs.lastName);
+					break;
+				}
+			}
+		}
+
 	}
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
@@ -222,27 +241,27 @@ public class FaceCards : MonoBehaviour {
 
 
 	}
-	void DisplayFaceSprite()
+	void DisplayFaceSprite(FaceSprite fsToUse = null, bool refreshText = true)
 	{
-		faceSpriteCrnt = faceSprites[iFaceSprite];
-		guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.guessName : "";
-		guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
-		guiTextBadChar.text = "";
-
-		if (!faceSpriteCrnt.collected)
+		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
+		if (refreshText)
 		{
-			faceSpriteCrnt.countRevealed = 0;
-			faceSpriteCrnt.countWrongChars = 0;
+			guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.guessName : "";
+			guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+			guiTextBadChar.text = "";
+
+			if (!faceSpriteCrnt.collected)
+			{
+				faceSpriteCrnt.countRevealed = 0;
+				faceSpriteCrnt.countWrongChars = 0;
+			}
+			guiTextName.color = new Color(1, 1, 1, 1);
+			//guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
+			guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+
 		}
 		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
 		faceSpriteCrnt.card.FlipShowFront();
-		
-		guiTextName.color = new Color(1, 1, 1, 1);
-        //guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
-        guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
-
-        //Invoke("ShowGallows", timeTransitionShowFace);
-
     }
 
     void ShowGallows()
@@ -295,6 +314,7 @@ public class FaceCards : MonoBehaviour {
 		//		faceSpriteCrnt.card.ArrangeOnYearbook();
 		if (clearCollected)
 		{
+			isYearBookMode = false;
 			Randomize();
 			showAllFaces = false;
 			for (int i = 0; i < faceSprites.Count; i++)
@@ -304,7 +324,7 @@ public class FaceCards : MonoBehaviour {
 				faceSprites[i].card.uiTextName.gameObject.SetActive(false);
 			}
 		}
-		if (!AreAllCollected())
+		if (!AreAllCollected() && !isYearBookMode)
 		{
 			if (clearCollected)
 			{ 
@@ -330,6 +350,9 @@ public class FaceCards : MonoBehaviour {
 				FaceSprite fs = faceSprites[i];
 				if (roles[iDeptFilter-1] != fs.role)
 				{
+					totalGuessNameChars -= fs.fullName.Length;
+					fs.card.indexOrder = -1;
+					fs.card.uiTextName.gameObject.SetActive(false);
 					faceSprites.Remove(fs);
 					faceSpritesFiltered.Add(fs);
 					fs.collected = false;
@@ -344,6 +367,7 @@ public class FaceCards : MonoBehaviour {
 			if (iDeptFilter == 0 || roles[iDeptFilter-1] == fs.role)
 			{
 				faceSpritesFiltered.Remove(fs);
+				totalGuessNameChars += fs.fullName.Length;
 				faceSprites.Add(fs);
 			}
 		}
@@ -357,6 +381,9 @@ public class FaceCards : MonoBehaviour {
 		
 		iFaceSprite = faceSprites.Count - 1;
 		ShowNextFace();
+		if (showAllFaces)
+			ReturnFaceToYearbook(faceSpriteCrnt);
+
 	}
 
 	void ShowPrevFace()
@@ -533,6 +560,11 @@ public class FaceCards : MonoBehaviour {
 							guiTextName.color = Color.white;
 							guiTextName.text = "YOU WON!";
 							guiTextRole.text = "";
+							if (fsCurrentUser != null)
+							{
+								iFaceSprite = fsCurrentUser.card.indexOrder;
+								DisplayFaceSprite(fsCurrentUser, false);
+							}
 							//guiTextNofM.text = "";
 						}
 					}
@@ -588,7 +620,7 @@ public class FaceCards : MonoBehaviour {
 					int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
 					if (clickedDisplayFace)
 					{
-						if (Input.GetMouseButtonDown(0))
+						if (Input.GetMouseButtonDown(0) && (showAllFaces || isYearBookMode || AreAllCollected()))
 							ReturnFaceToYearbook(faceSpriteCrnt);
 					}
 					else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
@@ -660,18 +692,33 @@ public class FaceCards : MonoBehaviour {
 			{
 				fs.card.uiTextName.gameObject.SetActive(true);
 				fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
-				fs.collected = true;
+				//fs.collected = true;
 				fs.card.FlipShowFront();
 			}
 			SortByGuessName();
-			showAllFaces = true;
+			showAllFaces = false;
 			RestartGame(false);
 		}
 		else
 		{
 			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
-			showAllFaces = false;
-			RestartGame();
+			//			showAllFaces = false;
+			if (!showAllFaces)
+				RestartGame();
+			else
+			{
+				foreach (FaceSprite fs in faceSprites)
+				{
+					fs.card.FlipShowFront();
+					fs.card.uiTextName.gameObject.SetActive(false);
+					fs.card.ArrangeOnYearbook();
+				}
+				foreach (FaceSprite fs in faceSpritesFiltered)
+				{
+					fs.card.uiTextName.gameObject.SetActive(false);
+				}
+			}
+
 		}
 	}
 	public void SortByGuessName()
@@ -725,12 +772,15 @@ public class FaceCards : MonoBehaviour {
 		//if (fs.countRevealed > 0 || guiTextName.text != fs.guessName || !fs.collected)
 		//if (!fs.collected)
 		{
-			if (!fs.collected && !showAllFaces) //!AreAllCollected() && !showAllFaces)
+			if (!fs.collected && !showAllFaces && !isYearBookMode) //!AreAllCollected() && !showAllFaces)
 				fs.card.FlipShowBack();
 			else
 				fs.card.FlipShowFront();
 		}
-		fs.card.ArrangeOnYearbook();
+		if (fs.card.indexOrder == -1)
+			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
+		else
+			fs.card.ArrangeOnYearbook();
 	}
 	void RemoveChar()
 	{
@@ -876,30 +926,41 @@ public class FaceCards : MonoBehaviour {
 			if (selectedItemIndex != iDeptFilter)
 			{
 				FilterByDepartment(selectedItemIndex);
-				SortByGuessName();
+				if (isYearBookMode)
+				{
+					ChangeYearBookMode(isYearBookMode);
+				}
+				else if (showAllFaces)
+				{
+					SortByGuessName();
+					//DisplayFaceSprite();
+				}
 			}
 
 			// Name part to Guess selector
-			selectedItemIndex = comboBoxControlName.Show();
-			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
+			if (!isYearBookMode)
 			{
-                iGuessnamePrevious = FaceSprite.iGuessNameIndex;
-				FaceSprite.iGuessNameIndex = selectedItemIndex;
-                if (!showAllFaces)
-                {
-                    Randomize();
-                    RestartGame();
-                }
-                else
-                {
-                    ReturnFaceToYearbook(faceSpriteCrnt);
-                    guiTextName.text = "";
-                    guiTextRole.text = "";
-                    if (!AreAllCollected())
-                        DisplayFaceSprite();
-                }
-                if (showAllFaces || isYearBookMode)
-				    SortByGuessName();
+				selectedItemIndex = comboBoxControlName.Show();
+				if (selectedItemIndex != FaceSprite.iGuessNameIndex)
+				{
+					iGuessnamePrevious = FaceSprite.iGuessNameIndex;
+					FaceSprite.iGuessNameIndex = selectedItemIndex;
+					if (!showAllFaces)
+					{
+						Randomize();
+						RestartGame();
+					}
+					else
+					{
+						ReturnFaceToYearbook(faceSpriteCrnt);
+						guiTextName.text = "";
+						guiTextRole.text = "";
+						if (!AreAllCollected())
+							DisplayFaceSprite();
+					}
+					if (showAllFaces || isYearBookMode)
+						SortByGuessName();
+				}
 			}
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
@@ -916,7 +977,7 @@ public class FaceCards : MonoBehaviour {
             }
             guiStyleStats.normal.textColor = cursorColor;
             string cursorStr = (secondsBlinkCycle > secondsCursorOn) ? " " : "|";
-			if (!AreAllCollected() && timeGameStarted <= Time.time)
+			if (!AreAllCollected() && timeGameStarted <= Time.time && !showAllFaces && !isYearBookMode)
 			{
 				GUI.Label(new Rect(rectText.x + rectText.width, rectText.y, 16, 32), cursorStr, guiStyleStats);
 				guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, Screen.height - rectText.y);
@@ -937,17 +998,23 @@ public class FaceCards : MonoBehaviour {
 				if (showAllFaces)
 				{
 					ReturnFaceToYearbook(faceSpriteCrnt);
+					if (isYearBookMode)
+						ChangeYearBookMode(false);
 					foreach (FaceSprite facesprite in faceSprites)
 						facesprite.card.FlipShowFront();
-					DisplayFaceSprite();
+					//DisplayFaceSprite();
 				}
 				else
 				{
+					RestartGame();
+#if false
 					guiTextName.text = "";
 					guiTextRole.text = "";
 					foreach (FaceSprite facesprite in faceSprites)
 						if (!facesprite.collected && iFaceSprite != facesprite.card.indexOrder)
 							facesprite.card.FlipShowBack();
+					DisplayFaceSprite();
+#endif
 				}
 
 			}
@@ -959,7 +1026,12 @@ public class FaceCards : MonoBehaviour {
 			}
 			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, 64, btnHeight), "Restart"))
 			{
-				RestartGame();
+				if (isYearBookMode)
+				{
+					ChangeYearBookMode(false);
+				}
+				else
+					RestartGame();
 			}
 
 			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
@@ -968,7 +1040,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Stats
-			if (timeGameStarted <= Time.time)
+			if (timeGameStarted <= Time.time && !showAllFaces && !isYearBookMode)
 			{
 				// Accuracy
 				int typedTotal = typedGood + typedBad + typedGoodWrongCase;
@@ -988,7 +1060,8 @@ public class FaceCards : MonoBehaviour {
 				GUI.Label(new Rect(Screen.width * 0.5f - 128 - 58, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
 
 				// Score. Only displayed if guessing full name for all faces.
-				if (FaceSprite.iGuessNameIndex == 0 && iDeptFilter == 0 && AreAllCollected())
+				if (//FaceSprite.iGuessNameIndex == 0 && iDeptFilter == 0 && 
+					AreAllCollected())
 				{
 					if (!AreAllCollected())
 						secondsElapsed = Mathf.Floor(secondsElapsed);
