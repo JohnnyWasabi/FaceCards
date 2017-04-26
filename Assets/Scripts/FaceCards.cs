@@ -11,21 +11,30 @@ public class FaceCards : MonoBehaviour {
 	const float btnWidth = 64;
 	const float btnHSpacing = 4;
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
+	const float comboSpacing = 100 + btnHSpacing * 2;
+	const float xStartComboBoxes = 128;
 
 	public ColorPicker bgColorPicker;	// Background color picker
 
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
 
+	int iGameMode = 0;
+
 	float score;
 
+	// Departments
 	GUIContent[] comboBoxList;
 	private ComboBox comboBoxControl;// = new ComboBox();
 	private GUIStyle listStyle = new GUIStyle();
 
-
+	// Guess Name
 	GUIContent[] comboBoxListName;
 	private ComboBox comboBoxControlName;// = new ComboBox();
+
+	// Game Mode
+	GUIContent[] comboBoxListMode;
+	private ComboBox comboBoxControlMode;// = new ComboBox();
 
 	public int debugMaxCards = 0;	// greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
@@ -173,6 +182,8 @@ public class FaceCards : MonoBehaviour {
 
 	void SetupRolesComboBox()
 	{
+		float xComboBox = xStartComboBoxes;
+
 		comboBoxList = new GUIContent[roles.Count+1];
 		comboBoxList[0] = new GUIContent("All Depts");
 		for (int i = 0; i < roles.Count; i++)
@@ -188,16 +199,25 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
-		comboBoxControl = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing*2, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
-	
-			
+		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+
+		xComboBox += comboSpacing;
+
 		// What part of name they need to enter
 		comboBoxListName = new GUIContent[4];
 		comboBoxListName[0] = new GUIContent("First & Last");
 		comboBoxListName[1] = new GUIContent("First Name");
 		comboBoxListName[2] = new GUIContent("Last Name");
 		comboBoxListName[3] = new GUIContent("Department");
-		comboBoxControlName = new ComboBox(new Rect(btnWidthSpaced + btnHSpacing * 2 + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
+		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
+
+		xComboBox += comboSpacing;
+
+		comboBoxListMode = new GUIContent[3];
+		comboBoxListMode[0] = new GUIContent("Typing Game");
+		comboBoxListMode[1] = new GUIContent("Flash Cards");
+		comboBoxListMode[2] = new GUIContent("Yearbook");
+		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle);
 
 	}
 
@@ -226,9 +246,12 @@ public class FaceCards : MonoBehaviour {
 
 		if (comboBoxControl != null)
 		{
-			const int xCombo = 128;
+			float xCombo = xStartComboBoxes;
+			comboBoxControlMode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
+			xCombo += comboSpacing;
 			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
-			comboBoxControlName.Reposition(new Rect(xCombo + 100 + btnHSpacing * 2, Screen.height - btnHeightSpaced, 100, btnHeight));
+			xCombo += comboSpacing;
+			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
 		}
 
 #if false
@@ -963,6 +986,10 @@ public class FaceCards : MonoBehaviour {
 				}
 			}
 
+			bool showAllFacesBefore = showAllFaces;
+			bool isYearBookModeBefore = isYearBookMode;
+			iGameMode = comboBoxControlMode.Show();
+
 			rectText = guiTextName.GetScreenRect(Camera.main);
 			if (guiTextName.text.Length == 0)
 			{
@@ -986,13 +1013,13 @@ public class FaceCards : MonoBehaviour {
 			const float caseBtnWidth = 110;
 			caseSensitive = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 1, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
-			bool yearBookModeNew = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
-			if (yearBookModeNew != isYearBookMode)
-				ChangeYearBookMode(yearBookModeNew);
+			isYearBookMode = (iGameMode == 2);//GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
+			showAllFaces = (iGameMode == 1);//GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Show All");
+
+			if (isYearBookMode != isYearBookModeBefore)
+				ChangeYearBookMode(isYearBookMode);
 
 
-			bool showAllFacesBefore = showAllFaces;
-			showAllFaces = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Show All");
 			if (showAllFaces != showAllFacesBefore)
 			{
 				if (showAllFaces)
@@ -1006,7 +1033,8 @@ public class FaceCards : MonoBehaviour {
 				}
 				else
 				{
-					RestartGame();
+					if (iGameMode == 0)
+						RestartGame();
 #if false
 					guiTextName.text = "";
 					guiTextRole.text = "";
