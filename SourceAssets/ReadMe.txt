@@ -35,13 +35,15 @@ PageDown 	= Show next person.
 
 Buttons:
 --------
-Show All	= Display all cards face up and show name/info of current card.
-Yearbook	= Toggle between the game display and yearbook display, which shows all pictures with names/dept below them like in a high school yearbook.
 Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
+Typing Game	= This is a selector that lets you choose different modes of the app:
+			Typing Game: The typing game described above where you type in the name when shown a face.
+			Flash Cards: All faces are shown without names. Click on a face to enlarge it and see their name info.
+			Yearbook:    All faces are shown with their names and department below their picture.	
+All Depts	= This is a selector that lets you filter to show a single department (or All Departments).
+First & Last	= This is a selector of what name you have to enter to collect the card in the Typing Game: First, Last, Department, or First & Last. Only active when in Typing Game mode.
 Shuffle		= Shuffles the cards and redeals the 1st card (does not restart game).
 Restart		= Shuffles the cards and restarts the game.
-All Depts	= This is a selector that lets you filter to show a single department (or All Departments).
-First & Last	= This is a selector of what name you have to type in to collect the card: First, Last, Department, or First & Last.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
 Cards/Faces	= Click on any card to display it front & center.  Click on the front & center card to send it back to the grid.
 Background	= Right-click with mouse on background to access color-picker dialog for changing the background color. Color is saved in player prefs.
