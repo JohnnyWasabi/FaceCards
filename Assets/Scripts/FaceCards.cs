@@ -1094,14 +1094,14 @@ public class FaceCards : MonoBehaviour {
 					if (!AreAllCollected())
 						secondsElapsed = Mathf.Floor(secondsElapsed);
 					score = (secondsElapsed <= 0 || typedTotal == 0) ? 0 : (totalGuessNameChars / secondsElapsed) * (accuracy * accuracy * accuracy * accuracy) * totalGuessNameChars * 100f;
-					string scoreString = "Score: " + Mathf.Floor(score).ToString("0000000");
-				//	GUI.Label(new Rect(Screen.width * 0.5f + 128 + 64 + 163, Screen.height - 32, 256, 32), "Score: " + scoreString, guiStyleStats);
-					GUI.Label(new Rect(Screen.width * 0.5f, Screen.height * 0.5f - transform.position.y+32, 0, 32), scoreString, guiStyleScore);
+                    string scoreString = "Score: " + string.Format("{0:n0}", score); // Mathf.Floor(score).ToString("0000000");
+                //	GUI.Label(new Rect(Screen.width * 0.5f + 128 + 64 + 163, Screen.height - 32, 256, 32), "Score: " + scoreString, guiStyleStats);
+                    GUI.Label(new Rect(Screen.width * 0.5f, Screen.height * 0.5f - transform.position.y+32, 0, 32), scoreString, guiStyleScore);
 				}
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.6", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.61", guiStyleVersion);
 		}
     }
 }
