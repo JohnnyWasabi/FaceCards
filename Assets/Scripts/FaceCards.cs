@@ -13,6 +13,7 @@ public class FaceCards : MonoBehaviour {
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
 	const float comboSpacing = 100 + btnHSpacing * 2;
 	const float xStartComboBoxes = 128;
+	const string msgVictory = "YOU WON!";
 
 	public ColorPicker bgColorPicker;	// Background color picker
 
@@ -238,7 +239,7 @@ public class FaceCards : MonoBehaviour {
 		cubeBG.transform.localScale = new Vector3(Screen.width, cubeBG.transform.localScale.y, 1);
 		Camera.main.orthographicSize = Screen.height * 0.5f;
 
-		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y);  
+		guiTextName.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 4);  
 		guiTextRole.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 32); 
 		guiTextNofM.pixelOffset = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f + transform.position.y - 64); 
 		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.64f, Screen.height * 0.5f + transform.position.y-16);
@@ -581,7 +582,7 @@ public class FaceCards : MonoBehaviour {
 						else
 						{
 							guiTextName.color = Color.white;
-							guiTextName.text = "YOU WON!";
+							guiTextName.text = msgVictory;
 							guiTextRole.text = "";
 							if (fsCurrentUser != null)
 							{
@@ -948,6 +949,14 @@ public class FaceCards : MonoBehaviour {
 			int selectedItemIndex = comboBoxControl.Show();
 			if (selectedItemIndex != iDeptFilter)
 			{
+				if (AreAllCollected())
+				{
+					if (fsCurrentUser != null)
+					{
+						ReturnFaceToYearbook(fsCurrentUser);
+					}
+				}
+
 				FilterByDepartment(selectedItemIndex);
 				if (isYearBookMode)
 				{
@@ -957,6 +966,10 @@ public class FaceCards : MonoBehaviour {
 				{
 					SortByGuessName();
 					//DisplayFaceSprite();
+				}
+				else if (AreAllCollected())
+				{
+					RestartGame();
 				}
 			}
 
@@ -1087,21 +1100,19 @@ public class FaceCards : MonoBehaviour {
 
 				GUI.Label(new Rect(Screen.width * 0.5f - 128 - 58, Screen.height - 32, 64, 32), minutes + ":" + seconds, guiStyleStats);
 
-				// Score. Only displayed if guessing full name for all faces.
-				if (//FaceSprite.iGuessNameIndex == 0 && iDeptFilter == 0 && 
-					AreAllCollected())
+				// Score. Only displayed if game completed.
+				if (AreAllCollected() && guiTextRole.text == "")
 				{
-					if (!AreAllCollected())
-						secondsElapsed = Mathf.Floor(secondsElapsed);
+					guiTextName.text = msgVictory;
+					secondsElapsed = Mathf.Floor(secondsElapsed);
 					score = (secondsElapsed <= 0 || typedTotal == 0) ? 0 : (totalGuessNameChars / secondsElapsed) * (accuracy * accuracy * accuracy * accuracy) * totalGuessNameChars * 100f;
                     string scoreString = "Score: " + string.Format("{0:n0}", score); // Mathf.Floor(score).ToString("0000000");
-                //	GUI.Label(new Rect(Screen.width * 0.5f + 128 + 64 + 163, Screen.height - 32, 256, 32), "Score: " + scoreString, guiStyleStats);
                     GUI.Label(new Rect(Screen.width * 0.5f, Screen.height * 0.5f - transform.position.y+32, 0, 32), scoreString, guiStyleScore);
 				}
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.61", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.7", guiStyleVersion);
 		}
     }
 }
