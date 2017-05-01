@@ -270,7 +270,7 @@ public class FaceCards : MonoBehaviour {
 		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
 		if (refreshText)
 		{
-			guiTextName.text = (faceSpriteCrnt.collected || showAllFaces) ? faceSpriteCrnt.guessName : "";
+			guiTextName.text = (faceSpriteCrnt.collected || showAllFaces || isYearBookMode) ? faceSpriteCrnt.guessName : "";
 			guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
 			guiTextBadChar.text = "";
 
@@ -1112,7 +1112,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.7", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.8", guiStyleVersion);
 		}
     }
 }
