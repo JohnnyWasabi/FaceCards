@@ -61,11 +61,15 @@ public class ComboBox
 	private int selectedItemIndex = 0;
 
 	private Rect rect;
+    private Rect rectTriangle;
 	private GUIContent buttonContent;
 	private GUIContent[] listContent;
 	private string buttonStyle;
 	private string boxStyle;
 	private GUIStyle listStyle;
+    private GUIStyle dropDownButtonStyle;
+    public bool isBoxAbove = true;
+    private GUIStyle triangleStyle;
 
 	public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, GUIStyle listStyle)
 	{
@@ -75,9 +79,15 @@ public class ComboBox
 		this.buttonStyle = "button";
 		this.boxStyle = "box";
 		this.listStyle = listStyle;
-	}
 
-	public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, string buttonStyle, string boxStyle, GUIStyle listStyle)
+        this.dropDownButtonStyle = new GUIStyle("button");
+        this.dropDownButtonStyle.alignment = TextAnchor.MiddleLeft;
+        triangleStyle = new GUIStyle("label");
+        triangleStyle.alignment = TextAnchor.MiddleRight;
+        Reposition(rect);
+    }
+
+    public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, string buttonStyle, string boxStyle, GUIStyle listStyle)
 	{
 		this.rect = rect;
 		this.buttonContent = buttonContent;
@@ -85,12 +95,21 @@ public class ComboBox
 		this.buttonStyle = buttonStyle;
 		this.boxStyle = boxStyle;
 		this.listStyle = listStyle;
-	}
-	public void Reposition(Rect rect)
+
+        this.dropDownButtonStyle = new GUIStyle("button");
+        this.dropDownButtonStyle.alignment = TextAnchor.MiddleLeft;
+        triangleStyle = new GUIStyle("label");
+        triangleStyle.alignment = TextAnchor.MiddleRight;
+
+        Reposition(rect);
+    }
+    public void Reposition(Rect rect)
 	{
 		this.rect = rect;
-	}
-	public int Show()
+        rectTriangle = rect;
+        rectTriangle.width -= 4;
+    }
+    public int Show()
 	{
 		if (forceToUnShow)
 		{
@@ -113,7 +132,7 @@ public class ComboBox
 			break;
 		}
 
-		if (GUI.Button(rect, buttonContent, buttonStyle))
+		if (GUI.Button(rect, buttonContent, dropDownButtonStyle))
 		{
 			if (useControlID == -1)
 			{
@@ -128,6 +147,8 @@ public class ComboBox
 			}
 			isClickedComboButton = true;
 		}
+
+        GUI.Label(rectTriangle, (isBoxAbove) ? "▲" : "▼", triangleStyle);
 
 		if (isClickedComboButton)
 		{
@@ -147,7 +168,8 @@ public class ComboBox
 			}
 		}
 
-		if (done)
+ 
+        if (done)
 			isClickedComboButton = false;
 
 		return selectedItemIndex;

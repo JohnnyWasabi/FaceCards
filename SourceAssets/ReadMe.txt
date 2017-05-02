@@ -36,12 +36,12 @@ PageDown 	= Show next person.
 Buttons:
 --------
 Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
-Typing Game	= This is a selector that lets you choose different modes of the app:
-			Typing Game: The typing game described above where you type in the name when shown a face.
+Memory Game	= This is a selector that lets you choose different modes of the app:
+			Memory Game: The memory game described above where you type in the name when shown a face.
 			Flash Cards: All faces are shown without names. Click on a face to enlarge it and see their name info.
 			Yearbook:    All faces are shown with their names and department below their picture.	
 All Depts	= This is a selector that lets you filter to show a single department (or All Departments).
-First & Last	= This is a selector of what name you have to enter to collect the card in the Typing Game: First, Last, Department, or First & Last. Only active when in Typing Game mode.
+First & Last	= This is a selector of what name you have to enter to collect the card in the Memory Game: First, Last, Department, or First & Last. Only active when in Memory Game mode.
 Shuffle		= Shuffles the cards and redeals the 1st card (does not restart game).
 Restart		= Shuffles the cards and restarts the game.
 Exit		= Quits the app without a confirmation (because this is a deadly game).

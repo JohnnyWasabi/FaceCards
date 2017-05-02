@@ -11,7 +11,8 @@ public class FaceCards : MonoBehaviour {
 	const float btnWidth = 64;
 	const float btnHSpacing = 4;
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
-	const float comboSpacing = 100 + btnHSpacing * 2;
+    const float comboButtonWidth = 120;
+	const float comboSpacing = comboButtonWidth + btnHSpacing * 2;
 	const float xStartComboBoxes = 128;
 	const string msgVictory = "YOU WON!";
 
@@ -200,7 +201,7 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
-		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
 
 		xComboBox += comboSpacing;
 
@@ -210,15 +211,15 @@ public class FaceCards : MonoBehaviour {
 		comboBoxListName[1] = new GUIContent("First Name");
 		comboBoxListName[2] = new GUIContent("Last Name");
 		comboBoxListName[3] = new GUIContent("Department");
-		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
+		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
 
 		xComboBox += comboSpacing;
 
 		comboBoxListMode = new GUIContent[3];
-		comboBoxListMode[0] = new GUIContent("Typing Game");
+		comboBoxListMode[0] = new GUIContent("Memory Game");
 		comboBoxListMode[1] = new GUIContent("Flash Cards");
 		comboBoxListMode[2] = new GUIContent("Yearbook");
-		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, 100, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle);
+		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle);
 
 	}
 
@@ -248,11 +249,11 @@ public class FaceCards : MonoBehaviour {
 		if (comboBoxControl != null)
 		{
 			float xCombo = xStartComboBoxes;
-			comboBoxControlMode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
+			comboBoxControlMode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
+			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, 100, btnHeight));
+			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 		}
 
 #if false
@@ -1112,7 +1113,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.8", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.9", guiStyleVersion);
 		}
     }
 }
