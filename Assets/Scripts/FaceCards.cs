@@ -975,14 +975,14 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Name part to Guess selector
-			if (!isYearBookMode)
+			//if (!isYearBookMode)
 			{
 				selectedItemIndex = comboBoxControlName.Show();
 				if (selectedItemIndex != FaceSprite.iGuessNameIndex)
 				{
 					iGuessnamePrevious = FaceSprite.iGuessNameIndex;
 					FaceSprite.iGuessNameIndex = selectedItemIndex;
-					if (!showAllFaces)
+					if (!showAllFaces && !isYearBookMode)
 					{
 						Randomize();
 						RestartGame();
@@ -992,7 +992,7 @@ public class FaceCards : MonoBehaviour {
 						ReturnFaceToYearbook(faceSpriteCrnt);
 						guiTextName.text = "";
 						guiTextRole.text = "";
-						if (!AreAllCollected())
+						if (!AreAllCollected() && !isYearBookMode)
 							DisplayFaceSprite();
 					}
 					if (showAllFaces || isYearBookMode)
