@@ -21,6 +21,8 @@ public class FaceSprite : System.IComparable
 	static int numCreated = 0;
 	static public int iGuessNameIndex = 0;
 	static public int GetNumCollected() { return numCollected;  }
+
+	public System.DateTime dateTime;	// Date endoced in file name, or if non present then from system file creation time.
 	public string[] guessNames;
 	public string firstName		{ get { return guessNames[1]; } set { guessNames[1] = value; } }
 	public string lastName		{ get { return guessNames[2]; } set { guessNames[2] = value; } }

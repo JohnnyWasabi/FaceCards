@@ -206,19 +206,20 @@ public class FaceCards : MonoBehaviour {
 		xComboBox += comboSpacing;
 
 		// What part of name they need to enter
-		comboBoxListName = new GUIContent[4];
+		comboBoxListName = new GUIContent[5];
 		comboBoxListName[0] = new GUIContent("First & Last");
 		comboBoxListName[1] = new GUIContent("First Name");
 		comboBoxListName[2] = new GUIContent("Last Name");
 		comboBoxListName[3] = new GUIContent("Department");
+		comboBoxListName[4] = new GUIContent("Tenure*");
 		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
 
 		xComboBox += comboSpacing;
 
 		comboBoxListMode = new GUIContent[3];
 		comboBoxListMode[0] = new GUIContent("Memory Game");
-		comboBoxListMode[1] = new GUIContent("Flash Cards");
-		comboBoxListMode[2] = new GUIContent("Yearbook");
+		comboBoxListMode[1] = new GUIContent("Flash Cards*");
+		comboBoxListMode[2] = new GUIContent("Yearbook*");
 		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle);
 
 	}
@@ -362,6 +363,11 @@ public class FaceCards : MonoBehaviour {
 				ShowNextFace();
 			}
 		}
+		if (!isYearBookMode && !showAllFaces && FaceSprite.iGuessNameIndex == 4)
+		{
+			FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
+			comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
+		}
 	}
 
 	void FilterByDepartment(int ifilter)
@@ -430,14 +436,14 @@ public class FaceCards : MonoBehaviour {
 			if (f.FullName.EndsWith(".png") || f.FullName.EndsWith(".jpg"))
 			{
 				//Debug.Log("file: " + f.FullName);
-				yield return LoadFaceSprite(f.FullName);
+				yield return LoadFaceSprite(f.FullName, f.CreationTime);
 				guiTextNofM.text = faceSprites.Count.ToString();
 			}
 			if (debugMaxCards > 0 && faceSprites.Count >= debugMaxCards) break;
 		}
 	}
 
-	public IEnumerator LoadFaceSprite(string absoluteImagePath)
+	public IEnumerator LoadFaceSprite(string absoluteImagePath, System.DateTime dateTime)
 	{
 		string url =  @"file:///" + absoluteImagePath;
 		WWW localFile = new WWW(url);
@@ -453,7 +459,7 @@ public class FaceCards : MonoBehaviour {
 				string fileName = absoluteImagePath.Substring(LastSlash(absoluteImagePath) + 1);
 				string nameCode = fileName.Substring(0, fileName.Length - 4);
 				string[] nameParts = nameCode.Split('_');
-				if (nameParts.Length == 3)
+				if (nameParts.Length >= 3)
 				{
 					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture);
 					if (faceSprite != null)
@@ -472,6 +478,36 @@ public class FaceCards : MonoBehaviour {
 						faceSprite.card.ArrangeOnYearbook();
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
+
+						if (nameParts.Length > 3)
+						{ // parse date from name: YYYY-MM-DD
+							string[] dateParts = nameParts[3].Split('-');
+							int year;
+							int month = 1;
+							int day = 1;
+							if (int.TryParse(dateParts[0], out year))
+							{
+								if (dateParts.Length > 1)
+								{
+									if (int.TryParse(dateParts[1], out month))
+									{
+										if (dateParts.Length > 2)
+										{
+											if (!int.TryParse(dateParts[2], out day))
+												Debug.LogError("Unable to parse day from rom date part of filename:" + nameParts[3]);
+										}
+									}
+									else
+										Debug.LogError("Unable to parse month from rom date part of filename:" + nameParts[3]);
+								}
+								dateTime = new System.DateTime(year, month, day);
+							}
+							else
+								Debug.LogError("Unable to parse year from date part of filename: " + nameParts[3]);
+						}
+						faceSprite.dateTime = dateTime;
+						Debug.Log("File date: " + dateTime);
+
 
 						totalGuessNameChars += faceSprite.fullName.Length;
 					}
@@ -768,6 +804,8 @@ public class FaceCards : MonoBehaviour {
                             return string.Compare(fs1.role + fs1.lastName + fs1.firstName, fs2.role + fs2.lastName + fs2.firstName);
                     }
                     return string.Compare(fs1.role, fs2.role); // This should actually never get reached.
+			case 4: // Tenure (date of hire, older dates last)
+				return System.DateTime.Compare(fs1.dateTime, fs2.dateTime);
             }
             return (fs1.card.indexOrder - fs2.card.indexOrder); // This should actually never get reached.
 		});
@@ -974,29 +1012,33 @@ public class FaceCards : MonoBehaviour {
 				}
 			}
 
-			// Name part to Guess selector
-			//if (!isYearBookMode)
+			// Name part to Guess selector, or sort filter for Yearbook mode.
+			selectedItemIndex = comboBoxControlName.Show();
+			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
 			{
-				selectedItemIndex = comboBoxControlName.Show();
-				if (selectedItemIndex != FaceSprite.iGuessNameIndex)
+				iGuessnamePrevious = FaceSprite.iGuessNameIndex;
+				FaceSprite.iGuessNameIndex = selectedItemIndex;
+				if (!showAllFaces && !isYearBookMode)
 				{
-					iGuessnamePrevious = FaceSprite.iGuessNameIndex;
-					FaceSprite.iGuessNameIndex = selectedItemIndex;
-					if (!showAllFaces && !isYearBookMode)
+					if (selectedItemIndex != 4)
 					{
 						Randomize();
 						RestartGame();
 					}
-					else
-					{
-						ReturnFaceToYearbook(faceSpriteCrnt);
-						guiTextName.text = "";
-						guiTextRole.text = "";
-						if (!AreAllCollected() && !isYearBookMode)
-							DisplayFaceSprite();
-					}
-					if (showAllFaces || isYearBookMode)
-						SortByGuessName();
+				}
+				else
+				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
+					guiTextName.text = "";
+					guiTextRole.text = "";
+
+				}
+				if (showAllFaces || isYearBookMode)
+					SortByGuessName();
+				if (selectedItemIndex == 4 && !isYearBookMode && !showAllFaces)
+				{
+					FaceSprite.iGuessNameIndex = iGuessnamePrevious;
+					comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
 				}
 			}
 
@@ -1113,7 +1155,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 1.9", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.0", guiStyleVersion);
 		}
     }
 }
