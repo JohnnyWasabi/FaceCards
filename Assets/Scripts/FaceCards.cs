@@ -272,8 +272,16 @@ public class FaceCards : MonoBehaviour {
 		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
 		if (refreshText)
 		{
-			guiTextName.text = (faceSpriteCrnt.collected || showAllFaces || isYearBookMode) ? faceSpriteCrnt.guessName : "";
-			guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+			if (FaceSprite.iGuessNameIndex == 4)
+			{
+				guiTextName.text = faceSpriteCrnt.fullName;
+				guiTextNofM.text = faceSpriteCrnt.dateHired; 
+			}
+			else
+			{
+				guiTextName.text = (faceSpriteCrnt.collected || showAllFaces || isYearBookMode) ? faceSpriteCrnt.guessName : "";
+				guiTextNofM.text = (showAllFaces || isYearBookMode) ? faceSpriteCrnt.dateHired :  FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+			}
 			guiTextBadChar.text = "";
 
 			if (!faceSpriteCrnt.collected)
@@ -461,7 +469,36 @@ public class FaceCards : MonoBehaviour {
 				string[] nameParts = nameCode.Split('_');
 				if (nameParts.Length >= 3)
 				{
-					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], sprite, texture);
+					if (nameParts.Length > 3)
+					{ // parse date from name: YYYY-MM-DD
+						string[] dateParts = nameParts[3].Split('-');
+						int year;
+						int month = 1;
+						int day = 1;
+						if (int.TryParse(dateParts[0], out year))
+						{
+							if (dateParts.Length > 1)
+							{
+								if (int.TryParse(dateParts[1], out month))
+								{
+									if (dateParts.Length > 2)
+									{
+										if (!int.TryParse(dateParts[2], out day))
+											Debug.LogError("Unable to parse day from rom date part of filename:" + nameParts[3]);
+									}
+								}
+								else
+									Debug.LogError("Unable to parse month from rom date part of filename:" + nameParts[3]);
+							}
+							dateTime = new System.DateTime(year, month, day);
+						}
+						else
+							Debug.LogError("Unable to parse year from date part of filename: " + nameParts[3]);
+					}
+					Debug.Log("File date: " + dateTime);
+
+
+					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, sprite, texture);
 					if (faceSprite != null)
 					{
 						int indexOrder = faceSprites.Count;
@@ -478,35 +515,6 @@ public class FaceCards : MonoBehaviour {
 						faceSprite.card.ArrangeOnYearbook();
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
-
-						if (nameParts.Length > 3)
-						{ // parse date from name: YYYY-MM-DD
-							string[] dateParts = nameParts[3].Split('-');
-							int year;
-							int month = 1;
-							int day = 1;
-							if (int.TryParse(dateParts[0], out year))
-							{
-								if (dateParts.Length > 1)
-								{
-									if (int.TryParse(dateParts[1], out month))
-									{
-										if (dateParts.Length > 2)
-										{
-											if (!int.TryParse(dateParts[2], out day))
-												Debug.LogError("Unable to parse day from rom date part of filename:" + nameParts[3]);
-										}
-									}
-									else
-										Debug.LogError("Unable to parse month from rom date part of filename:" + nameParts[3]);
-								}
-								dateTime = new System.DateTime(year, month, day);
-							}
-							else
-								Debug.LogError("Unable to parse year from date part of filename: " + nameParts[3]);
-						}
-						faceSprite.dateTime = dateTime;
-						Debug.Log("File date: " + dateTime);
 
 
 						totalGuessNameChars += faceSprite.fullName.Length;
@@ -1155,7 +1163,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.0", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.1", guiStyleVersion);
 		}
     }
 }
