@@ -63,9 +63,8 @@ public class FaceCards : MonoBehaviour {
 	bool doneLoading;
 	FaceSprite faceSpriteCrnt = null;
 	int iFaceSprite;
-	public float faceHeightAsScreenHeightPercent = 128; //0.5f * 0.75f;
-	public float heightFaceDealStartDisplay = 128;
-	public float heightFaceGuessDislplay = 128;
+	public float heightFaceDealStartDisplay = 144;
+	public float heightFaceGuessDislplay = 144;
 	public Color colorCorrect = new Color(0, 1, 0, 1);
 	private GUIStyle guiStyleStats = new GUIStyle(); //create a new variable
 	private GUIStyle guiStyleScore = new GUIStyle(); //create a new variable
