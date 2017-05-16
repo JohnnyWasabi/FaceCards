@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set src=G:\temp\Faces\
+set src=K:\Blind Squirrel\Employee List\FaceCardsGame\FaceCards_Data\StreamingAssets\Faces\
 set dst=FaceCards_Data\StreamingAssets\Faces\
 robocopy %src% %dst% /MIR >UpdatesFullLog.txt
 findstr .png UpdatesFullLog.txt >FileChangesLog.txt
