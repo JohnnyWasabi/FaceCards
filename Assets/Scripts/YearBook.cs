@@ -15,9 +15,11 @@ public class YearBook {
 	static int nameHeight;
 	static int slotWidth;
 	static int slotHeight;
+	static int topMargin;	// margin at top of screen that cards can't cover.
+	static int sideMargin;	// margin on left and right side of screen where cards can't cover.
 
 	static int dxCentered;
-	static public void Init(int thumbnailWidth, int thumbnailHeight, int nameLabelWidth = 0, int nameLabelHeight = 0) {
+	static public void Init(int thumbnailWidth, int thumbnailHeight, int nameLabelWidth = 0, int nameLabelHeight = 0, int topMarginHeight = 0, int sideMarginWidth=0) {
 		dimPhoto = new Vector2(thumbnailWidth, thumbnailHeight);
 		aspectCorrectWidth1 = new Vector2(1.0f, dimPhoto.y / dimPhoto.x);
 		aspectCorrectHeight1 = new Vector2(dimPhoto.x / dimPhoto.y, 1.0f);
@@ -26,7 +28,10 @@ public class YearBook {
 		nameHeight = nameLabelHeight;
 		slotWidth = Mathf.Max((int)dimPhoto.x, nameWidth);
 		slotHeight = (int)dimPhoto.y + nameHeight;
-		cols = (int)(Screen.width / slotWidth);
+		topMargin = topMarginHeight;
+		sideMargin = sideMarginWidth;
+
+		cols = (int)((Screen.width - 2*sideMargin) / slotWidth);
 //		rows = (int)(Screen.height / slotHeight);
 
 		dxCentered = (Screen.width - (cols * slotWidth)) / 2;
@@ -37,7 +42,7 @@ public class YearBook {
 		int row = indexCard / cols;
 		int col = indexCard % cols;
 		float x = col * slotWidth + slotWidth * 0.5f + dxCentered;
-		float y = row * slotHeight + slotHeight - nameHeight;
+		float y = row * slotHeight + slotHeight - nameHeight + topMargin;
 
 		x += Camera.main.transform.position.x - Screen.width * 0.5f;
 		y = Screen.height - y + Camera.main.transform.position.y - Screen.height * 0.5f;
@@ -49,15 +54,16 @@ public class YearBook {
 	// y==0 is at bottom left corner of screen. y==Screen.height at top of screen.
 	static public int IndexAtScreenXY(int x, int y)
 	{
-		y = Screen.height - 1 - y;
+		y = Screen.height - 1 - y - topMargin;
 		int row = y / slotHeight;
 		int col = (x-dxCentered) / slotWidth;
 		int index = row * cols + col;
 
 		
 		float xcardCenter = col * slotWidth + slotWidth * 0.5f + dxCentered;
+		int yOffset = y % slotHeight; 
 		float halfPhotoWidth = dimPhoto.x * 0.5f;
-		if (x < xcardCenter - halfPhotoWidth || x > xcardCenter + halfPhotoWidth)
+		if (x < xcardCenter - halfPhotoWidth || x > xcardCenter + halfPhotoWidth || y < 0 || yOffset >= dimPhoto.y)
 			index = -1;
 
 		return index;

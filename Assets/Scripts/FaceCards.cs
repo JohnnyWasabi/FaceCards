@@ -89,6 +89,9 @@ public class FaceCards : MonoBehaviour {
 
 	public int widthYearbookNameLabel = 140;
 	public int heightYearBookNameLabel = 32;
+	public int topMargin = 12;  // margin space at top of screen above cards
+	public int sideMargin = 12;
+
 	bool isYearBookMode = false;
 
 	float totalGuessNameChars;  // Total chars in the all the names to be guessed.
@@ -138,7 +141,7 @@ public class FaceCards : MonoBehaviour {
 		}
 		FaceSprite.spriteCardFrontFrame.texture.filterMode = FilterMode.Point;
 
-		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
 		
 		faceSprites = new List<FaceSprite>();
 		faceSpritesFiltered = new List<FaceSprite>();
@@ -724,7 +727,7 @@ public class FaceCards : MonoBehaviour {
 				if (!(Input.mousePosition.x == 0 || Input.mousePosition.y == 0 || Input.mousePosition.x == Screen.width-1 || Input.mousePosition.y == Screen.height-1))
 				{
 					//Mouse is inside the screen by 1 pixel or more, so can't be outside of window, therefore is over the game screen
-					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot); // make it update it's Screen-size based values.
+					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin); // make it update it's Screen-size based values.
 					if (!isYearBookMode)
 					{
 						foreach (FaceSprite fs in faceSprites)
@@ -755,7 +758,7 @@ public class FaceCards : MonoBehaviour {
 		isYearBookMode = isYearBook;
 		if (isYearBookMode)
 		{
-			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel);
+			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel, topMargin, sideMargin);
 			foreach (FaceSprite fs in faceSprites)
 			{
 				fs.card.uiTextName.gameObject.SetActive(true);
@@ -769,7 +772,7 @@ public class FaceCards : MonoBehaviour {
 		}
 		else
 		{
-			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot);
+			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
 			//			showAllFaces = false;
 			if (!showAllFaces)
 				RestartGame();
