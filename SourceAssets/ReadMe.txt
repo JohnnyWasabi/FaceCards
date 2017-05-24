@@ -54,3 +54,7 @@ Cards/Faces	= Click on any card to display it front & center.  Click on the fron
 Background	= Right-click with mouse on background to access color-picker dialog for changing the background color. Color is saved in player prefs.
 
 Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 1600x1024. However, in windowed mood you can resize the window as needed during the game.
+
+Version History
+----------------
+2.2	Added margins on top and sides of screen so cards don't rest against edges of screen.
