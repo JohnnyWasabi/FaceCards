@@ -35,7 +35,8 @@ public class FaceCards : MonoBehaviour {
 	private GUIStyle listStyle = new GUIStyle();
 
 	// Guess Name
-	GUIContent[] comboBoxListName;
+	GUIContent[] comboBoxListNameGuess;
+	GUIContent[] comboBoxListNameSort;
 	private ComboBox comboBoxControlName;// = new ComboBox();
 
 	// Game Mode
@@ -216,13 +217,19 @@ public class FaceCards : MonoBehaviour {
 
 		// What part of name they need to enter
 		xComboBox += comboSpacing;
-		comboBoxListName = new GUIContent[5];
-		comboBoxListName[0] = new GUIContent("First & Last");
-		comboBoxListName[1] = new GUIContent("First Name");
-		comboBoxListName[2] = new GUIContent("Last Name");
-		comboBoxListName[3] = new GUIContent("Department");
-		comboBoxListName[4] = new GUIContent("Tenure*");
-		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle, "Guess/Sort by:");
+		comboBoxListNameGuess = new GUIContent[4];
+		comboBoxListNameGuess[0] = new GUIContent("First & Last");
+		comboBoxListNameGuess[1] = new GUIContent("First Name");
+		comboBoxListNameGuess[2] = new GUIContent("Last Name");
+		comboBoxListNameGuess[3] = new GUIContent("Department");
+
+		comboBoxListNameSort = new GUIContent[5];
+		comboBoxListNameSort[0] = new GUIContent("First & Last");
+		comboBoxListNameSort[1] = new GUIContent("First Name");
+		comboBoxListNameSort[2] = new GUIContent("Last Name");
+		comboBoxListNameSort[3] = new GUIContent("Department");
+		comboBoxListNameSort[4] = new GUIContent("Tenure");
+		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListNameGuess[0], comboBoxListNameGuess, "button", "box", listStyle, "Guess:");
 
 		xComboBox += comboSpacing;
 		comboBoxListMode = new GUIContent[3];
@@ -1070,7 +1077,24 @@ public class FaceCards : MonoBehaviour {
 
 			bool showAllFacesBefore = showAllFaces;
 			bool isYearBookModeBefore = isYearBookMode;
-			iGameMode = comboBoxControlMode.Show();
+			selectedItemIndex = comboBoxControlMode.Show();
+			if (selectedItemIndex != iGameMode)
+			{
+				iGameMode = selectedItemIndex;
+				if (iGameMode == 0)
+				{ // Game Mode
+					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
+						FaceSprite.iGuessNameIndex = 0;
+					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
+					comboBoxControlName.comboLabel = "Guess:";
+				}
+				else // not Game Mode
+				{
+					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
+					comboBoxControlName.comboLabel = (iGameMode == 0) ? "Guess:" : "Sort by*:";
+
+				}
+			}
 
 			selectedItemIndex = comboBoxControlTenure.Show();
 			if (selectedItemIndex != iTenureFilter)

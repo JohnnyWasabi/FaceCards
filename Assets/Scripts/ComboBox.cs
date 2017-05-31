@@ -64,7 +64,6 @@ public class ComboBox
     private Rect rectTriangle;
 	private GUIContent buttonContent;
 	private GUIContent[] listContent;
-	private string buttonStyle;
 	private string boxStyle;
 	private GUIStyle listStyle;
     private GUIStyle dropDownButtonStyle;
@@ -79,7 +78,6 @@ public class ComboBox
 		this.rect = rect;
 		this.buttonContent = buttonContent;
 		this.listContent = listContent;
-		this.buttonStyle = "button";
 		this.boxStyle = "box";
 		this.listStyle = listStyle;
 		this.comboLabel = comboLabel;
@@ -96,7 +94,6 @@ public class ComboBox
 		this.rect = rect;
 		this.buttonContent = buttonContent;
 		this.listContent = listContent;
-		this.buttonStyle = buttonStyle;
 		this.boxStyle = boxStyle;
 		this.listStyle = listStyle;
 		this.comboLabel = comboLabel;
@@ -108,6 +105,11 @@ public class ComboBox
 
         Reposition(rect);
     }
+	public void UpdateContent(GUIContent buttonContent, GUIContent[] listContent)
+	{
+		this.buttonContent = buttonContent;
+		this.listContent = listContent;
+	}
     public void Reposition(Rect rect)
 	{
 		this.rect = rect;
