@@ -22,6 +22,10 @@ public class FaceCards : MonoBehaviour {
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
 
 	int iGameMode = 0;
+	int iTenureFilter = 0;
+	float valTenureSlider;	// 0.0 .. 1.0  slider value that determines countTenureMembersMin.
+	int countTenureMembersMin;	// 1..TotalFaces; Minimum number of people to include in filter. This determines the date to use (to get that many people) and in turn determines the actual number shown (because some people were hired on the same date).
+
 
 	float score;
 
@@ -37,6 +41,10 @@ public class FaceCards : MonoBehaviour {
 	// Game Mode
 	GUIContent[] comboBoxListMode;
 	private ComboBox comboBoxControlMode;// = new ComboBox();
+
+	// Tenure Filter mode:
+	GUIContent[] comboBoxListTenure;
+	private ComboBox comboBoxControlTenure;
 
 	public int debugMaxCards = 0;	// greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
@@ -203,11 +211,11 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
+
 		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle, "Department:");
 
-		xComboBox += comboSpacing;
-
 		// What part of name they need to enter
+		xComboBox += comboSpacing;
 		comboBoxListName = new GUIContent[5];
 		comboBoxListName[0] = new GUIContent("First & Last");
 		comboBoxListName[1] = new GUIContent("First Name");
@@ -217,12 +225,18 @@ public class FaceCards : MonoBehaviour {
 		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle, "Guess/Sort by:");
 
 		xComboBox += comboSpacing;
-
 		comboBoxListMode = new GUIContent[3];
 		comboBoxListMode[0] = new GUIContent("Memory Game");
 		comboBoxListMode[1] = new GUIContent("Flash Cards*");
 		comboBoxListMode[2] = new GUIContent("Yearbook*");
 		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
+
+		xComboBox += comboSpacing;
+		comboBoxListTenure = new GUIContent[3];
+		comboBoxListTenure[0] = new GUIContent("All Tenures");
+		comboBoxListTenure[1] = new GUIContent("Greater than");
+		comboBoxListTenure[2] = new GUIContent("Less than");
+		comboBoxControlTenure = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListTenure[0], comboBoxListTenure, "button", "box", listStyle, "Tenure Filter:");
 
 	}
 
@@ -257,6 +271,8 @@ public class FaceCards : MonoBehaviour {
 			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
 			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			xCombo += comboSpacing;
+			comboBoxControlTenure.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 		}
 
 #if false
@@ -1055,6 +1071,23 @@ public class FaceCards : MonoBehaviour {
 			bool showAllFacesBefore = showAllFaces;
 			bool isYearBookModeBefore = isYearBookMode;
 			iGameMode = comboBoxControlMode.Show();
+
+			selectedItemIndex = comboBoxControlTenure.Show();
+			if (selectedItemIndex != iTenureFilter)
+			{
+				iTenureFilter = selectedItemIndex;
+
+			}
+			if (!comboBoxControlTenure.isComboBoxOpen && iTenureFilter != 0)
+			{
+				Rect rectTenureSlider = comboBoxControlTenure.rectPosition;
+				rectTenureSlider.y -= 40;
+			
+				valTenureSlider = GUI.HorizontalSlider(rectTenureSlider, valTenureSlider, 0.0f, 1.0f);
+				countTenureMembersMin = (int)(valTenureSlider * faceSprites.Count);
+				countTenureMembersMin = Mathf.Clamp(countTenureMembersMin, 1, faceSprites.Count);
+			}
+
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
 			if (guiTextName.text.Length == 0)
