@@ -203,7 +203,7 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
-		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle);
+		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle, "Department:");
 
 		xComboBox += comboSpacing;
 
@@ -214,7 +214,7 @@ public class FaceCards : MonoBehaviour {
 		comboBoxListName[2] = new GUIContent("Last Name");
 		comboBoxListName[3] = new GUIContent("Department");
 		comboBoxListName[4] = new GUIContent("Tenure*");
-		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle);
+		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle, "Guess/Sort by:");
 
 		xComboBox += comboSpacing;
 
@@ -222,7 +222,7 @@ public class FaceCards : MonoBehaviour {
 		comboBoxListMode[0] = new GUIContent("Memory Game");
 		comboBoxListMode[1] = new GUIContent("Flash Cards*");
 		comboBoxListMode[2] = new GUIContent("Yearbook*");
-		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle);
+		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
 
 	}
 

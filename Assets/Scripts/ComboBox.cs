@@ -70,8 +70,11 @@ public class ComboBox
     private GUIStyle dropDownButtonStyle;
     public bool isBoxAbove = true;
     private GUIStyle triangleStyle;
+	public bool isComboBoxOpen {  get { return isClickedComboButton; } }
+	public Rect rectPosition {  get { return rect; } }
+	public string comboLabel;
 
-	public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, GUIStyle listStyle)
+	public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, GUIStyle listStyle, string comboLabel = "")
 	{
 		this.rect = rect;
 		this.buttonContent = buttonContent;
@@ -79,15 +82,16 @@ public class ComboBox
 		this.buttonStyle = "button";
 		this.boxStyle = "box";
 		this.listStyle = listStyle;
+		this.comboLabel = comboLabel;
 
-        this.dropDownButtonStyle = new GUIStyle("button");
+		this.dropDownButtonStyle = new GUIStyle("button");
         this.dropDownButtonStyle.alignment = TextAnchor.MiddleLeft;
         triangleStyle = new GUIStyle("label");
         triangleStyle.alignment = TextAnchor.MiddleRight;
         Reposition(rect);
     }
 
-    public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, string buttonStyle, string boxStyle, GUIStyle listStyle)
+    public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, string buttonStyle, string boxStyle, GUIStyle listStyle, string comboLabel = "")
 	{
 		this.rect = rect;
 		this.buttonContent = buttonContent;
@@ -95,6 +99,7 @@ public class ComboBox
 		this.buttonStyle = buttonStyle;
 		this.boxStyle = boxStyle;
 		this.listStyle = listStyle;
+		this.comboLabel = comboLabel;
 
         this.dropDownButtonStyle = new GUIStyle("button");
         this.dropDownButtonStyle.alignment = TextAnchor.MiddleLeft;
@@ -171,6 +176,15 @@ public class ComboBox
  
         if (done)
 			isClickedComboButton = false;
+
+
+		if (!string.IsNullOrEmpty(comboLabel) && (!isComboBoxOpen || !isBoxAbove))
+		{
+			Rect rectLabel = rectPosition;
+			rectLabel.y -= 20;
+			rectLabel.x += 6;
+			GUI.Label(rectLabel, comboLabel);
+		}
 
 		return selectedItemIndex;
 	}
