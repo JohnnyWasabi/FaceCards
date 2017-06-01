@@ -35,22 +35,28 @@ PageDown 	= Show next person.
 
 Buttons:
 --------
-Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
-Memory Game	= This is a selector that lets you choose different modes of the app:
+Mode		= This is a selector that lets you choose different modes of the app:
 			Memory Game: The memory game described above where you type in the name when shown a face.
 			Flash Cards: All faces are shown without names. Click on a face to enlarge it and see their name info.
 			Yearbook:    All faces are shown with their names and department below their picture.	
-All Depts	= This is a selector that lets you filter to show a single department (or All Departments).
-First & Last	= This is a selector of what name you have to enter to collect the card in the Memory Game; it determines sorting order in Flash Cards and Yearbook modes: 
+Department	= This is a selector that lets you filter to show a single department (or All Departments).
+Guess		= This is a selector of what name you have to enter to collect the card in the Memory Game; it determines sorting order in Flash Cards and Yearbook modes: 
 			First & Last 
 			First 
 			Last 
 			Department 
-			Tenure*		Only selectable in Flash Cards and Yearbook modes. Sorts by hire-date, oldest first.
+Sort by* 	= This is a selector that determines sorting order in Flash Cards and Yearbook modes: 
+			First & Last 
+			First 
+			Last 
+			Department 
+			Tenure Most
+			Tenure Least		
+Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
 Shuffle		= Shuffles the cards and redeals the 1st card (does not restart game).
 Restart		= Shuffles the cards and restarts the game.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
-Cards/Faces	= Click on any card to display it front & center.  Click on the front & center card to send it back to the grid.
+Cards/Faces	= Click on any card in the grid to display it large/featured.  Click on the large/featured card to send it back to the grid.
 Background	= Right-click with mouse on background to access color-picker dialog for changing the background color. Color is saved in player prefs.
 
 Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 1600x1024. However, in windowed mood you can resize the window as needed during the game.
@@ -58,3 +64,4 @@ Note: Play at minimum of 1024x768 resolution.  For Yearbook display at least 160
 Version History
 ----------------
 2.2	Added margins on top and sides of screen so cards don't rest against edges of screen.
+2.3	Added Tenure Filter with slider. Moved "Case Sensitive" toggle to right side and slid Selector buttons left. Made the Guess/Sort selector change based on mode between "Guess" and "Sort by". Added "Tenure Least" to sort order options.
