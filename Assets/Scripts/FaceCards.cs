@@ -13,15 +13,22 @@ public class FaceCards : MonoBehaviour {
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
     const float comboButtonWidth = 120;
 	const float comboSpacing = comboButtonWidth + btnHSpacing * 2;
-	const float xStartComboBoxes = 128;
+	const float xStartComboBoxes = btnHSpacing;
 	const string msgVictory = "YOU WON!";
 
 	public ColorPicker bgColorPicker;	// Background color picker
 
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
+	int countTenureMembers = 1;  // 1..TotalFaces; Minimum number of people to include in filter. This determines the date to use (to get that many people) and in turn determines the actual number shown (because some people were hired on the same date).
+	int _countDeptTotal = 0;     // How many people are included by current Department filter setting.
+	int countDeptTotal { get { return _countDeptTotal; } set { _countDeptTotal = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }     // How many people are included by current Department filter setting.
 
 	int iGameMode = 0;
+	int iTenureFilter = 0;
+	float _valTenureSlider = 0;
+	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }	  // 0.0 .. 1.0  slider value that determines countTenureMembers.
+	float valTenureSliderLastRelease = 0;	// Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
 	float score;
 
@@ -31,12 +38,17 @@ public class FaceCards : MonoBehaviour {
 	private GUIStyle listStyle = new GUIStyle();
 
 	// Guess Name
-	GUIContent[] comboBoxListName;
+	GUIContent[] comboBoxListNameGuess;
+	GUIContent[] comboBoxListNameSort;
 	private ComboBox comboBoxControlName;// = new ComboBox();
 
 	// Game Mode
 	GUIContent[] comboBoxListMode;
 	private ComboBox comboBoxControlMode;// = new ComboBox();
+
+	// Tenure Filter mode:
+	GUIContent[] comboBoxListTenure;
+	private ComboBox comboBoxControlTenure;
 
 	public int debugMaxCards = 0;	// greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
@@ -189,7 +201,7 @@ public class FaceCards : MonoBehaviour {
 		float xComboBox = xStartComboBoxes;
 
 		comboBoxList = new GUIContent[roles.Count+1];
-		comboBoxList[0] = new GUIContent("All Depts");
+		comboBoxList[0] = new GUIContent("All");
 		for (int i = 0; i < roles.Count; i++)
 		{
 			comboBoxList[i + 1] = new GUIContent(roles[i]);
@@ -203,26 +215,39 @@ public class FaceCards : MonoBehaviour {
 		listStyle.padding.top =
 		listStyle.padding.bottom = 4;
 
+
 		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle, "Department:");
 
-		xComboBox += comboSpacing;
-
 		// What part of name they need to enter
-		comboBoxListName = new GUIContent[5];
-		comboBoxListName[0] = new GUIContent("First & Last");
-		comboBoxListName[1] = new GUIContent("First Name");
-		comboBoxListName[2] = new GUIContent("Last Name");
-		comboBoxListName[3] = new GUIContent("Department");
-		comboBoxListName[4] = new GUIContent("Tenure*");
-		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListName[0], comboBoxListName, "button", "box", listStyle, "Guess/Sort by:");
+		xComboBox += comboSpacing;
+		comboBoxListNameGuess = new GUIContent[4];
+		comboBoxListNameGuess[0] = new GUIContent("First & Last");
+		comboBoxListNameGuess[1] = new GUIContent("First Name");
+		comboBoxListNameGuess[2] = new GUIContent("Last Name");
+		comboBoxListNameGuess[3] = new GUIContent("Department");
+
+		comboBoxListNameSort = new GUIContent[6];
+		comboBoxListNameSort[0] = new GUIContent("First & Last");
+		comboBoxListNameSort[1] = new GUIContent("First Name");
+		comboBoxListNameSort[2] = new GUIContent("Last Name");
+		comboBoxListNameSort[3] = new GUIContent("Department");
+		comboBoxListNameSort[4] = new GUIContent("Tenure Most");
+		comboBoxListNameSort[5] = new GUIContent("Tenure Least");
+		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListNameGuess[0], comboBoxListNameGuess, "button", "box", listStyle, "Guess:");
 
 		xComboBox += comboSpacing;
-
 		comboBoxListMode = new GUIContent[3];
 		comboBoxListMode[0] = new GUIContent("Memory Game");
 		comboBoxListMode[1] = new GUIContent("Flash Cards*");
 		comboBoxListMode[2] = new GUIContent("Yearbook*");
 		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
+
+		xComboBox += comboSpacing;
+		comboBoxListTenure = new GUIContent[3];
+		comboBoxListTenure[0] = new GUIContent("All");
+		comboBoxListTenure[1] = new GUIContent("Most");
+		comboBoxListTenure[2] = new GUIContent("Least");
+		comboBoxControlTenure = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListTenure[0], comboBoxListTenure, "button", "box", listStyle, "Tenure Filter:");
 
 	}
 
@@ -254,9 +279,11 @@ public class FaceCards : MonoBehaviour {
 			float xCombo = xStartComboBoxes;
 			comboBoxControlMode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
+			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			xCombo += comboSpacing;
 			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			comboBoxControlTenure.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 		}
 
 #if false
@@ -274,7 +301,7 @@ public class FaceCards : MonoBehaviour {
 		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
 		if (refreshText)
 		{
-			if (FaceSprite.iGuessNameIndex == 4)
+			if (FaceSprite.iGuessNameIndex >= 4)
 			{
 				guiTextName.text = faceSpriteCrnt.fullName;
 				guiTextNofM.text = faceSpriteCrnt.dateHired; 
@@ -373,7 +400,7 @@ public class FaceCards : MonoBehaviour {
 				ShowNextFace();
 			}
 		}
-		if (!isYearBookMode && !showAllFaces && FaceSprite.iGuessNameIndex == 4)
+		if (!isYearBookMode && !showAllFaces && FaceSprite.iGuessNameIndex >= 4)
 		{
 			FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
 			comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
@@ -391,13 +418,7 @@ public class FaceCards : MonoBehaviour {
 				FaceSprite fs = faceSprites[i];
 				if (roles[iDeptFilter-1] != fs.role)
 				{
-					totalGuessNameChars -= fs.fullName.Length;
-					fs.card.indexOrder = -1;
-					fs.card.uiTextName.gameObject.SetActive(false);
-					faceSprites.Remove(fs);
-					faceSpritesFiltered.Add(fs);
-					fs.collected = false;
-					fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
+					FilterOutFace(fs);
 				}
 			}
 		}
@@ -412,7 +433,31 @@ public class FaceCards : MonoBehaviour {
 				faceSprites.Add(fs);
 			}
 		}
+		countDeptTotal = faceSprites.Count;
 
+		if (iTenureFilter > 0)
+		{ // Apply tenure filter
+			if (countTenureMembers < countDeptTotal)
+			{
+				faceSprites.Sort(delegate (FaceSprite fs1, FaceSprite fs2)
+				{
+					int diff = (FaceSprite.iGuessNameIndex == 5) ? System.DateTime.Compare(fs2.dateTime, fs1.dateTime) : System.DateTime.Compare(fs1.dateTime, fs2.dateTime);
+					if (diff == 0)
+					{
+						diff = string.Compare(fs1.lastName + fs1.firstName, fs2.lastName + fs2.firstName);
+					}
+					return diff;
+				});
+				int countToRemove = countDeptTotal - countTenureMembers;
+				int indexRemoveStart = ((iTenureFilter == 1 && FaceSprite.iGuessNameIndex != 5) || (iTenureFilter == 2 && FaceSprite.iGuessNameIndex == 5)) ? countTenureMembers : 0;
+				int indexRemoveEnd = indexRemoveStart + countToRemove-1;
+				for (int i = indexRemoveEnd; i >= indexRemoveStart; i--)
+				{
+					FilterOutFace (faceSprites[i]);
+				}
+			}
+
+		}
 		// Recalc order indices for active list and move all faces to proper place in yearbook layout
 		for (int i = 0; i <  faceSprites.Count; i++)
 		{
@@ -425,6 +470,17 @@ public class FaceCards : MonoBehaviour {
 		if (showAllFaces)
 			ReturnFaceToYearbook(faceSpriteCrnt);
 
+	}
+
+	void FilterOutFace(FaceSprite fs)
+	{
+		totalGuessNameChars -= fs.fullName.Length;
+		fs.card.indexOrder = -1;
+		fs.card.uiTextName.gameObject.SetActive(false);
+		faceSprites.Remove(fs);
+		faceSpritesFiltered.Add(fs);
+		fs.collected = false;
+		fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
 	}
 
 	void ShowPrevFace()
@@ -505,6 +561,7 @@ public class FaceCards : MonoBehaviour {
 					{
 						int indexOrder = faceSprites.Count;
 						faceSprites.Add(faceSprite);
+						++countDeptTotal;
 						if (!roles.Contains(nameParts[2]))
 							roles.Add(nameParts[2]);
 
@@ -709,9 +766,14 @@ public class FaceCards : MonoBehaviour {
 							bgColorPicker.Show();
 					}
 				}
-				else if (Input.GetMouseButtonDown(1))
-				{
 
+				if (Input.GetMouseButtonUp(0))
+				{
+					if (valTenureSlider != valTenureSliderLastRelease)
+					{
+						valTenureSliderLastRelease = valTenureSlider;
+						RestartCurrentMode();
+					}
 				}
 			}
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
@@ -814,9 +876,25 @@ public class FaceCards : MonoBehaviour {
                             return string.Compare(fs1.role + fs1.lastName + fs1.firstName, fs2.role + fs2.lastName + fs2.firstName);
                     }
                     return string.Compare(fs1.role, fs2.role); // This should actually never get reached.
-			case 4: // Tenure (date of hire, older dates last)
-				return System.DateTime.Compare(fs1.dateTime, fs2.dateTime);
-            }
+			case 4: // Tenure Most (date of hire, earlier dates first)
+				{
+					int diff = System.DateTime.Compare(fs1.dateTime, fs2.dateTime);
+					if (diff == 0)
+					{
+						diff = string.Compare(fs1.lastName + fs1.firstName, fs2.lastName + fs2.firstName);
+					}
+					return diff;
+				}
+			case 5: // Tenure Least (date of hire, laster dates first)
+				{
+					int diff = System.DateTime.Compare(fs2.dateTime, fs1.dateTime);
+					if (diff == 0)
+					{
+						diff = string.Compare(fs1.lastName + fs1.firstName, fs2.lastName + fs2.firstName);
+					}
+					return diff;
+				}
+			}
             return (fs1.card.indexOrder - fs2.card.indexOrder); // This should actually never get reached.
 		});
 		for (int i = 0; i < faceSprites.Count; i++)
@@ -842,6 +920,9 @@ public class FaceCards : MonoBehaviour {
 	{
         guiTextName.text = "";
         guiTextRole.text = "";
+		if (iGameMode != 0)
+			guiTextNofM.text = "";
+
 		//if (fs.countRevealed > 0 || guiTextName.text != fs.guessName || !fs.collected)
 		//if (!fs.collected)
 		{
@@ -989,7 +1070,24 @@ public class FaceCards : MonoBehaviour {
 		guiTextGallows.enabled = (indexHangMan > 0);
 	}
 
-    void OnGUI()
+	void RestartCurrentMode()
+	{
+		FilterByDepartment(iDeptFilter);
+		if (isYearBookMode)
+		{
+			ChangeYearBookMode(isYearBookMode);
+		}
+		else if (showAllFaces)
+		{
+			SortByGuessName();
+		}
+		else if (AreAllCollected())
+		{
+			RestartGame();
+		}
+
+	}
+	void OnGUI()
 	{
  		if (doneLoading)
 		{
@@ -1005,21 +1103,8 @@ public class FaceCards : MonoBehaviour {
 						ReturnFaceToYearbook(fsCurrentUser);
 					}
 				}
-
-				FilterByDepartment(selectedItemIndex);
-				if (isYearBookMode)
-				{
-					ChangeYearBookMode(isYearBookMode);
-				}
-				else if (showAllFaces)
-				{
-					SortByGuessName();
-					//DisplayFaceSprite();
-				}
-				else if (AreAllCollected())
-				{
-					RestartGame();
-				}
+				iDeptFilter = selectedItemIndex;
+				RestartCurrentMode();
 			}
 
 			// Name part to Guess selector, or sort filter for Yearbook mode.
@@ -1030,7 +1115,7 @@ public class FaceCards : MonoBehaviour {
 				FaceSprite.iGuessNameIndex = selectedItemIndex;
 				if (!showAllFaces && !isYearBookMode)
 				{
-					if (selectedItemIndex != 4)
+					if (selectedItemIndex < 4)
 					{
 						Randomize();
 						RestartGame();
@@ -1054,7 +1139,43 @@ public class FaceCards : MonoBehaviour {
 
 			bool showAllFacesBefore = showAllFaces;
 			bool isYearBookModeBefore = isYearBookMode;
-			iGameMode = comboBoxControlMode.Show();
+			selectedItemIndex = comboBoxControlMode.Show();
+			if (selectedItemIndex != iGameMode)
+			{
+				iGameMode = selectedItemIndex;
+				if (iGameMode == 0)
+				{ // Game Mode
+					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
+						FaceSprite.iGuessNameIndex = 0;
+					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
+					comboBoxControlName.comboLabel = "Guess:";
+				}
+				else // not Game Mode
+				{
+					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
+					comboBoxControlName.comboLabel = (iGameMode == 0) ? "Guess:" : "Sort by*:";
+
+				}
+			}
+
+			// *************** TENURE
+			selectedItemIndex = comboBoxControlTenure.Show();
+			if (selectedItemIndex != iTenureFilter)
+			{
+				iTenureFilter = selectedItemIndex;
+				RestartCurrentMode();
+			}
+			if (!comboBoxControlTenure.isComboBoxOpen && iTenureFilter != 0)
+			{
+				Rect rectTenureSlider = comboBoxControlTenure.rectPosition;
+				rectTenureSlider.y -= 32;
+				valTenureSlider = GUI.HorizontalSlider(rectTenureSlider, valTenureSlider, 0.0f, 1.0f);
+
+				rectTenureSlider.y -= 16;
+				rectTenureSlider.x += valTenureSlider * (rectTenureSlider.width-12);
+				GUI.Label(rectTenureSlider, new GUIContent(countTenureMembers.ToString()));
+			}
+
 
 			rectText = guiTextName.GetScreenRect(Camera.main);
 			if (guiTextName.text.Length == 0)
@@ -1077,7 +1198,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			const float caseBtnWidth = 110;
-			caseSensitive = GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 1, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
+			caseSensitive = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
 			isYearBookMode = (iGameMode == 2);//GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), isYearBookMode, "Yearbook");
 			showAllFaces = (iGameMode == 1);//GUI.Toggle(new Rect(btnHSpacing, Screen.height - btnHeightSpaced*3, 80, btnHeight), showAllFaces, "Show All");
@@ -1165,7 +1286,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.2", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.3", guiStyleVersion);
 		}
     }
 }
