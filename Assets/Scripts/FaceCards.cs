@@ -1146,7 +1146,10 @@ public class FaceCards : MonoBehaviour {
 				if (iGameMode == 0)
 				{ // Game Mode
 					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
-						FaceSprite.iGuessNameIndex = 0;
+					{
+						FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
+						comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
+					}
 					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
 					comboBoxControlName.comboLabel = "Guess:";
 				}
