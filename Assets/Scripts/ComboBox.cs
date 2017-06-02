@@ -63,6 +63,7 @@ public class ComboBox
 	private Rect rect;
     private Rect rectTriangle;
 	private GUIContent buttonContent;
+	private GUIContent blankText = new GUIContent(" ");
 	private GUIContent[] listContent;
 	private string boxStyle;
 	private GUIStyle listStyle;
@@ -72,6 +73,17 @@ public class ComboBox
 	public bool isComboBoxOpen {  get { return isClickedComboButton; } }
 	public Rect rectPosition {  get { return rect; } }
 	public string comboLabel;
+	private bool _isFlashedOff = false;
+	public bool isFlashedOff {  get { return _isFlashedOff; } }
+	private float secondsFlashing = 0;
+	private float timeFlashingStarted = 0;
+	private float secondsFlashInterval = 0.10f;
+
+	private bool _isLabelFlashedOff = false;
+	public bool isLabelFlashedOff { get { return _isFlashedOff; } }
+	private float secondsLabelFlashing = 0;
+	private float timeLabelFlashingStarted = 0;
+	private float secondsLabelFlashInterval = 0.10f;
 
 	public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, GUIStyle listStyle, string comboLabel = "")
 	{
@@ -105,6 +117,18 @@ public class ComboBox
 
         Reposition(rect);
     }
+	public void FlashButtonText(float secondsDuration = 0.75f, float interval = 0.10f)
+	{
+		this.secondsFlashing = secondsDuration;
+		secondsFlashInterval = interval;
+		timeFlashingStarted = Time.time;
+	}
+	public void FlashLabelText(float secondsDuration = 0.75f, float interval = 0.10f)
+	{
+		this.secondsLabelFlashing = secondsDuration;
+		secondsLabelFlashInterval = interval;
+		timeLabelFlashingStarted = Time.time;
+	}
 	public void UpdateContent(GUIContent buttonContent, GUIContent[] listContent)
 	{
 		this.buttonContent = buttonContent;
@@ -139,7 +163,22 @@ public class ComboBox
 			break;
 		}
 
-		if (GUI.Button(rect, buttonContent, dropDownButtonStyle))
+		if (secondsFlashing > 0)
+		{
+			float elapsedTime = Time.time - timeFlashingStarted;
+			if (elapsedTime > secondsFlashing)
+			{
+				_isFlashedOff = false;
+				secondsFlashing = 0;
+			}
+			else
+			{
+				int intervalIndex = (int)(elapsedTime / secondsFlashInterval);
+				_isFlashedOff = (intervalIndex & 1) == 0;
+			}
+		}
+
+		if (GUI.Button(rect, (_isFlashedOff) ? blankText :  buttonContent, dropDownButtonStyle))
 		{
 			if (useControlID == -1)
 			{
@@ -179,8 +218,21 @@ public class ComboBox
         if (done)
 			isClickedComboButton = false;
 
-
-		if (!string.IsNullOrEmpty(comboLabel) && (!isComboBoxOpen || !isBoxAbove))
+		if (secondsLabelFlashing > 0)
+		{
+			float elapsedTime = Time.time - timeLabelFlashingStarted;
+			if (elapsedTime > secondsLabelFlashing)
+			{
+				_isLabelFlashedOff = false;
+				secondsLabelFlashing = 0;
+			}
+			else
+			{
+				int intervalIndex = (int)(elapsedTime / secondsLabelFlashInterval);
+				_isLabelFlashedOff = (intervalIndex & 1) == 0;
+			}
+		}
+		if (!string.IsNullOrEmpty(comboLabel) && (!isComboBoxOpen || !isBoxAbove) && !_isLabelFlashedOff)
 		{
 			Rect rectLabel = rectPosition;
 			rectLabel.y -= 20;

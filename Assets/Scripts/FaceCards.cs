@@ -243,10 +243,12 @@ public class FaceCards : MonoBehaviour {
 		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
 
 		xComboBox += comboSpacing;
-		comboBoxListTenure = new GUIContent[3];
+		comboBoxListTenure = new GUIContent[5];
 		comboBoxListTenure[0] = new GUIContent("All");
 		comboBoxListTenure[1] = new GUIContent("Most");
 		comboBoxListTenure[2] = new GUIContent("Least");
+		comboBoxListTenure[3] = new GUIContent("OGs*");
+		comboBoxListTenure[4] = new GUIContent("Newbies*");
 		comboBoxControlTenure = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListTenure[0], comboBoxListTenure, "button", "box", listStyle, "Tenure Filter:");
 
 	}
@@ -553,7 +555,7 @@ public class FaceCards : MonoBehaviour {
 						else
 							Debug.LogError("Unable to parse year from date part of filename: " + nameParts[3]);
 					}
-					Debug.Log("File date: " + dateTime);
+					//Debug.Log("File date: " + dateTime);
 
 
 					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, sprite, texture);
@@ -1142,6 +1144,9 @@ public class FaceCards : MonoBehaviour {
 			selectedItemIndex = comboBoxControlMode.Show();
 			if (selectedItemIndex != iGameMode)
 			{
+				if (iGameMode == 0 || selectedItemIndex == 0)	// Flash change of Guess/SortBy selector if moving to or from Memory Game mode (i.e. if the selector is changing, don't flash between yearbook and flashcards swaps)
+					comboBoxControlName.FlashLabelText();
+
 				iGameMode = selectedItemIndex;
 				if (iGameMode == 0)
 				{ // Game Mode
@@ -1149,6 +1154,7 @@ public class FaceCards : MonoBehaviour {
 					{
 						FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
 						comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
+						comboBoxControlName.FlashButtonText();
 					}
 					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
 					comboBoxControlName.comboLabel = "Guess:";
@@ -1157,7 +1163,6 @@ public class FaceCards : MonoBehaviour {
 				{
 					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
 					comboBoxControlName.comboLabel = (iGameMode == 0) ? "Guess:" : "Sort by*:";
-
 				}
 			}
 
@@ -1166,6 +1171,28 @@ public class FaceCards : MonoBehaviour {
 			if (selectedItemIndex != iTenureFilter)
 			{
 				iTenureFilter = selectedItemIndex;
+				if (iTenureFilter >= 3)
+				{
+					valTenureSlider = 0.1f;	// select 10% of people
+					switch (iTenureFilter)
+					{
+					case 3: // OGs
+						iTenureFilter = 1;
+						if (iGameMode != 0)
+							comboBoxControlName.SelectedItemIndex = 4;
+						break;
+					case 4: // Newbies
+						iTenureFilter = 2;
+						if (iGameMode != 0)
+							comboBoxControlName.SelectedItemIndex = 5;
+						break;
+					}
+					if (iGameMode != 0)
+						comboBoxControlName.FlashButtonText(0.75f);
+
+					comboBoxControlTenure.FlashButtonText(0.75f);
+					comboBoxControlTenure.SelectedItemIndex = iTenureFilter;
+				}
 				RestartCurrentMode();
 			}
 			if (!comboBoxControlTenure.isComboBoxOpen && iTenureFilter != 0)
@@ -1176,7 +1203,8 @@ public class FaceCards : MonoBehaviour {
 
 				rectTenureSlider.y -= 16;
 				rectTenureSlider.x += valTenureSlider * (rectTenureSlider.width-12);
-				GUI.Label(rectTenureSlider, new GUIContent(countTenureMembers.ToString()));
+				if (!comboBoxControlTenure.isFlashedOff)
+					GUI.Label(rectTenureSlider, new GUIContent(countTenureMembers.ToString()));
 			}
 
 
@@ -1289,7 +1317,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.3", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.4", guiStyleVersion);
 		}
     }
 }
