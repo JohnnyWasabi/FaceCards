@@ -72,3 +72,4 @@ Version History
 2.2	Added margins on top and sides of screen so cards don't rest against edges of screen.
 2.3	Added Tenure Filter with slider. Moved "Case Sensitive" toggle to right side and slid Selector buttons left. Made the Guess/Sort selector change based on mode between "Guess" and "Sort by". Added "Tenure Least" to sort order options.
 2.4	Added "OGs" and "Newbies" shortcuts to Tenure filter. These set up the Tenure filter (and "Sort By" setting if not in Memory Game mode) to show the 10% of employees with most or least tenure.
+2.5	Added sub-departments separated by '-'. People appear in their whole and sub departments. E.g. IT-QA person appears in IT, QA and IT-QA.

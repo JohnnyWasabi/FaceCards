@@ -300,6 +300,9 @@ public class FaceCards : MonoBehaviour {
 	}
 	void DisplayFaceSprite(FaceSprite fsToUse = null, bool refreshText = true)
 	{
+        if (faceSprites.Count <= 0)
+            return;
+
 		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
 		if (refreshText)
 		{
@@ -409,6 +412,14 @@ public class FaceCards : MonoBehaviour {
 		}
 	}
 
+    bool DeptMatchesRole(string dept, string role)
+    {
+        if (dept == role)
+            return true;
+        if (role.Contains(dept))
+            return true;
+        return false;
+    }
 	void FilterByDepartment(int ifilter)
 	{
 		iDeptFilter = ifilter;
@@ -418,7 +429,7 @@ public class FaceCards : MonoBehaviour {
 			for (int i = faceSprites.Count - 1; i >= 0; i--)
 			{
 				FaceSprite fs = faceSprites[i];
-				if (roles[iDeptFilter-1] != fs.role)
+				if (!DeptMatchesRole(roles[iDeptFilter-1], fs.role))
 				{
 					FilterOutFace(fs);
 				}
@@ -428,7 +439,7 @@ public class FaceCards : MonoBehaviour {
 		for (int i = faceSpritesFiltered.Count - 1; i >= 0; i--)
 		{
 			FaceSprite fs = faceSpritesFiltered[i];
-			if (iDeptFilter == 0 || roles[iDeptFilter-1] == fs.role)
+			if (iDeptFilter == 0 || DeptMatchesRole(roles[iDeptFilter-1], fs.role))
 			{
 				faceSpritesFiltered.Remove(fs);
 				totalGuessNameChars += fs.fullName.Length;
@@ -564,10 +575,19 @@ public class FaceCards : MonoBehaviour {
 						int indexOrder = faceSprites.Count;
 						faceSprites.Add(faceSprite);
 						++countDeptTotal;
-						if (!roles.Contains(nameParts[2]))
+                        if (!roles.Contains(nameParts[2]))
 							roles.Add(nameParts[2]);
+                        string[] roleParts = nameParts[2].Split('-');
+                        if (roleParts.Length > 1)
+                        { // It is a multi-role person, e.g. "IT-QA" so add addition to role of "IT-QA", add roles for "IT" and "QA"
+                            foreach (string rolePart in roleParts)
+                            {
+                                if (!roles.Contains(rolePart))
+                                    roles.Add(rolePart);
+                            }
+                        }
 
-						GameObject goFaceCard = Instantiate(faceCardPrefab);
+                        GameObject goFaceCard = Instantiate(faceCardPrefab);
 						faceSprite.card = goFaceCard.GetComponent<Card>();
 						faceSprite.card.indexOrder = indexOrder;
 						faceSprite.card.Init(sprite, FaceSprite.spriteCardBack, FaceSprite.spriteCardFrontBG, FaceSprite.spriteCardFrontFrame, Vector3.zero);
@@ -1317,7 +1337,7 @@ public class FaceCards : MonoBehaviour {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.4", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 2.5", guiStyleVersion);
 		}
     }
 }
