@@ -4,6 +4,14 @@ Installation/Running:
 --------------------
 Copy the whole "FaceCardsGame" folder to your destktop. Open the folder on your desktop and double click the "FaceCards" application. Choose at least 1600x1024 when prompted for resolution. It can be played at lower resolution, but the Yearbook mode currently does not scale to fit and will go off the bottom at lower resolutions.
 
+Updating Pictures:
+-----------------
+There is a batch file called UpdateFaces.bat that you can launch to update your local store of pictures from the network with any new people that have joined or to remove people that have left the company.  It will show you what files were added or removed. 
+
+Update and Play:
+----------------
+There is a batch file called UpdateAndPlay.bat that you can launch to update the face photos and then play.
+
 Play Instructions:
 -----------------
 Type the full name of the person shown. 
@@ -72,4 +80,3 @@ Version History
 2.2	Added margins on top and sides of screen so cards don't rest against edges of screen.
 2.3	Added Tenure Filter with slider. Moved "Case Sensitive" toggle to right side and slid Selector buttons left. Made the Guess/Sort selector change based on mode between "Guess" and "Sort by". Added "Tenure Least" to sort order options.
 2.4	Added "OGs" and "Newbies" shortcuts to Tenure filter. These set up the Tenure filter (and "Sort By" setting if not in Memory Game mode) to show the 10% of employees with most or least tenure.
-2.5	Added sub-departments separated by '-'. People appear in their whole and sub departments. E.g. IT-QA person appears in IT, QA and IT-QA.
