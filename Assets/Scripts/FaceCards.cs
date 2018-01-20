@@ -110,6 +110,42 @@ public class FaceCards : MonoBehaviour {
 
 	FaceSprite fsCurrentUser = null;
 
+	public MapReader.Map mapDataGarden;
+	public MapRenderer mapRendererGarden;
+	// Upper left corner of map in world coordinates
+	public static int xMapUL { get; private set; }
+	public static int yMapUL { get; private set; }
+	public static int xMapBR { get; private set; }
+	public static int yMapBR { get; private set; }
+
+	public static int xScreenMin { get; private set; }  // screen left edge
+	public static int yScreenMax { get; private set; }  // screen top edge
+	public static int xScreenMax { get; private set; }  // screen right edge
+	public static int yScreenMin { get; private set; }  // screen bottom edge
+
+	// These are assigned from the actual loaded map data.
+	static public int pixelTileWidth = 24;
+	static public int pixelTileHeight = 24;
+	static public int pixelHalfTileWidth = (pixelTileWidth / 2);
+	static public int pixelHalfTileHeight = (pixelTileHeight / 2);
+
+	void Awake()
+	{
+		mapDataGarden = MapReader.GetMapFromFile("Floorplan.tmx");   // Dirt layer
+		pixelTileWidth = mapDataGarden.TileWidth;
+		pixelHalfTileWidth = pixelTileWidth / 2;
+		pixelTileHeight = mapDataGarden.TileHeight;
+		pixelHalfTileHeight = pixelTileHeight / 2;
+
+		xMapUL = -(mapDataGarden.Layers[0].Width / 2 * pixelTileWidth);// + (int)LayoutSet.layout.transform.localPosition.x;
+		yMapUL = mapDataGarden.Layers[0].Height / 2 * pixelTileHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
+		xMapBR = xMapUL + (mapDataGarden.Width - 1) * pixelTileWidth;
+		yMapBR = yMapUL - (mapDataGarden.Height - 1) * pixelTileHeight;
+
+		mapRendererGarden = MapRenderer.CreateMapRenderer(mapDataGarden, "Floorplan");
+		mapRendererGarden.goMap.transform.position = new Vector3(xMapUL, yMapUL, 0);
+
+	}
 	// Use this for initialization
 	IEnumerator Start()
 	{
