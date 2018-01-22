@@ -967,8 +967,6 @@ public class FaceCards : MonoBehaviour {
 		if (gameMode != GameMode.memoryGame)
 			guiTextNofM.text = "";
 
-		//if (fs.countRevealed > 0 || guiTextName.text != fs.guessName || !fs.collected)
-		//if (!fs.collected)
 		{
 			if (!fs.collected && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode
 				fs.card.FlipShowBack();
@@ -977,6 +975,8 @@ public class FaceCards : MonoBehaviour {
 		}
 		if (fs.card.indexOrder == -1)
 			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
+		else if (gameMode == GameMode.map)
+			fs.ArrangeOnMap();
 		else
 			fs.card.ArrangeOnYearbook();
 	}
@@ -1296,9 +1296,19 @@ public class FaceCards : MonoBehaviour {
 					ReturnFaceToYearbook(faceSpriteCrnt);
 					SortByGuessName();
 				}
-				else if (gameModeBefore == GameMode.map)
+				else if (gameMode == GameMode.map)
 				{
-
+					foreach (FaceSprite fs in faceSprites)
+					{
+						fs.card.FlipShowFront();
+						fs.card.uiTextName.gameObject.SetActive(false);
+						fs.ArrangeOnMap();
+					}
+					foreach (FaceSprite fs in faceSpritesFiltered)
+					{
+						fs.card.uiTextName.gameObject.SetActive(false);
+					}
+					ReturnFaceToYearbook(faceSpriteCrnt);
 				}
 				mapRendererMap.goMap.SetActive(gameMode == GameMode.map);
 			}
