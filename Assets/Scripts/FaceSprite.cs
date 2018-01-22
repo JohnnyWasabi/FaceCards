@@ -82,10 +82,10 @@ public class FaceSprite : System.IComparable
 		wasFullNameDisplayed = false;
 	}
 
-	public void ArrangeOnMap(float moveDuration = 0.5f)
+	public void ArrangeOnMap(float scale, float moveDuration = 0.5f)
 	{
-		Vector2 pos = SpotManager.GetSpotPos(id);
-		card.MoveTo(pos, YearBook.dimPhoto, moveDuration);
+		Vector2 pos = SpotManager.GetSpotPos(id) * scale;
+		card.MoveTo(pos, YearBook.dimPhoto * scale, moveDuration);
 	}
 }
 

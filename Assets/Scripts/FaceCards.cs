@@ -119,6 +119,7 @@ public class FaceCards : MonoBehaviour {
 
 	public MapReader.Map mapDataMap;
 	public MapRenderer mapRendererMap;
+	public float scaleMap { get { return mapRendererMap.goMap.transform.localScale.x; } }
 	// Upper left corner of map in world coordinates
 	public static int xMapUL { get; private set; }
 	public static int yMapUL { get; private set; }
@@ -152,6 +153,8 @@ public class FaceCards : MonoBehaviour {
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
 		mapRendererMap.goMap.transform.position = new Vector3(xMapUL, yMapUL, 0);
 		mapRendererMap.goMap.SetActive(false);
+		CenterMap centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
+		centerMap.Init(mapDataMap, mapRendererMap);
 	}
 	// Use this for initialization
 	IEnumerator Start()
@@ -976,7 +979,7 @@ public class FaceCards : MonoBehaviour {
 		if (fs.card.indexOrder == -1)
 			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
 		else if (gameMode == GameMode.map)
-			fs.ArrangeOnMap();
+			fs.ArrangeOnMap(scaleMap);
 		else
 			fs.card.ArrangeOnYearbook();
 	}
@@ -1302,7 +1305,7 @@ public class FaceCards : MonoBehaviour {
 					{
 						fs.card.FlipShowFront();
 						fs.card.uiTextName.gameObject.SetActive(false);
-						fs.ArrangeOnMap();
+						fs.ArrangeOnMap(scaleMap);
 					}
 					foreach (FaceSprite fs in faceSpritesFiltered)
 					{
