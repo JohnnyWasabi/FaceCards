@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class FaceSprite : System.IComparable
 {
-	public FaceSprite(string first, string last, string role, System.DateTime date, Sprite sprite, Texture2D texture)
+	public FaceSprite(string first, string last, string role, System.DateTime date, string idStr, Sprite sprite, Texture2D texture)
 	{
-		guessNames = new string[5];
+		guessNames = new string[6];
 		firstName = first;
 		lastName = last;
 		fullName = first + " " + last;
 		dateTime = date;
+		id = idStr;
 		dateHired = date.Year.ToString() + "-" + date.Month.ToString("00") + "-" + date.Day.ToString("00");
 		this.role = role;
 		this.sprite = sprite;
@@ -31,6 +32,7 @@ public class FaceSprite : System.IComparable
 	public string fullName		{ get { return guessNames[0]; } set { guessNames[0] = value; } }
 	public string role			{ get { return guessNames[3]; } set { guessNames[3] = value; } }
 	public string dateHired		{ get { return guessNames[4]; } set { guessNames[4] = value; } }
+	public string id			{ get { return guessNames[5]; } set { guessNames[5] = value; } }
 	// The actual string they need to guess.
 	public string guessName		{ get { return guessNames[iGuessNameIndex]; } set { } }
 	public Sprite sprite;

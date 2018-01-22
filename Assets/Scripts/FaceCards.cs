@@ -558,6 +558,7 @@ public class FaceCards : MonoBehaviour {
 		}
 	}
 
+	int idDefault = 1;
 	public IEnumerator LoadFaceSprite(string absoluteImagePath, System.DateTime dateTime)
 	{
 		string url =  @"file:///" + absoluteImagePath;
@@ -602,10 +603,14 @@ public class FaceCards : MonoBehaviour {
 						else
 							Debug.LogError("Unable to parse year from date part of filename: " + nameParts[3]);
 					}
+					string idString = (idDefault++).ToString();
 					//Debug.Log("File date: " + dateTime);
+					if (nameParts.Length > 4)
+					{ // parse employee id
+						idString = nameParts[4];
+					}
 
-
-					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, sprite, texture);
+					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, idString, sprite, texture);
 					if (faceSprite != null)
 					{
 						int indexOrder = faceSprites.Count;
