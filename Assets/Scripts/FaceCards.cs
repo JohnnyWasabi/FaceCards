@@ -164,8 +164,8 @@ public class FaceCards : MonoBehaviour {
 
 		mapWidth = mapDataMap.Layers[0].Width * pixelTileWidth;
 		mapHeight = mapDataMap.Layers[0].Height * pixelTileHeight;
-		xMapUL = -(mapWidth / 2) + pixelHalfTileWidth;// + (int)LayoutSet.layout.transform.localPosition.x;
-		yMapUL = mapHeight / 2 - pixelHalfTileHeight + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
+		xMapUL = -(mapWidth / 2);// + (int)LayoutSet.layout.transform.localPosition.x;
+		yMapUL = mapHeight / 2 + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
 		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
 		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
 
@@ -175,7 +175,7 @@ public class FaceCards : MonoBehaviour {
 		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
 
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
-		mapRendererMap.goMap.transform.position = new Vector3(xMapUL, yMapUL, 0);
+		mapRendererMap.goMap.transform.position = new Vector3(xMapUL + pixelHalfTileWidth, yMapUL - pixelHalfTileHeight, 0);
 		mapRendererMap.goMap.SetActive(false);
 		CenterMap centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
 		centerMap.Init(mapDataMap, mapRendererMap);

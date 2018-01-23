@@ -32,10 +32,10 @@ public class CenterMap : MonoBehaviour {
 		if (mapRenderer != null && mapRenderer.goMap.activeSelf)
 		{
 			float scale = mapRenderer.goMap.transform.localScale.x;
-			FaceCards.xMapUL =(int)( (-mapData.Layers[0].Width / 2 * pixelTileWidth + pixelHalfTileWidth) * scale);
-			FaceCards.yMapUL =(int)( (mapData.Layers[0].Height / 2 * pixelTileHeight - pixelHalfTileHeight) * scale + FaceCards.ControlBarHeight); 
+			FaceCards.xMapUL =(int)( (-mapData.Layers[0].Width / 2 * pixelTileWidth) * scale);
+			FaceCards.yMapUL =(int)( (mapData.Layers[0].Height / 2 * pixelTileHeight ) * scale + FaceCards.ControlBarHeight); 
 
-			mapRenderer.goMap.transform.position = new Vector3(FaceCards.xMapUL, FaceCards.yMapUL, 0);
+			mapRenderer.goMap.transform.position = new Vector3(FaceCards.xMapUL + pixelHalfTileWidth*scale, FaceCards.yMapUL - pixelHalfTileHeight*scale, 0);
 		}
 	}
 }
