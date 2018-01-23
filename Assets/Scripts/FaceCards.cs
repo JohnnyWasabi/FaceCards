@@ -166,20 +166,30 @@ public class FaceCards : MonoBehaviour {
 		mapWidth = mapDataMap.Layers[0].Width * pixelTileWidth;
 		mapHeight = mapDataMap.Layers[0].Height * pixelTileHeight;
 		xMapUL = -(mapWidth / 2);// + (int)LayoutSet.layout.transform.localPosition.x;
-		yMapUL = mapHeight / 2 + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
+		yMapUL = Screen.height/2; // mapHeight / 2;// + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
 		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
 		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
-
-
-		float scaleMapMinX = (float)ScreenPlayAreaWidth / (float)mapWidth;
-		float scaleMapMinY = (float)ScreenPlayAreaHeight / (float)mapHeight;
-		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
 
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
 		mapRendererMap.goMap.transform.position = new Vector3(xMapUL + pixelHalfTileWidth, yMapUL - pixelHalfTileHeight, 0);
 		mapRendererMap.goMap.SetActive(false);
 		CenterMap centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
 		centerMap.Init(mapDataMap, mapRendererMap);
+
+		CalcMapScaleLimits();
+	}
+
+	void CalcMapScaleLimits()
+	{
+		ScreenPlayAreaWidth = Screen.width;
+		ScreenPlayAreaHeight = Screen.height - (int)cubeBG.transform.localScale.y;
+		float scaleMapMinX = (float)ScreenPlayAreaWidth / (float)mapWidth;
+		float scaleMapMinY = (float)ScreenPlayAreaHeight / (float)mapHeight;
+		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
+		if (scaleMap < scaleMapMin)
+		{
+			scaleMap = scaleMapMin;
+		}
 	}
 	// Use this for initialization
 	IEnumerator Start()
@@ -884,6 +894,8 @@ public class FaceCards : MonoBehaviour {
 			{
 				if (!(Input.mousePosition.x == 0 || Input.mousePosition.y == 0 || Input.mousePosition.x == Screen.width-1 || Input.mousePosition.y == Screen.height-1))
 				{
+					CalcMapScaleLimits();
+
 					//Mouse is inside the screen by 1 pixel or more, so can't be outside of window, therefore is over the game screen
 					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin); // make it update it's Screen-size based values.
 					if (!isYearBookMode)

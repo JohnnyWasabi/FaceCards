@@ -36,7 +36,7 @@ public class CenterMap : MonoBehaviour {
 			int mapHeight = mapData.Layers[0].Height * pixelTileHeight;
 
 			FaceCards.xMapUL =(int)( (-mapWidth / 2) * scale);
-			FaceCards.yMapUL =(int)( (mapHeight / 2) * scale + FaceCards.ControlBarHeight); 
+			FaceCards.yMapUL = Screen.height/2;// (int)((mapHeight / 2) * scale);// + FaceCards.ControlBarHeight); 
 
 			mapRenderer.goMap.transform.position = new Vector3(FaceCards.xMapUL + pixelHalfTileWidth*scale, FaceCards.yMapUL - pixelHalfTileHeight*scale, 0);
 		}
