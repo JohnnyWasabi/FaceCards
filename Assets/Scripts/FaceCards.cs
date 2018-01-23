@@ -39,6 +39,7 @@ public class FaceCards : MonoBehaviour {
 
 	float _valMapScaleSlider = 1;
 	float valMapScaleSlider {  get { return _valMapScaleSlider; } set { _valMapScaleSlider = value;  } }
+	float valMapScaleSliderLastRelease = 0;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
 
 	float score;
@@ -864,6 +865,11 @@ public class FaceCards : MonoBehaviour {
 						valTenureSliderLastRelease = valTenureSlider;
 						RestartCurrentMode();
 					}
+					if (valMapScaleSlider != valMapScaleSliderLastRelease)
+					{
+						valMapScaleSliderLastRelease = valMapScaleSlider;
+						RestartCurrentMode();
+					}
 				}
 			}
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
@@ -1241,9 +1247,6 @@ public class FaceCards : MonoBehaviour {
 				rectMapScaleSlider.y -= 32;
 				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valMapScaleSlider, scaleMapMin, scaleMapMax);
 				scaleMap = valMapScaleSlider;
-				
-				//if (!comboBoxControlMode.isFlashedOff)
-				//	GUI.Label(rectMapScaleSlider, new GUIContent(countTenureMembers.ToString()));
 			}
 
 
