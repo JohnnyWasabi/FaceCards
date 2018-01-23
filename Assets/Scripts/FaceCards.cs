@@ -35,7 +35,11 @@ public class FaceCards : MonoBehaviour {
 	int iTenureFilter = 0;
 	float _valTenureSlider = 0;
 	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }	  // 0.0 .. 1.0  slider value that determines countTenureMembers.
-	float valTenureSliderLastRelease = 0;	// Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
+	float valTenureSliderLastRelease = 0;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
+
+	float _valMapScaleSlider = 0;
+	float valMapScaleSlider {  get { return _valMapScaleSlider; } set { _valMapScaleSlider = value;  } }
+
 
 	float score;
 
@@ -130,6 +134,9 @@ public class FaceCards : MonoBehaviour {
 	public static int yScreenMax { get; private set; }  // screen top edge
 	public static int xScreenMax { get; private set; }  // screen right edge
 	public static int yScreenMin { get; private set; }  // screen bottom edge
+
+	float scaleMapMax = 1.0f;
+	float scaleMapMin = 0.5f;	// Typically set to fit-to-screen scale
 
 	// These are assigned from the actual loaded map data.
 	static public int pixelTileWidth = 24;
@@ -1210,6 +1217,20 @@ public class FaceCards : MonoBehaviour {
 					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : "Sort by*:";
 				}
 			}
+			//*************** Map Scale slider
+			if (!comboBoxControlMode.isComboBoxOpen && gameMode == GameMode.map)
+			{
+				Rect rectMapScaleSlider = comboBoxControlMode.rectPosition;
+				rectMapScaleSlider.y -= 32;
+				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valTenureSlider, scalMapMin, scalMapMax);
+
+				
+				rectMapScaleSlider.y -= 16;
+				rectMapScaleSlider.x += valTenureSlider * (rectMapScaleSlider.width - 12);
+				//if (!comboBoxControlMode.isFlashedOff)
+				//	GUI.Label(rectMapScaleSlider, new GUIContent(countTenureMembers.ToString()));
+			}
+
 
 			// *************** TENURE
 			selectedItemIndex = comboBoxControlTenure.Show();
@@ -1240,6 +1261,7 @@ public class FaceCards : MonoBehaviour {
 				}
 				RestartCurrentMode();
 			}
+
 			if (!comboBoxControlTenure.isComboBoxOpen && iTenureFilter != 0)
 			{
 				Rect rectTenureSlider = comboBoxControlTenure.rectPosition;
@@ -1247,7 +1269,7 @@ public class FaceCards : MonoBehaviour {
 				valTenureSlider = GUI.HorizontalSlider(rectTenureSlider, valTenureSlider, 0.0f, 1.0f);
 
 				rectTenureSlider.y -= 16;
-				rectTenureSlider.x += valTenureSlider * (rectTenureSlider.width-12);
+				rectTenureSlider.x += valTenureSlider * (rectTenureSlider.width - 12);
 				if (!comboBoxControlTenure.isFlashedOff)
 					GUI.Label(rectTenureSlider, new GUIContent(countTenureMembers.ToString()));
 			}
