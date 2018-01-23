@@ -85,6 +85,7 @@ public class FaceSprite : System.IComparable
 	public void ArrangeOnMap(float scale, float moveDuration = 0.5f)
 	{
 		Vector2 pos = SpotManager.GetSpotPos(id, scale);
+		pos.y -= YearBook.dimPhoto.y * 0.5f;
 		card.MoveTo(pos, YearBook.dimPhoto * scale, moveDuration);
 	}
 }

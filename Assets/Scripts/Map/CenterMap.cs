@@ -32,8 +32,11 @@ public class CenterMap : MonoBehaviour {
 		if (mapRenderer != null && mapRenderer.goMap.activeSelf)
 		{
 			float scale = mapRenderer.goMap.transform.localScale.x;
-			FaceCards.xMapUL =(int)( (-mapData.Layers[0].Width / 2 * pixelTileWidth) * scale);
-			FaceCards.yMapUL =(int)( (mapData.Layers[0].Height / 2 * pixelTileHeight ) * scale + FaceCards.ControlBarHeight); 
+			int mapWidth = mapData.Layers[0].Width * pixelTileWidth;
+			int mapHeight = mapData.Layers[0].Height * pixelTileHeight;
+
+			FaceCards.xMapUL =(int)( (-mapWidth / 2) * scale);
+			FaceCards.yMapUL =(int)( (mapHeight / 2) * scale + FaceCards.ControlBarHeight); 
 
 			mapRenderer.goMap.transform.position = new Vector3(FaceCards.xMapUL + pixelHalfTileWidth*scale, FaceCards.yMapUL - pixelHalfTileHeight*scale, 0);
 		}
