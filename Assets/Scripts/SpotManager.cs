@@ -28,11 +28,14 @@ public class SpotManager : MonoBehaviour {
 		}
 
 	}
-	public static Vector2 GetSpotPos(string id)
+	public static Vector2 GetSpotPos(string id, float scale)
 	{
 		Vector2 pos;
 		if (dictSeatIdToPos.TryGetValue(id, out pos))
 		{
+			pos *= scale;
+			pos.x += FaceCards.xMapUL;
+			pos.y = FaceCards.yMapUL - pos.y;
 			return pos;
 		}
 		return Vector2.zero;
@@ -55,9 +58,9 @@ public class SpotManager : MonoBehaviour {
 				float yPos;
 				float.TryParse(cols[1], out xPos);
 				float.TryParse(cols[2], out yPos);
+				dictSeatIdToPos.Add(cols[0], new Vector2(xPos, yPos));
 				xPos = FaceCards.xMapUL + xPos;
 				yPos = FaceCards.yMapUL - yPos;
-				dictSeatIdToPos.Add(cols[0], new Vector2(xPos, yPos));
 
 				if (editSpots)
 				{

@@ -37,7 +37,7 @@ public class FaceCards : MonoBehaviour {
 	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }	  // 0.0 .. 1.0  slider value that determines countTenureMembers.
 	float valTenureSliderLastRelease = 0;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
-	float _valMapScaleSlider = 0;
+	float _valMapScaleSlider = 1;
 	float valMapScaleSlider {  get { return _valMapScaleSlider; } set { _valMapScaleSlider = value;  } }
 
 
@@ -123,10 +123,10 @@ public class FaceCards : MonoBehaviour {
 
 	public MapReader.Map mapDataMap;
 	public MapRenderer mapRendererMap;
-	public float scaleMap { get { return mapRendererMap.goMap.transform.localScale.x; } }
+	public float scaleMap { get { return mapRendererMap.goMap.transform.localScale.x; } set { mapRendererMap.goMap.transform.localScale = new Vector3(value, value, 1); } }
 	// Upper left corner of map in world coordinates
-	public static int xMapUL { get; private set; }
-	public static int yMapUL { get; private set; }
+	public static int xMapUL { get; set; }
+	public static int yMapUL { get; set; }
 	public static int xMapBR { get; private set; }
 	public static int yMapBR { get; private set; }
 
@@ -134,6 +134,10 @@ public class FaceCards : MonoBehaviour {
 	public static int yScreenMax { get; private set; }  // screen top edge
 	public static int xScreenMax { get; private set; }  // screen right edge
 	public static int yScreenMin { get; private set; }  // screen bottom edge
+
+	public static int ScreenPlayAreaWidth;
+	public static int ScreenPlayAreaHeight;
+	public static int ControlBarHeight;
 
 	float scaleMapMax = 1.0f;
 	float scaleMapMin = 0.5f;	// Typically set to fit-to-screen scale
@@ -143,19 +147,32 @@ public class FaceCards : MonoBehaviour {
 	static public int pixelTileHeight = 24;
 	static public int pixelHalfTileWidth = (pixelTileWidth / 2);
 	static public int pixelHalfTileHeight = (pixelTileHeight / 2);
+	public int mapWidth;
+	public int mapHeight;
 
 	void Awake()
 	{
+		ScreenPlayAreaWidth = Screen.width;
+		ScreenPlayAreaHeight = Screen.height - (int)cubeBG.transform.localScale.y;
+		ControlBarHeight = (int)cubeBG.transform.localScale.y;
+
 		mapDataMap = MapReader.GetMapFromFile("Floorplan.tmx");   // Dirt layer
 		pixelTileWidth = mapDataMap.TileWidth;
 		pixelHalfTileWidth = pixelTileWidth / 2;
 		pixelTileHeight = mapDataMap.TileHeight;
 		pixelHalfTileHeight = pixelTileHeight / 2;
 
-		xMapUL = -(mapDataMap.Layers[0].Width / 2 * pixelTileWidth);// + (int)LayoutSet.layout.transform.localPosition.x;
-		yMapUL = mapDataMap.Layers[0].Height / 2 * pixelTileHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
+		mapWidth = mapDataMap.Layers[0].Width * pixelTileWidth;
+		mapHeight = mapDataMap.Layers[0].Height * pixelTileHeight;
+		xMapUL = -(mapWidth / 2) + pixelHalfTileWidth;// + (int)LayoutSet.layout.transform.localPosition.x;
+		yMapUL = mapHeight / 2 - pixelHalfTileHeight + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
 		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
 		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
+
+
+		float scaleMapMinX = (float)ScreenPlayAreaWidth / (float)mapWidth;
+		float scaleMapMinY = (float)ScreenPlayAreaHeight / (float)mapHeight;
+		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
 
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
 		mapRendererMap.goMap.transform.position = new Vector3(xMapUL, yMapUL, 0);
@@ -532,7 +549,7 @@ public class FaceCards : MonoBehaviour {
 		
 		iFaceSprite = faceSprites.Count - 1;
 		ShowNextFace();
-		if (isFlashcardsMode)
+		if (isFlashcardsMode || gameMode == GameMode.map)
 			ReturnFaceToYearbook(faceSpriteCrnt);
 	}
 
@@ -1222,11 +1239,9 @@ public class FaceCards : MonoBehaviour {
 			{
 				Rect rectMapScaleSlider = comboBoxControlMode.rectPosition;
 				rectMapScaleSlider.y -= 32;
-				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valTenureSlider, scalMapMin, scalMapMax);
-
+				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valMapScaleSlider, scaleMapMin, scaleMapMax);
+				scaleMap = valMapScaleSlider;
 				
-				rectMapScaleSlider.y -= 16;
-				rectMapScaleSlider.x += valTenureSlider * (rectMapScaleSlider.width - 12);
 				//if (!comboBoxControlMode.isFlashedOff)
 				//	GUI.Label(rectMapScaleSlider, new GUIContent(countTenureMembers.ToString()));
 			}
