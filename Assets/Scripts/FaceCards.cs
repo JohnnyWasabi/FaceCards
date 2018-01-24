@@ -189,6 +189,7 @@ public class FaceCards : MonoBehaviour {
 		if (scaleMap < scaleMapMin)
 		{
 			scaleMap = scaleMapMin;
+			valMapScaleSlider = scaleMap;
 		}
 	}
 	// Use this for initialization
@@ -564,6 +565,17 @@ public class FaceCards : MonoBehaviour {
 			ReturnFaceToYearbook(faceSpriteCrnt);
 	}
 
+	public void ArrangeFacesOnPage()
+	{
+		foreach (FaceSprite fs in faceSprites)
+		{
+			ReturnFaceToYearbook(fs);
+			//fs.card.ArrangeOnYearbook(0.25f);
+		}
+		if (gameMode == GameMode.memoryGame)
+			faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, 0.25f);
+	}
+
 	void FilterOutFace(FaceSprite fs)
 	{
 		totalGuessNameChars -= fs.fullName.Length;
@@ -900,12 +912,7 @@ public class FaceCards : MonoBehaviour {
 					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin); // make it update it's Screen-size based values.
 					if (!isYearBookMode)
 					{
-						foreach (FaceSprite fs in faceSprites)
-						{
-							fs.card.ArrangeOnYearbook(0.25f);
-						}
-						//DisplayFaceSprite();
-						faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, 0.25f);// timeTransitionShowFace);
+						Invoke("ArrangeFacesOnPage", 0.1f); // requires delay or it doesn't work. Don't know why.
 					}
 					else
 					{
@@ -1012,12 +1019,11 @@ public class FaceCards : MonoBehaviour {
 		if (gameMode != GameMode.memoryGame)
 			guiTextNofM.text = "";
 
-		{
-			if (!fs.collected && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode
-				fs.card.FlipShowBack();
-			else
-				fs.card.FlipShowFront();
-		}
+		if (!fs.collected && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode
+			fs.card.FlipShowBack();
+		else
+			fs.card.FlipShowFront();
+
 		if (fs.card.indexOrder == -1)
 			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
 		else if (gameMode == GameMode.map)
@@ -1376,18 +1382,6 @@ public class FaceCards : MonoBehaviour {
 			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, 64, btnHeight), "Restart"))
 			{
 				RestartCurrentMode();
-#if false
-				if (isYearBookMode)
-				{
-					ChangeToFromYearBookMode();
-				}
-				else if (isFlashcardsMode)
-				{
-					RestartGame(false);
-				}
-				else if (gameMode == GameMode.memoryGame)
-					RestartGame();
-#endif
 			}
 
 			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
