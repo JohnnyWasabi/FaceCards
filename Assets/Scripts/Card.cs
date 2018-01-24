@@ -54,10 +54,26 @@ public class Card : MonoBehaviour {
 	float timeFlipStart;
 	float flipDuration;
 
+	public enum WaggleState {  stopped, waggling, stopping}
+	public WaggleState waggleState;
+	float timeWaggleAnchor = 0;
+	float sinWagglePrev;
+
 	bool bShowFront;
 
 	// Use this for initialization
 	void Awake () {
+		waggleState = WaggleState.stopped;
+	}
+
+	public void StartWaggle()
+	{
+		timeWaggleAnchor = Time.time;
+		waggleState = WaggleState.waggling;
+	}
+	public void StopWaggle()
+	{
+		waggleState = WaggleState.stopping;
 	}
 
 	public void Init(Sprite face, Sprite back, Sprite front, Sprite frontFrame, Vector2 pos)
@@ -119,6 +135,25 @@ public class Card : MonoBehaviour {
 				SetPos(posMoveEnd);
 				UpdateSpritesScales();
 			}
+		}
+		if (waggleState != WaggleState.stopped)
+		{
+			float timeDelta = Time.time - timeWaggleAnchor;
+			float radians = timeDelta * (2f*Mathf.PI * 1.75f);
+			float sinWaggle = Mathf.Sin(radians);
+			float tiltDegs = sinWaggle * 45f;
+			Vector3 eulers = transform.localRotation.eulerAngles;
+			transform.localRotation = Quaternion.Euler(eulers.x, eulers.y, tiltDegs);
+			
+			if (waggleState == WaggleState.stopping)
+			{
+				if (Mathf.Sign(sinWaggle) != Mathf.Sign(sinWagglePrev))
+				{
+					transform.localRotation = Quaternion.Euler(eulers.x, eulers.y, 0);
+					waggleState = WaggleState.stopped;
+				}
+			}
+			sinWagglePrev = sinWaggle;
 		}
 	}
 
