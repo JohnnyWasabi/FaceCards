@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-public class FaceCards : MonoBehaviour {
+public class FaceCards : StateMachine {
 
 	const float btnHeight = 24;
 	const float btnVSpacing = 4;
@@ -177,6 +177,20 @@ public class FaceCards : MonoBehaviour {
 		centerMap.Init(mapDataMap, mapRendererMap);
 
 		CalcMapScaleLimits();
+
+		// Setup app states
+		stateLoading = new State("Loading", Loading_Enter, Loading_Update, Loading_Exit);
+		stateMemoryGame = new State("MemoryGame", MemoryGame_Enter, MemoryGame_Update, MemoryGame_Exit);
+		stateFlashCards = new State("FlashCards", FlashCards_Enter, FlashCards_Update, FlashCards_Exit);
+		stateYearbook = new State("Yearbook", Yearbook_Enter, Yearbook_Update, Yearbook_Exit);
+		stateMapView = new State("MapView", MapView_Enter, MapView_Update, MapView_Exit);
+		stateColorPicking = new State("ColorPicking", ColorPicking_Enter, ColorPicking_Update, ColorPicking_Exit);
+
+		TransitionToState(stateLoading);
+
+		oldScreenWidth = Screen.width;
+		oldScreenHeight = Screen.height;
+
 	}
 
 	void CalcMapScaleLimits()
@@ -275,6 +289,488 @@ public class FaceCards : MonoBehaviour {
 		}
 
 	}
+
+	#region STATES
+	/************************************************************************************************************************************/
+	/************************************************************************************************************************************/
+
+	#region STATE_Loading
+	/************************************************************************************************************************************/
+	State stateLoading;
+	public void Loading_Enter(State prevState)	{ doneLoading = false; }
+	public void Loading_Exit(State nextState) { }
+	public State Loading_Update()
+	{
+		if (doneLoading)
+			return stateMemoryGame;
+
+		return null;
+	}
+	#endregion STATE_Loading
+
+	#region STATE_MemoryGame
+	/************************************************************************************************************************************/
+	State stateMemoryGame;
+	public void MemoryGame_Enter(State prevState) {  }
+	public void MemoryGame_Exit(State nextState) { }
+	public State MemoryGame_Update()
+	{
+		if (Input.inputString.Length > 0 && !AreAllCollected())
+		{
+			guiTextBadChar.text = "";
+			foreach (char c in Input.inputString)
+			{
+				if (c == "\b"[0])
+				{
+					//RemoveChar();
+				}
+				else if (c == "\n"[0] || c == "\r"[0])
+				{
+
+				}
+				else if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+				{
+					char nextNameChar = faceSpriteCrnt.guessName[guiTextName.text.Length];
+					if (nextNameChar == c)
+					{
+						AddChar();
+						++typedGood;
+					}
+					else if (!caseSensitive && (nextNameChar == char.ToUpper(c) || nextNameChar == char.ToLower(c)))
+					{
+						AddChar();
+						guiTextBadChar.text += c.ToString();
+						++typedGoodWrongCase;
+					}
+					else
+					{
+						guiTextBadChar.text += c.ToString();
+						faceSpriteCrnt.countWrongChars++;
+						++typedBad;
+						guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
+					}
+				}
+			}
+		}
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			if (guiTextName.text == faceSpriteCrnt.guessName)
+			{
+				if (!IsHangManDead())
+				{
+					faceSpriteCrnt.collected = true;
+					guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+				}
+				ReturnFaceToYearbook(faceSpriteCrnt);
+				if (!AreAllCollected())
+					ShowNextFace();
+				else
+				{
+					guiTextName.color = Color.white;
+					guiTextName.text = msgVictory;
+					guiTextRole.text = "";
+					if (fsCurrentUser != null)
+					{
+						iFaceSprite = fsCurrentUser.card.indexOrder;
+						DisplayFaceSprite(fsCurrentUser, false);
+					}
+				}
+			}
+			else if (!AreAllCollected())
+			{
+				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
+				guiTextName.text = faceSpriteCrnt.guessName;
+				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.RightArrow))
+		{
+			if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+			{
+				++faceSpriteCrnt.countRevealed;
+				AddChar();
+				if (IsHangManDead())
+					guiTextName.color = Color.yellow;
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.LeftArrow))
+		{
+			RemoveChar();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageDown))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowNextFace();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageUp))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowPrevFace();
+		}
+		else if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+		else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+		{
+			// First check if clicked on Big version of pic
+			Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
+			float xMouseWorld = Input.mousePosition.x - Screen.width * 0.5f;
+			float yMouseWorld = Input.mousePosition.y - Screen.height * 0.5f;
+			bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
+				&& (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
+					&& xMouseWorld <= transform.position.x + displayFaceSize.x * 0.5f
+					&& yMouseWorld <= transform.position.y + displayFaceSize.y
+					&& yMouseWorld >= transform.position.y
+				);
+			//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
+			if (clickedDisplayFace)
+			{
+				if (Input.GetMouseButtonDown(0) && AreAllCollected())
+					ReturnFaceToYearbook(faceSpriteCrnt);
+			}
+			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y)))
+			{
+				if (Input.GetMouseButtonDown(0))
+				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
+					iFaceSprite = index;
+					DisplayFaceSprite();
+				}
+			}
+			else if (yMouseWorld > transform.position.y)
+			{
+				if (Input.GetMouseButtonDown(1))
+					return stateColorPicking;
+			}
+		}
+
+		return null;
+	}
+	#endregion STATE_MemoryGame
+
+	#region STATE_FlashCards
+	/************************************************************************************************************************************/
+	State stateFlashCards;
+	public void FlashCards_Enter(State prevState) { }
+	public void FlashCards_Exit(State nextState) { }
+	public State FlashCards_Update()
+	{
+		if (Input.inputString.Length > 0 && !AreAllCollected())
+		{
+			guiTextBadChar.text = "";
+			foreach (char c in Input.inputString)
+			{
+				if (c == "\b"[0])
+				{
+					//RemoveChar();
+				}
+				else if (c == "\n"[0] || c == "\r"[0])
+				{
+
+				}
+				else if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+				{
+					char nextNameChar = faceSpriteCrnt.guessName[guiTextName.text.Length];
+					if (nextNameChar == c)
+					{
+						AddChar();
+						++typedGood;
+					}
+					else if (!caseSensitive && (nextNameChar == char.ToUpper(c) || nextNameChar == char.ToLower(c)))
+					{
+						AddChar();
+						guiTextBadChar.text += c.ToString();
+						++typedGoodWrongCase;
+					}
+					else
+					{
+						guiTextBadChar.text += c.ToString();
+						faceSpriteCrnt.countWrongChars++;
+						++typedBad;
+						guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
+					}
+				}
+			}
+		}
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			if (guiTextName.text == faceSpriteCrnt.guessName)
+			{
+				if (!IsHangManDead() && gameMode == GameMode.memoryGame) //!isFlashcardsMode)
+				{
+					faceSpriteCrnt.collected = true;
+					guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+				}
+				//faceSpriteCrnt.card.ArrangeOnYearbook();
+				ReturnFaceToYearbook(faceSpriteCrnt);
+				if (!AreAllCollected())
+					ShowNextFace();
+				else
+				{
+					guiTextName.color = Color.white;
+					guiTextName.text = msgVictory;
+					guiTextRole.text = "";
+					if (fsCurrentUser != null)
+					{
+						iFaceSprite = fsCurrentUser.card.indexOrder;
+						DisplayFaceSprite(fsCurrentUser, false);
+					}
+					//guiTextNofM.text = "";
+				}
+			}
+			else if (!AreAllCollected())
+			{
+				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
+				guiTextName.text = faceSpriteCrnt.guessName;
+				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.RightArrow))
+		{
+			if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+			{
+				++faceSpriteCrnt.countRevealed;
+				AddChar();
+				if (IsHangManDead())
+					guiTextName.color = Color.yellow;
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.LeftArrow))
+		{
+			RemoveChar();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageDown))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowNextFace();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageUp))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowPrevFace();
+		}
+		else if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+		else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+		{
+			// First check if clicked on Big version of pic
+			Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
+			float xMouseWorld = Input.mousePosition.x - Screen.width * 0.5f;
+			float yMouseWorld = Input.mousePosition.y - Screen.height * 0.5f;
+			bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
+				&& (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
+					&& xMouseWorld <= transform.position.x + displayFaceSize.x * 0.5f
+					&& yMouseWorld <= transform.position.y + displayFaceSize.y
+					&& yMouseWorld >= transform.position.y
+				);
+			//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
+			if (clickedDisplayFace)
+			{
+				if (Input.GetMouseButtonDown(0) && (gameMode != GameMode.memoryGame || AreAllCollected())) //showAllFaces || isYearBookMode ||
+					ReturnFaceToYearbook(faceSpriteCrnt);
+			}
+			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
+			{
+				if (Input.GetMouseButtonDown(0))
+				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
+					iFaceSprite = index;
+					DisplayFaceSprite();
+				}
+			}
+			else if (yMouseWorld > transform.position.y)
+			{
+				if (Input.GetMouseButtonDown(1))
+					bgColorPicker.Show();
+			}
+		}
+		return null;
+	}
+	#endregion STATE_FlashCards
+
+	#region STATE_Yearbook
+	/************************************************************************************************************************************/
+	State stateYearbook;
+	public void Yearbook_Enter(State prevState) { }
+	public void Yearbook_Exit(State nextState) { }
+	public State Yearbook_Update()
+	{
+		if (Input.inputString.Length > 0 && !AreAllCollected())
+		{
+			guiTextBadChar.text = "";
+			foreach (char c in Input.inputString)
+			{
+				if (c == "\b"[0])
+				{
+					//RemoveChar();
+				}
+				else if (c == "\n"[0] || c == "\r"[0])
+				{
+
+				}
+				else if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+				{
+					char nextNameChar = faceSpriteCrnt.guessName[guiTextName.text.Length];
+					if (nextNameChar == c)
+					{
+						AddChar();
+						++typedGood;
+					}
+					else if (!caseSensitive && (nextNameChar == char.ToUpper(c) || nextNameChar == char.ToLower(c)))
+					{
+						AddChar();
+						guiTextBadChar.text += c.ToString();
+						++typedGoodWrongCase;
+					}
+					else
+					{
+						guiTextBadChar.text += c.ToString();
+						faceSpriteCrnt.countWrongChars++;
+						++typedBad;
+						guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
+					}
+				}
+			}
+		}
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			if (guiTextName.text == faceSpriteCrnt.guessName)
+			{
+				if (!IsHangManDead() && gameMode == GameMode.memoryGame) //!isFlashcardsMode)
+				{
+					faceSpriteCrnt.collected = true;
+					guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+				}
+				//faceSpriteCrnt.card.ArrangeOnYearbook();
+				ReturnFaceToYearbook(faceSpriteCrnt);
+				if (!AreAllCollected())
+					ShowNextFace();
+				else
+				{
+					guiTextName.color = Color.white;
+					guiTextName.text = msgVictory;
+					guiTextRole.text = "";
+					if (fsCurrentUser != null)
+					{
+						iFaceSprite = fsCurrentUser.card.indexOrder;
+						DisplayFaceSprite(fsCurrentUser, false);
+					}
+					//guiTextNofM.text = "";
+				}
+			}
+			else if (!AreAllCollected())
+			{
+				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
+				guiTextName.text = faceSpriteCrnt.guessName;
+				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.RightArrow))
+		{
+			if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
+			{
+				++faceSpriteCrnt.countRevealed;
+				AddChar();
+				if (IsHangManDead())
+					guiTextName.color = Color.yellow;
+			}
+		}
+		else if (GetKeyRepeatable(KeyCode.LeftArrow))
+		{
+			RemoveChar();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageDown))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowNextFace();
+		}
+		else if (GetKeyRepeatable(KeyCode.PageUp))
+		{
+			ReturnFaceToYearbook(faceSpriteCrnt);
+			ShowPrevFace();
+		}
+		else if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+		else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+		{
+			// First check if clicked on Big version of pic
+			Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
+			float xMouseWorld = Input.mousePosition.x - Screen.width * 0.5f;
+			float yMouseWorld = Input.mousePosition.y - Screen.height * 0.5f;
+			bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
+				&& (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
+					&& xMouseWorld <= transform.position.x + displayFaceSize.x * 0.5f
+					&& yMouseWorld <= transform.position.y + displayFaceSize.y
+					&& yMouseWorld >= transform.position.y
+				);
+			//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
+			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
+			if (clickedDisplayFace)
+			{
+				if (Input.GetMouseButtonDown(0) && (gameMode != GameMode.memoryGame || AreAllCollected())) //showAllFaces || isYearBookMode ||
+					ReturnFaceToYearbook(faceSpriteCrnt);
+			}
+			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
+			{
+				if (Input.GetMouseButtonDown(0))
+				{
+					ReturnFaceToYearbook(faceSpriteCrnt);
+					iFaceSprite = index;
+					DisplayFaceSprite();
+				}
+			}
+			else if (yMouseWorld > transform.position.y)
+			{
+				if (Input.GetMouseButtonDown(1))
+					bgColorPicker.Show();
+			}
+		}
+		return null;
+	}
+	#endregion
+
+	#region STATE_MapView
+	/************************************************************************************************************************************/
+	State stateMapView;
+	public void MapView_Enter(State prevState) { }
+	public void MapView_Exit(State nextState) { }
+	public State MapView_Update()
+	{
+		return null;
+	}
+	#endregion STATE_MapView
+
+
+	#region STATE_ColorPicking
+	/************************************************************************************************************************************/
+	State stateColorPicking;
+	State stateColorPickingReturnTo;
+	public void ColorPicking_Enter(State prevState) {
+		stateColorPickingReturnTo = prevState;
+		bgColorPicker.Show();
+	}
+	public void ColorPicking_Exit(State nextState) { }
+	public State ColorPicking_Update()
+	{
+		if (!bgColorPicker.IsActive())
+			return stateColorPickingReturnTo;
+
+		return null;
+	}
+	#endregion STATE_ColorPicking
+	/************************************************************************************************************************************/
+	/************************************************************************************************************************************/
+	#endregion STATES
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
 
@@ -741,144 +1237,13 @@ public class FaceCards : MonoBehaviour {
 	float oldScreenHeight = 0;
 	bool needScreenLayoutUpdate = false;
 	// Update is called once per frame
-	void Update() {
+	public override void Update() {
+		base.Update();
 		if (doneLoading)
 		{
 			if (!bgColorPicker.IsActive())
 			{
-				if (Input.inputString.Length > 0 && !AreAllCollected())
-				{
-					guiTextBadChar.text = "";
-					foreach (char c in Input.inputString)
-					{
-						if (c == "\b"[0])
-						{
-							//RemoveChar();
-						}
-						else if (c == "\n"[0] || c == "\r"[0])
-						{
 
-						}
-						else if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
-						{
-							char nextNameChar = faceSpriteCrnt.guessName[guiTextName.text.Length];
-							if (nextNameChar == c)
-							{
-								AddChar();
-								++typedGood;
-							}
-							else if (!caseSensitive && (nextNameChar == char.ToUpper(c) || nextNameChar == char.ToLower(c)))
-							{
-								AddChar();
-								guiTextBadChar.text += c.ToString();
-								++typedGoodWrongCase;
-							}
-							else
-							{
-								guiTextBadChar.text += c.ToString();
-								faceSpriteCrnt.countWrongChars++;
-								++typedBad;
-								guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
-							}
-						}
-					}
-				}
-				if (Input.GetKeyDown(KeyCode.Return))
-				{
-					if (guiTextName.text == faceSpriteCrnt.guessName)
-					{
-						if (!IsHangManDead() && gameMode == GameMode.memoryGame) //!isFlashcardsMode)
-						{
-							faceSpriteCrnt.collected = true;
-							guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
-						}
-						//faceSpriteCrnt.card.ArrangeOnYearbook();
-						ReturnFaceToYearbook(faceSpriteCrnt);
-						if (!AreAllCollected())
-							ShowNextFace();
-						else
-						{
-							guiTextName.color = Color.white;
-							guiTextName.text = msgVictory;
-							guiTextRole.text = "";
-							if (fsCurrentUser != null)
-							{
-								iFaceSprite = fsCurrentUser.card.indexOrder;
-								DisplayFaceSprite(fsCurrentUser, false);
-							}
-							//guiTextNofM.text = "";
-						}
-					}
-					else if (!AreAllCollected())
-					{
-						faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
-						guiTextName.text = faceSpriteCrnt.guessName;
-						guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-						guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
-					}
-				}
-				else if (GetKeyRepeatable(KeyCode.RightArrow))
-				{
-					if (guiTextName.text.Length < faceSpriteCrnt.guessName.Length)
-					{
-						++faceSpriteCrnt.countRevealed;
-						AddChar();
-						if (IsHangManDead())
-							guiTextName.color = Color.yellow;
-					}
-				}
-				else if (GetKeyRepeatable(KeyCode.LeftArrow))
-				{
-					RemoveChar();
-				}
-				else if (GetKeyRepeatable(KeyCode.PageDown))
-				{
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					ShowNextFace();
-				}
-				else if (GetKeyRepeatable(KeyCode.PageUp))
-				{
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					ShowPrevFace();
-				}
-				else if (Input.GetKeyDown(KeyCode.Escape))
-				{
-					Application.Quit();
-				}
-				else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
-				{
-					// First check if clicked on Big version of pic
-					Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
-					float xMouseWorld = Input.mousePosition.x - Screen.width * 0.5f;
-					float yMouseWorld = Input.mousePosition.y - Screen.height * 0.5f;
-					bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
-						&& (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
-							&& xMouseWorld <= transform.position.x + displayFaceSize.x * 0.5f
-							&& yMouseWorld <= transform.position.y + displayFaceSize.y
-							&& yMouseWorld >= transform.position.y
-						);
-					//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
-					int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
-					if (clickedDisplayFace)
-					{
-						if (Input.GetMouseButtonDown(0) && (gameMode != GameMode.memoryGame || AreAllCollected())) //showAllFaces || isYearBookMode ||
-							ReturnFaceToYearbook(faceSpriteCrnt);
-					}
-					else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
-					{
-						if (Input.GetMouseButtonDown(0))
-						{
-							ReturnFaceToYearbook(faceSpriteCrnt);
-							iFaceSprite = index;
-							DisplayFaceSprite();
-						}
-					}
-					else if (yMouseWorld > transform.position.y)
-					{
-						if (Input.GetMouseButtonDown(1))
-							bgColorPicker.Show();
-					}
-				}
 
 				if (Input.GetMouseButtonUp(0))
 				{
@@ -1185,7 +1550,7 @@ public class FaceCards : MonoBehaviour {
 	}
 	void OnGUI()
 	{
- 		if (doneLoading)
+ 		if (doneLoading && !bgColorPicker.IsActive())
 		{
 
 			// Department Selector
@@ -1256,6 +1621,13 @@ public class FaceCards : MonoBehaviour {
 				{
 					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
 					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : "Sort by*:";
+				}
+				switch (gameMode)
+				{
+				case GameMode.memoryGame:	TransitionToState(stateMemoryGame); break;
+				case GameMode.flashCards:	TransitionToState(stateFlashCards); break;
+				case GameMode.yearBook:		TransitionToState(stateYearbook); break;
+				case GameMode.map:			TransitionToState(stateMapView); break;
 				}
 			}
 			//*************** Map Scale slider
