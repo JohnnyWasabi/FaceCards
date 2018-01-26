@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,12 +13,17 @@ public class SpotManager : MonoBehaviour {
 
 	List<NumberedSpot> listSpots;
 	string[] rows;
+	string headingsSeats;
 	string filePath;
-	static Dictionary<string, Vector2> dictSeatIdToPos;
+	static Dictionary<string, Vector2> dictSeatIdToPos = new Dictionary<string, Vector2>();
+	static Dictionary<string, string> dictFaceIdToSeatID = new Dictionary<string, string>();
+	Dictionary<string, string> dictConfig;
+	const string FaceIDReplacementToken = "<UNIQUE_ID>";
+	static public string FaceIDTemplate = FaceIDReplacementToken; // Defaults to replacement token f none present in config file so that the unique portion from the filename becomes the whole ID.
 
 	void Awake()
 	{
-		dictSeatIdToPos = new Dictionary<string, Vector2>();
+		dictConfig = new Dictionary<string, string>();
 		listSpots = new List<NumberedSpot>();
 
 		if (editSpots)
@@ -27,55 +33,147 @@ public class SpotManager : MonoBehaviour {
 			nspotCursor.textMesh.text = "";
 		}
 
-	}
-	public static Vector2 GetSpotPos(string id, float scale)
-	{
-		Vector2 pos;
-		if (dictSeatIdToPos.TryGetValue(id, out pos))
+
+		// Read in Config file
 		{
-			pos *= scale;
-			pos.x += FaceCards.xMapUL;
-			pos.y = FaceCards.yMapUL - pos.y;
-			return pos;
-		}
-		return Vector2.zero;
-	}
-	// Use this for initialization
-	void Start () {
-		// Read in the spot values
-		string filename = "Maps\\Seats.csv";
-		filePath = System.IO.Path.Combine(Application.streamingAssetsPath, filename);
-		string seatsFile = System.IO.File.ReadAllText(filePath);
-		//Debug.Log("Puzzle=" + puzzleFile);
-		rows = seatsFile.Split(new string[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
-		for (int iRow = 1; iRow < rows.Length; iRow++)
-		{
-			string[] cols = rows[iRow].Split(new char[] { ',' }, System.StringSplitOptions.None);
-			if (cols.Length >= 3)
+			string filenameConfig = "Config.txt";
+			string filePathConfig = System.IO.Path.Combine(Application.streamingAssetsPath, filenameConfig);
+			string configFile = System.IO.File.ReadAllText(filePathConfig);
+			string[] linesConfig = configFile.Split(new string[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+
+			for (int iLine = 0; iLine < linesConfig.Length; iLine++)
 			{
-
-				float xPos;
-				float yPos;
-				float.TryParse(cols[1], out xPos);
-				float.TryParse(cols[2], out yPos);
-				dictSeatIdToPos.Add(cols[0], new Vector2(xPos, yPos));
-				xPos = FaceCards.xMapUL + xPos;
-				yPos = FaceCards.yMapUL - yPos;
-
-				if (editSpots)
+				if (linesConfig[iLine].StartsWith("//"))
+					continue; // ignore comments
+				string line = linesConfig[iLine].Trim();
+				if (line.Length == 0)
+					continue;
+				string[] parts = line.Split(new char[] { '=' }, System.StringSplitOptions.None);
+				if (parts.Length == 2)
 				{
-					GameObject goSpot = Instantiate(prefabSpot, transform);
-					NumberedSpot nspot = goSpot.GetComponent<NumberedSpot>();
-					listSpots.Add(nspot);
-					nspot.textMesh.text = cols[0];
-					nspot.id = cols[0];
-					nspot.transform.localPosition = new Vector3(xPos, yPos, 0);
+					dictConfig.Add(parts[0].Trim(), parts[1].Trim());
 				}
 			}
 		}
+		if (dictConfig.ContainsKey("FaceIDTemplate"))
+			FaceIDTemplate = dictConfig["FaceIDTemplate"];
+
+		string[] seatCSVs = GetConfigValuesArray("Seats", dictConfig);
+		string[] seatingCSVs = GetConfigValuesArray("Seating", dictConfig);
+		AddHeadingsToDict("SeatsHeadings", dictConfig);
+		AddHeadingsToDict("SeatingHeadings", dictConfig);
+
+		// Read in the SeatID to map position mappings
+		foreach (string seatFile in seatCSVs)
+		{
+			filePath = System.IO.Path.Combine(Application.streamingAssetsPath, seatFile);
+			headingsSeats = AddKeyValuesFromCSVToDict(filePath, 
+				(iRow, dictHeadingsToValues) =>
+				{
+					float xPos, yPos;
+					float.TryParse(dictHeadingsToValues[dictConfig["SeatsHeadings.XPos"]], out xPos);
+					float.TryParse(dictHeadingsToValues[dictConfig["SeatsHeadings.YPos"]], out yPos);
+					string seatID = dictHeadingsToValues[dictConfig["SeatsHeadings.SeatID"]];
+					dictSeatIdToPos[seatID] = new Vector2(xPos, yPos);
+					if (editSpots)
+					{
+						xPos = FaceCards.xMapUL + xPos;
+						yPos = FaceCards.yMapUL - yPos;
+						GameObject goSpot = Instantiate(prefabSpot, transform);
+						NumberedSpot nspot = goSpot.GetComponent<NumberedSpot>();
+						listSpots.Add(nspot);
+						nspot.textMesh.text = seatID;
+						nspot.id = seatID;
+						nspot.transform.localPosition = new Vector3(xPos, yPos, 0);
+					}
+				}
+			);
+		}
+		// Read in the FaceID to SeatID mappings
+		foreach (string seatingFile in seatingCSVs)
+		{
+			AddKeyValuesFromCSVToDict(System.IO.Path.Combine(Application.streamingAssetsPath, seatingFile),
+				(iRow, dictHeadingsToValues) =>
+				{
+					dictFaceIdToSeatID[dictHeadingsToValues[dictConfig["SeatingHeadings.FaceID"]]] = dictHeadingsToValues[dictConfig["SeatingHeadings.SeatID"]];
+				}
+			);
+		}
+
+
 		if (editSpots)
 			idSpotPlacing = listSpots[iSpotEdit].id;
 		enabled = editSpots;
+
+	}
+	static public string GetFullFaceID(string uniquePortion)
+	{
+		return FaceIDTemplate.Replace(FaceIDReplacementToken, uniquePortion);
+	}
+	public static Vector2 GetSpotPos(string faceId, float scale)
+	{
+		string seatId;
+		if (dictFaceIdToSeatID.TryGetValue(faceId, out seatId))
+		{
+			Vector2 pos;
+			if (dictSeatIdToPos.TryGetValue(seatId, out pos))
+			{
+				pos *= scale;
+				pos.x += FaceCards.xMapUL;
+				pos.y = FaceCards.yMapUL - pos.y;
+				return pos;
+			}
+		}
+		return Vector2.zero;
+	}
+
+	// Action takes (int iRow, Dictionary<string, string> dictHeadingToVal), where iRow of 0 is the header.
+	// returns headings row string
+	static string AddKeyValuesFromCSVToDict(string filePath, Action<int, Dictionary<string, string>> action)
+	{
+		string csvFile = System.IO.File.ReadAllText(filePath);
+		string[] rows = csvFile.Split(new string[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+		Dictionary<string, string> dictHeadingToVal = new Dictionary<string, string>();
+		string[] headings = rows[0].Split(new char[] { ',' }, System.StringSplitOptions.None);
+
+		for (int iRow = 1; iRow < rows.Length; iRow++)
+		{
+			string[] cols = rows[iRow].Split(new char[] { ',' }, System.StringSplitOptions.None);
+			if (cols.Length <= headings.Length)
+			{
+				for (int c = 0; c < cols.Length; c++)
+				{
+					dictHeadingToVal[headings[c]] = cols[c];
+				}
+				action(iRow, dictHeadingToVal);
+			}
+		}
+		return rows[0];
+	}
+
+	static string[] GetConfigValuesArray(string key, Dictionary<string,string> dict, char delimiterChar = ',')
+	{
+		string valuesLine;
+		string[] values = new string[] { };
+		if (dict.TryGetValue(key, out valuesLine))
+		{
+			values = valuesLine.Split(new char[] { delimiterChar }, System.StringSplitOptions.None);
+			for (int i = 0; i < values.Length; i++)
+				values[i] = values[i].Trim();
+		}
+		return values;
+	}
+
+	static void AddHeadingsToDict(string headingsKey, Dictionary<string, string> dict, char delimHeadings = ',', char delimColumLabel = ':')
+	{
+
+		string[] colLabels = GetConfigValuesArray(headingsKey, dict, delimHeadings);
+		foreach(string colLabel in colLabels)
+		{
+			string[] parts = colLabel.Split(new char[] { delimColumLabel }, System.StringSplitOptions.None);
+			if (parts.Length == 2)
+				dict.Add(headingsKey + "." + parts[0].Trim(), parts[1].Trim());
+		}
 	}
 
 	public float camSpeed = 1f;
@@ -125,7 +223,7 @@ public class SpotManager : MonoBehaviour {
 			if (Input.GetKeyDown(KeyCode.Return))
 			{
 				System.Text.StringBuilder sb = new System.Text.StringBuilder();
-				sb.Append(rows[0] + "\n");
+				sb.Append(headingsSeats + "\n");
 				foreach (NumberedSpot nspot in listSpots)
 				{
 					sb.Append(nspot.id); sb.Append(",");

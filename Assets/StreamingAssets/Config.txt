@@ -1,0 +1,28 @@
+// Lines starting with // are comments.
+// This file contains Key=Value data (one per line) that tells Facecards where to find seating data (for displaying faces on the map).
+// 
+// Required Keys: 
+// 	Seats		- File name(s) of CSV containing seat IDs and corresponding position information. Comma separated if multiple.
+// 	SeatsHeadings	- Header labels on columns in SeatsCsv file for seat id, x position and y position.  Comma separated.
+// 	Seating		- File name(s) of CSV containing Face IDs and corresponding seat IDs. Comma separated if multiple.
+// 	SeatingHeadings	- Header label on columns in SeatingCSV file for Face IDs and corresponding Seat IDs. Comma separated.
+// 
+// The SeatsHeadings Value consists of property:label pairs separated by comma. Required property:label pairs:
+//	SeatID:<seat ID column label>
+//	FaceID:<label>
+//
+// The SeatsHeadings Value consists of property:label pairs separated by comma. Required property:label pairs:
+// 	SeatID:<seat ID column label>
+//	XPos:<x position column label>
+//	YPos:<x position column label>
+//
+// Spaces allowed and ignored around reserved characters for the delimiters '=', ':", and ','. 
+
+
+Seats=Seats.csv
+SeatsHeadings = SeatID:SeatID, XPos:X, YPos:Y
+Seating = user_locations.csv, user_locations_contractors.csv
+SeatingHeadings = SeatID: physicalDeliveryOfficeName, FaceID:objectSid
+
+// The <UNIQUE_ID> part is replaced with the unique portion of the ID from the filename.
+FaceIDTemplate=S-1-5-21-3939536698-307175389-1584766368-<UNIQUE_ID>

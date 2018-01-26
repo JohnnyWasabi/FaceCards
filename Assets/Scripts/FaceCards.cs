@@ -1158,7 +1158,7 @@ public class FaceCards : StateMachine {
 					//Debug.Log("File date: " + dateTime);
 					if (nameParts.Length > 4)
 					{ // parse employee id
-						idString = nameParts[4];
+						idString = SpotManager.GetFullFaceID(nameParts[4]);
 					}
 
 					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, idString, sprite, texture);
@@ -1193,7 +1193,7 @@ public class FaceCards : StateMachine {
 						totalGuessNameChars += faceSprite.fullName.Length;
 					}
 				}
-				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role");
+				else Debug.LogError("Filename missing all three parts separated by underscore. E.g. FirstName_LastName_Role: " + fileName);
 			}
 		}
 	}
