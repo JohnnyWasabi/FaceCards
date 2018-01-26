@@ -26,3 +26,11 @@ SeatingHeadings = SeatID: physicalDeliveryOfficeName, FaceID:objectSid
 
 // The <UNIQUE_ID> part is replaced with the unique portion of the ID from the filename.
 FaceIDTemplate=S-1-5-21-3939536698-307175389-1584766368-<UNIQUE_ID>
+
+// Pixel coord of start of map grid in the blueprint image
+MapGridUpperLeftX=72
+MapGridUpperLeftY=102
+MapGridHeight=2025
+MapGridWidth=4021
+MapGridRows=26
+MapGridCols=40

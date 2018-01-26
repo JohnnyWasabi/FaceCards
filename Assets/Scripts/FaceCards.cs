@@ -746,6 +746,21 @@ public class FaceCards : StateMachine {
 	public void MapView_Exit(State nextState) { }
 	public State MapView_Update()
 	{
+		if (Input.GetKeyDown(KeyCode.F12))
+		{
+			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			sb.Append("Name,Row, Col\n");
+			foreach (FaceSprite fs in faceSprites)
+			{
+				Vector2 loc = SpotManager.GetGridXY(fs.id);
+				sb.Append(fs.fullName); sb.Append(",");
+				sb.Append((Mathf.FloorToInt(loc.y) + 1).ToString()); sb.Append(",");
+				sb.Append((Mathf.FloorToInt(loc.x) + 1).ToString()); sb.Append(",");
+				sb.Append("\n");
+			}
+			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "LocatorListing.csv"), sb.ToString());
+
+		}
 		return null;
 	}
 	#endregion STATE_MapView

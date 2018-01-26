@@ -17,13 +17,21 @@ public class SpotManager : MonoBehaviour {
 	string filePath;
 	static Dictionary<string, Vector2> dictSeatIdToPos = new Dictionary<string, Vector2>();
 	static Dictionary<string, string> dictFaceIdToSeatID = new Dictionary<string, string>();
-	Dictionary<string, string> dictConfig;
+	static Dictionary<string, string> dictConfig = new Dictionary<string, string>();
 	const string FaceIDReplacementToken = "<UNIQUE_ID>";
 	static public string FaceIDTemplate = FaceIDReplacementToken; // Defaults to replacement token f none present in config file so that the unique portion from the filename becomes the whole ID.
 
+	static int mapGridUpperLeftX;
+	static int mapGridUpperLeftY;
+	static int mapGridHeight;
+	static int mapGridWidth;
+	static int mapGridRows;
+	static int mapGridCols;
+	static float mapGridCellWidth;
+	static float mapGridCellHeight;
+
 	void Awake()
 	{
-		dictConfig = new Dictionary<string, string>();
 		listSpots = new List<NumberedSpot>();
 
 		if (editSpots)
@@ -57,6 +65,16 @@ public class SpotManager : MonoBehaviour {
 		}
 		if (dictConfig.ContainsKey("FaceIDTemplate"))
 			FaceIDTemplate = dictConfig["FaceIDTemplate"];
+
+		mapGridUpperLeftX	= GetIntFromDictIfPresent(dictConfig, "MapGridUpperLeftX");
+		mapGridUpperLeftY	= GetIntFromDictIfPresent(dictConfig, "MapGridUpperLeftY");
+		mapGridHeight		= GetIntFromDictIfPresent(dictConfig, "MapGridHeight", 1);
+		mapGridWidth		= GetIntFromDictIfPresent(dictConfig, "MapGridWidth", 1);
+		mapGridRows			= GetIntFromDictIfPresent(dictConfig, "MapGridRows", 1);
+		mapGridCols			= GetIntFromDictIfPresent(dictConfig, "MapGridCols", 1);
+		mapGridCellWidth = (float)mapGridWidth / (float)mapGridCols;
+		mapGridCellHeight = (float)mapGridHeight / (float)mapGridRows;												
+
 
 		string[] seatCSVs = GetConfigValuesArray("Seats", dictConfig);
 		string[] seatingCSVs = GetConfigValuesArray("Seating", dictConfig);
@@ -106,11 +124,21 @@ public class SpotManager : MonoBehaviour {
 		enabled = editSpots;
 
 	}
+	static public int GetIntFromDictIfPresent(Dictionary<string,string> dict, string key, int defaultVal = 0)
+	{
+		int val = defaultVal;
+		if (dict.ContainsKey(key))
+		{
+			string valStr = dict[key];
+			val = int.Parse(valStr);
+		}
+		return val;
+	}
 	static public string GetFullFaceID(string uniquePortion)
 	{
 		return FaceIDTemplate.Replace(FaceIDReplacementToken, uniquePortion);
 	}
-	public static Vector2 GetSpotPos(string faceId, float scale)
+	public static Vector2 GetSpotPos(string faceId, float scale = 1.0f, bool raw = false)
 	{
 		string seatId;
 		if (dictFaceIdToSeatID.TryGetValue(faceId, out seatId))
@@ -119,12 +147,26 @@ public class SpotManager : MonoBehaviour {
 			if (dictSeatIdToPos.TryGetValue(seatId, out pos))
 			{
 				pos *= scale;
-				pos.x += FaceCards.xMapUL;
-				pos.y = FaceCards.yMapUL - pos.y;
+				if (!raw)
+				{
+					pos.x += FaceCards.xMapUL;
+					pos.y = FaceCards.yMapUL - pos.y;
+				}
 				return pos;
 			}
 		}
 		return Vector2.zero;
+	}
+
+	// returns 0-based x (column) and y (row) grid cell index. Upper left grid is 0,0
+	public static Vector2 GetGridXY(string faceId)
+	{
+		Vector2 spotPos = GetSpotPos(faceId, 1.0f, true);
+		Vector2 gridPos = new Vector2(
+			(spotPos.x - mapGridUpperLeftX) / mapGridCellWidth,
+			(spotPos.y - mapGridUpperLeftY) / mapGridCellHeight
+		);
+		return gridPos;
 	}
 
 	// Action takes (int iRow, Dictionary<string, string> dictHeadingToVal), where iRow of 0 is the header.
