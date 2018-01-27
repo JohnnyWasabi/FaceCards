@@ -150,6 +150,7 @@ public class FaceCards : StateMachine {
 	static public int pixelHalfTileHeight = (pixelTileHeight / 2);
 	public int mapWidth;
 	public int mapHeight;
+	CenterMap centerMap;
 
 	void Awake()
 	{
@@ -173,10 +174,11 @@ public class FaceCards : StateMachine {
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
 		mapRendererMap.goMap.transform.position = new Vector3(xMapUL + pixelHalfTileWidth, yMapUL - pixelHalfTileHeight, 0);
 		mapRendererMap.goMap.SetActive(false);
-		CenterMap centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
+		centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
 		centerMap.Init(mapDataMap, mapRendererMap);
 
 		CalcMapScaleLimits();
+		scaleMap = valMapScaleSlider = valMapScaleSliderLastRelease = scaleMapMin;
 
 		// Setup app states
 		stateLoading = new State("Loading", Loading_Enter, Loading_Update, Loading_Exit);
@@ -202,8 +204,7 @@ public class FaceCards : StateMachine {
 		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
 		if (scaleMap < scaleMapMin)
 		{
-			scaleMap = scaleMapMin;
-			valMapScaleSlider = scaleMap;
+			scaleMap = valMapScaleSlider = scaleMapMin;
 		}
 	}
 	// Use this for initialization
@@ -742,7 +743,14 @@ public class FaceCards : StateMachine {
 	#region STATE_MapView
 	/************************************************************************************************************************************/
 	State stateMapView;
-	public void MapView_Enter(State prevState) { }
+	public float mouseZoomSpeed = 0.1f;
+	Vector2 mousePosMapPanAnchor;
+	Vector2 mapPanAnchor;
+	bool isMouseMapPanning;
+
+	public void MapView_Enter(State prevState) {
+		isMouseMapPanning = false;
+	}
 	public void MapView_Exit(State nextState) { }
 	public State MapView_Update()
 	{
@@ -785,7 +793,37 @@ public class FaceCards : StateMachine {
 			}
 
 		}
+		float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
+		if (wheelDelta != 0)
+		{
+			float slider = (valMapScaleSlider - scaleMapMin)/(1.0f - scaleMapMin);
+			slider += wheelDelta * mouseZoomSpeed;
+			slider = Mathf.Clamp01(slider);
+			valMapScaleSlider = scaleMapMin + slider * (1.0f - scaleMapMin);
 
+			centerMap.enabled = true;
+		}
+		if (isMouseMapPanning)
+		{
+			if (!Input.GetMouseButton(0))
+			{
+				isMouseMapPanning = false;
+			}
+			else
+			{
+				xMapUL = (int)(mapPanAnchor.x + Input.mousePosition.x -  mousePosMapPanAnchor.x);
+				yMapUL = (int)(mapPanAnchor.y + Input.mousePosition.y -  mousePosMapPanAnchor.y);
+				float scale = mapRendererMap.goMap.transform.localScale.x;
+				mapRendererMap.goMap.transform.position = new Vector3(FaceCards.xMapUL + pixelHalfTileWidth * scale, FaceCards.yMapUL - pixelHalfTileHeight * scale, 0);
+			}
+		}
+		else if (Input.GetMouseButtonDown(0))
+		{
+			isMouseMapPanning = true;
+			mousePosMapPanAnchor = Input.mousePosition;
+			mapPanAnchor = new Vector2(xMapUL, yMapUL);
+			centerMap.enabled = false;
+		}
 		return null;
 	}
 	int WaggleMatchingFaces(string prefix)
