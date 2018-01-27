@@ -56,6 +56,7 @@ public class Card : MonoBehaviour {
 
 	public enum WaggleState {  stopped, waggling, stopping}
 	public WaggleState waggleState;
+	public bool isWaggling { get { return waggleState == WaggleState.waggling; } }
 	float timeWaggleAnchor = 0;
 	float sinWagglePrev;
 
@@ -68,12 +69,16 @@ public class Card : MonoBehaviour {
 
 	public void StartWaggle()
 	{
-		timeWaggleAnchor = Time.time;
-		waggleState = WaggleState.waggling;
+		if (!isWaggling)
+		{
+			timeWaggleAnchor = Time.time;
+			waggleState = WaggleState.waggling;
+		}
 	}
 	public void StopWaggle()
 	{
-		waggleState = WaggleState.stopping;
+		if (waggleState != WaggleState.stopped)
+			waggleState = WaggleState.stopping;
 	}
 
 	public void Init(Sprite face, Sprite back, Sprite front, Sprite frontFrame, Vector2 pos)

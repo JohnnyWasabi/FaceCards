@@ -39,7 +39,7 @@ public class FaceCards : StateMachine {
 
 	float _valMapScaleSlider = 1;
 	float valMapScaleSlider {  get { return _valMapScaleSlider; } set { _valMapScaleSlider = value;  } }
-	float valMapScaleSliderLastRelease = 0;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
+	float valMapScaleSliderLastRelease = 1;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
 
 	float score;
@@ -761,7 +761,49 @@ public class FaceCards : StateMachine {
 			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "LocatorListing.csv"), sb.ToString());
 
 		}
+
+		if (Input.inputString.Length > 0)
+		{
+			foreach (char c in Input.inputString)
+			{
+				if (c == "\b"[0])
+				{ // Remove char from end
+					if (guiTextName.text.Length != 0)
+						guiTextName.text = guiTextName.text.Substring(0, guiTextName.text.Length - 1);
+				}
+				else if (c == "\n"[0] || c == "\r"[0])
+				{
+					guiTextName.text = "";
+				}
+				else
+				{
+					guiTextName.text += c;
+					//guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
+				}
+				int countMatches = WaggleMatchingFaces(guiTextName.text);
+				guiTextName.color = countMatches > 0 ? (countMatches == 1 ? Color.green : Color.white) : Color.red;
+			}
+
+		}
+
 		return null;
+	}
+	int WaggleMatchingFaces(string prefix)
+	{
+		int count = 0;
+
+		foreach (FaceSprite fs in faceSprites)
+		{
+			if (prefix.Length > 0 && fs.guessName.StartsWith(prefix))
+			{
+				++count;
+				fs.card.StartWaggle();
+			}
+			else
+				fs.card.StopWaggle();
+
+		}
+		return count;
 	}
 	#endregion STATE_MapView
 
@@ -779,7 +821,6 @@ public class FaceCards : StateMachine {
 	{
 		if (!bgColorPicker.IsActive())
 			return stateColorPickingReturnTo;
-
 		return null;
 	}
 	#endregion STATE_ColorPicking
