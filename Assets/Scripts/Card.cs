@@ -164,11 +164,11 @@ public class Card : MonoBehaviour {
 
 	public void SetPos(Vector3 pos)
 	{
-		transform.position = new Vector3(pos.x, pos.y, -(dimCard.x/1000f));
+		transform.localPosition = new Vector3(pos.x, pos.y, -(dimCard.x/1000f));
 	}
 	public Vector3 GetPos()
 	{
-		return transform.position;
+		return transform.localPosition;
 	}
 
 	public void SetHeight(float height)

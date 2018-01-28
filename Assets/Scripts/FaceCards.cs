@@ -124,7 +124,8 @@ public class FaceCards : StateMachine {
 
 	public MapReader.Map mapDataMap;
 	public MapRenderer mapRendererMap;
-	public float scaleMap { get { return mapRendererMap.goMap.transform.localScale.x; } set { mapRendererMap.goMap.transform.localScale = new Vector3(value, value, 1); } }
+	public GameObject goMapParent;
+	public float scaleMap { get { return goMapParent.transform.localScale.x; } set { goMapParent.transform.localScale = new Vector3(value, value, 1); } }
 	// Upper left corner of map in world coordinates
 	public static int xMapUL { get; set; }
 	public static int yMapUL { get; set; }
@@ -154,9 +155,9 @@ public class FaceCards : StateMachine {
 
 	void Awake()
 	{
-		ScreenPlayAreaWidth = Screen.width;
-		ScreenPlayAreaHeight = Screen.height - (int)cubeBG.transform.localScale.y;
 		ControlBarHeight = (int)cubeBG.transform.localScale.y;
+		ScreenPlayAreaWidth = Screen.width;
+		ScreenPlayAreaHeight = Screen.height - ControlBarHeight;
 
 		mapDataMap = MapReader.GetMapFromFile("Floorplan.tmx");   // Dirt layer
 		pixelTileWidth = mapDataMap.TileWidth;
@@ -166,19 +167,25 @@ public class FaceCards : StateMachine {
 
 		mapWidth = mapDataMap.Layers[0].Width * pixelTileWidth;
 		mapHeight = mapDataMap.Layers[0].Height * pixelTileHeight;
-		xMapUL = -(mapWidth / 2);// + (int)LayoutSet.layout.transform.localPosition.x;
-		yMapUL = Screen.height/2; // mapHeight / 2;// + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
+		xMapUL = Mathf.FloorToInt(-Screen.width * 0.5f);// + (int)LayoutSet.layout.transform.localPosition.x;
+		yMapUL = Mathf.FloorToInt(Screen.height * 0.5f); // mapHeight / 2;// + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
 		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
 		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
 
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
-		mapRendererMap.goMap.transform.position = new Vector3(xMapUL + pixelHalfTileWidth, yMapUL - pixelHalfTileHeight, 0);
 		mapRendererMap.goMap.SetActive(false);
 		centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
 		centerMap.Init(mapDataMap, mapRendererMap);
+		centerMap.enabled = false;
+
+		goMapParent = new GameObject("MapParent");
+		goMapParent.transform.position = new Vector3(xMapUL, yMapUL, 0);
+		mapRendererMap.goMap.transform.SetParent(goMapParent.transform);
+		mapRendererMap.goMap.transform.localPosition = new Vector3(pixelHalfTileWidth, -pixelHalfTileHeight, 0);
+
 
 		CalcMapScaleLimits();
-		scaleMap = valMapScaleSlider = valMapScaleSliderLastRelease = scaleMapMin;
+		scaleMap = valMapScaleSlider = valMapScaleSliderLastRelease = 1.0f;  //scaleMapMin;
 
 		// Setup app states
 		stateLoading = new State("Loading", Loading_Enter, Loading_Update, Loading_Exit);
@@ -748,10 +755,28 @@ public class FaceCards : StateMachine {
 	Vector2 mapPanAnchor;
 	bool isMouseMapPanning;
 
+	public void SetParentAllFaces(Transform transParent, bool worldPositionStays = true)
+	{
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.transform.SetParent(transParent, worldPositionStays);
+			fs.card.transform.localScale = Vector3.one;
+		}
+
+		foreach (FaceSprite fs in faceSpritesFiltered)
+		{
+			fs.card.transform.SetParent(transParent, worldPositionStays);
+			fs.card.transform.localScale = Vector3.one;
+		}
+	}
+
 	public void MapView_Enter(State prevState) {
 		isMouseMapPanning = false;
+		SetParentAllFaces(goMapParent.transform);
 	}
-	public void MapView_Exit(State nextState) { }
+	public void MapView_Exit(State nextState) {
+		SetParentAllFaces(null);
+	}
 	public State MapView_Update()
 	{
 		if (Input.GetKeyDown(KeyCode.F12))
@@ -801,7 +826,7 @@ public class FaceCards : StateMachine {
 			slider = Mathf.Clamp01(slider);
 			valMapScaleSlider = scaleMapMin + slider * (1.0f - scaleMapMin);
 
-			centerMap.enabled = true;
+//			centerMap.enabled = true;
 		}
 		if (isMouseMapPanning)
 		{
@@ -814,11 +839,12 @@ public class FaceCards : StateMachine {
 				xMapUL = (int)(mapPanAnchor.x + Input.mousePosition.x -  mousePosMapPanAnchor.x);
 				yMapUL = (int)(mapPanAnchor.y + Input.mousePosition.y -  mousePosMapPanAnchor.y);
 				float scale = mapRendererMap.goMap.transform.localScale.x;
-				mapRendererMap.goMap.transform.position = new Vector3(FaceCards.xMapUL + pixelHalfTileWidth * scale, FaceCards.yMapUL - pixelHalfTileHeight * scale, 0);
+				goMapParent.transform.position = new Vector3(xMapUL, yMapUL, 0);
 			}
 		}
-		else if (Input.GetMouseButtonDown(0))
+		else if (Input.GetMouseButtonDown(0) && Input.mousePosition.y > ControlBarHeight)
 		{
+			print("Pan Anchored");
 			isMouseMapPanning = true;
 			mousePosMapPanAnchor = Input.mousePosition;
 			mapPanAnchor = new Vector2(xMapUL, yMapUL);
@@ -1346,11 +1372,13 @@ public class FaceCards : StateMachine {
 						valTenureSliderLastRelease = valTenureSlider;
 						RestartCurrentMode();
 					}
+#if false
 					if (valMapScaleSlider != valMapScaleSliderLastRelease)
 					{
 						valMapScaleSliderLastRelease = valMapScaleSlider;
 						RestartCurrentMode();
 					}
+#endif
 				}
 			}
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
@@ -1486,7 +1514,7 @@ public class FaceCards : StateMachine {
 		if (fs.card.indexOrder == -1)
 			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
 		else if (gameMode == GameMode.map)
-			fs.ArrangeOnMap(scaleMap);
+			fs.ArrangeOnMap();
 		else
 			fs.card.ArrangeOnYearbook();
 	}
@@ -1829,7 +1857,7 @@ public class FaceCards : StateMachine {
 					{
 						fs.card.FlipShowFront();
 						fs.card.uiTextName.gameObject.SetActive(false);
-						fs.ArrangeOnMap(scaleMap);
+						fs.ArrangeOnMap();
 					}
 					foreach (FaceSprite fs in faceSpritesFiltered)
 					{

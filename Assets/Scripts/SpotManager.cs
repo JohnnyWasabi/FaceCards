@@ -138,7 +138,7 @@ public class SpotManager : MonoBehaviour {
 	{
 		return FaceIDTemplate.Replace(FaceIDReplacementToken, uniquePortion);
 	}
-	public static Vector2 GetSpotPos(string faceId, float scale = 1.0f, bool raw = false)
+	public static Vector2 GetSpotPos(string faceId)
 	{
 		string seatId;
 		if (dictFaceIdToSeatID.TryGetValue(faceId, out seatId))
@@ -146,12 +146,6 @@ public class SpotManager : MonoBehaviour {
 			Vector2 pos;
 			if (dictSeatIdToPos.TryGetValue(seatId, out pos))
 			{
-				pos *= scale;
-				if (!raw)
-				{
-					pos.x += FaceCards.xMapUL;
-					pos.y = FaceCards.yMapUL - pos.y;
-				}
 				return pos;
 			}
 		}
@@ -161,7 +155,7 @@ public class SpotManager : MonoBehaviour {
 	// returns 0-based x (column) and y (row) grid cell index. Upper left grid is 0,0
 	public static Vector2 GetGridXY(string faceId)
 	{
-		Vector2 spotPos = GetSpotPos(faceId, 1.0f, true);
+		Vector2 spotPos = GetSpotPos(faceId);
 		Vector2 gridPos = new Vector2(
 			(spotPos.x - mapGridUpperLeftX) / mapGridCellWidth,
 			(spotPos.y - mapGridUpperLeftY) / mapGridCellHeight
