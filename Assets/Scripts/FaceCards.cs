@@ -156,8 +156,6 @@ public class FaceCards : StateMachine {
 	void Awake()
 	{
 		ControlBarHeight = (int)cubeBG.transform.localScale.y;
-		ScreenPlayAreaWidth = Screen.width;
-		ScreenPlayAreaHeight = Screen.height - ControlBarHeight;
 
 		mapDataMap = MapReader.GetMapFromFile("Floorplan.tmx");   // Dirt layer
 		pixelTileWidth = mapDataMap.TileWidth;
@@ -167,25 +165,21 @@ public class FaceCards : StateMachine {
 
 		mapWidth = mapDataMap.Layers[0].Width * pixelTileWidth;
 		mapHeight = mapDataMap.Layers[0].Height * pixelTileHeight;
-		xMapUL = Mathf.FloorToInt(-Screen.width * 0.5f);// + (int)LayoutSet.layout.transform.localPosition.x;
-		yMapUL = Mathf.FloorToInt(Screen.height * 0.5f); // mapHeight / 2;// + ControlBarHeight; // + (int)LayoutSet.layout.transform.localPosition.y;
-		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
-		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
 
 		mapRendererMap = MapRenderer.CreateMapRenderer(mapDataMap, "Floorplan");
 		mapRendererMap.goMap.SetActive(false);
+
 		centerMap = mapRendererMap.goMap.AddComponent<CenterMap>();
 		centerMap.Init(mapDataMap, mapRendererMap);
 		centerMap.enabled = false;
 
 		goMapParent = new GameObject("MapParent");
-		goMapParent.transform.position = new Vector3(xMapUL, yMapUL, 0);
 		mapRendererMap.goMap.transform.SetParent(goMapParent.transform);
 		mapRendererMap.goMap.transform.localPosition = new Vector3(pixelHalfTileWidth, -pixelHalfTileHeight, 0);
 
-
 		CalcMapScaleLimits();
-		scaleMap = valMapScaleSlider = valMapScaleSliderLastRelease = 1.0f;  //scaleMapMin;
+
+		scaleMap = valMapScaleSlider = valMapScaleSliderLastRelease = scaleMapMin;
 
 		// Setup app states
 		stateLoading = new State("Loading", Loading_Enter, Loading_Update, Loading_Exit);
@@ -205,14 +199,21 @@ public class FaceCards : StateMachine {
 	void CalcMapScaleLimits()
 	{
 		ScreenPlayAreaWidth = Screen.width;
-		ScreenPlayAreaHeight = Screen.height - (int)cubeBG.transform.localScale.y;
+		ScreenPlayAreaHeight = Screen.height - ControlBarHeight;
 		float scaleMapMinX = (float)ScreenPlayAreaWidth / (float)mapWidth;
 		float scaleMapMinY = (float)ScreenPlayAreaHeight / (float)mapHeight;
 		scaleMapMin = Mathf.Min(scaleMapMinY, scaleMapMinX);
-		if (scaleMap < scaleMapMin)
-		{
-			scaleMap = valMapScaleSlider = scaleMapMin;
-		}
+		scaleMap = valMapScaleSlider = scaleMapMin;
+
+		float mapMarginHeight = (ScreenPlayAreaHeight - (mapHeight * scaleMap)) * 0.5f;
+		float mapMarginWidth  = (ScreenPlayAreaWidth  - (mapWidth  * scaleMap)) * 0.5f;
+		xMapUL = Mathf.FloorToInt(-Screen.width * 0.5f + mapMarginWidth);
+		yMapUL = Mathf.FloorToInt(Screen.height * 0.5f - mapMarginHeight); 
+		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
+		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
+
+		goMapParent.transform.position = new Vector3(xMapUL, yMapUL, 0);
+
 	}
 	// Use this for initialization
 	IEnumerator Start()
@@ -754,6 +755,8 @@ public class FaceCards : StateMachine {
 	Vector2 mousePosMapPanAnchor;
 	Vector2 mapPanAnchor;
 	bool isMouseMapPanning;
+	int countNameSearchMatches;
+	int prefixLenMatchMuliple;
 
 	public void SetParentAllFaces(Transform transParent, bool worldPositionStays = true)
 	{
@@ -773,9 +776,13 @@ public class FaceCards : StateMachine {
 	public void MapView_Enter(State prevState) {
 		isMouseMapPanning = false;
 		SetParentAllFaces(goMapParent.transform);
+		countNameSearchMatches = 0;
+		prefixLenMatchMuliple = 0;
 	}
 	public void MapView_Exit(State nextState) {
 		SetParentAllFaces(null);
+		string match;
+		WaggleMatchingFaces("", out match);
 	}
 	public State MapView_Update()
 	{
@@ -802,19 +809,30 @@ public class FaceCards : StateMachine {
 				if (c == "\b"[0])
 				{ // Remove char from end
 					if (guiTextName.text.Length != 0)
-						guiTextName.text = guiTextName.text.Substring(0, guiTextName.text.Length - 1);
+					{
+						guiTextName.text = guiTextName.text.Substring(0, (countNameSearchMatches == 1) ? prefixLenMatchMuliple : guiTextName.text.Length - 1);
+					}
 				}
 				else if (c == "\n"[0] || c == "\r"[0])
 				{
 					guiTextName.text = "";
 				}
-				else
+				else if (countNameSearchMatches != 1)
 				{
 					guiTextName.text += c;
 					//guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
 				}
-				int countMatches = WaggleMatchingFaces(guiTextName.text);
-				guiTextName.color = countMatches > 0 ? (countMatches == 1 ? Color.green : Color.white) : Color.red;
+				string match;
+				countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out match);
+				if (countNameSearchMatches != 1)
+				{
+					prefixLenMatchMuliple = guiTextName.text.Length;
+				}
+				if (match.Length > 0)
+				{
+					guiTextName.text = countNameSearchMatches == 1 ? match :  match.Substring(0, guiTextName.text.Length);
+				}
+				guiTextName.color = countNameSearchMatches > 0 ? (countNameSearchMatches == 1 ? Color.green : Color.white) : Color.red;
 			}
 
 		}
@@ -828,6 +846,7 @@ public class FaceCards : StateMachine {
 
 //			centerMap.enabled = true;
 		}
+#if false
 		if (isMouseMapPanning)
 		{
 			if (!Input.GetMouseButton(0))
@@ -850,18 +869,20 @@ public class FaceCards : StateMachine {
 			mapPanAnchor = new Vector2(xMapUL, yMapUL);
 			centerMap.enabled = false;
 		}
+#endif
 		return null;
 	}
-	int WaggleMatchingFaces(string prefix)
+	int WaggleMatchingFaces(string prefix, out string match)
 	{
 		int count = 0;
-
+		match = "";
 		foreach (FaceSprite fs in faceSprites)
 		{
-			if (prefix.Length > 0 && fs.guessName.StartsWith(prefix))
+			if (prefix.Length > 0 && fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
 			{
 				++count;
 				fs.card.StartWaggle();
+				match = fs.guessName;
 			}
 			else
 				fs.card.StopWaggle();
@@ -869,10 +890,10 @@ public class FaceCards : StateMachine {
 		}
 		return count;
 	}
-	#endregion STATE_MapView
+#endregion STATE_MapView
 
 
-	#region STATE_ColorPicking
+#region STATE_ColorPicking
 	/************************************************************************************************************************************/
 	State stateColorPicking;
 	State stateColorPickingReturnTo;
@@ -887,10 +908,10 @@ public class FaceCards : StateMachine {
 			return stateColorPickingReturnTo;
 		return null;
 	}
-	#endregion STATE_ColorPicking
+#endregion STATE_ColorPicking
 	/************************************************************************************************************************************/
 	/************************************************************************************************************************************/
-	#endregion STATES
+#endregion STATES
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
 
@@ -1742,7 +1763,7 @@ public class FaceCards : StateMachine {
 				else // not Game Mode
 				{
 					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
-					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : "Sort by*:";
+					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : ((gameMode == GameMode.map) ? "Find by" : "Sort by*:");
 				}
 				switch (gameMode)
 				{
@@ -1752,6 +1773,7 @@ public class FaceCards : StateMachine {
 				case GameMode.map:			TransitionToState(stateMapView); break;
 				}
 			}
+#if false
 			//*************** Map Scale slider
 			if (!comboBoxControlMode.isComboBoxOpen && gameMode == GameMode.map)
 			{
@@ -1760,7 +1782,7 @@ public class FaceCards : StateMachine {
 				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valMapScaleSlider, scaleMapMin, scaleMapMax);
 				scaleMap = valMapScaleSlider;
 			}
-
+#endif
 
 			// *************** TENURE
 			selectedItemIndex = comboBoxControlTenure.Show();
@@ -1819,7 +1841,7 @@ public class FaceCards : StateMachine {
             }
             guiStyleStats.normal.textColor = cursorColor;
             string cursorStr = (secondsBlinkCycle > secondsCursorOn) ? " " : "|";
-			if (!AreAllCollected() && timeGameStarted <= Time.time && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode)
+			if (gameMode == GameMode.map || (!AreAllCollected() && timeGameStarted <= Time.time && gameMode == GameMode.memoryGame)) //!showAllFaces && !isYearBookMode)
 			{
 				GUI.Label(new Rect(rectText.x + rectText.width, rectText.y, 16, 32), cursorStr, guiStyleStats);
 				guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, Screen.height - rectText.y);
