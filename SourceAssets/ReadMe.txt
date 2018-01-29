@@ -47,6 +47,7 @@ Mode		= This is a selector that lets you choose different modes of the app:
 			Memory Game: The memory game described above where you type in the name when shown a face.
 			Flash Cards: All faces are shown without names. Click on a face to enlarge it and see their name info.
 			Yearbook:    All faces are shown with their names and department below their picture.	
+			Map:         Displays faces on a blueprint of the office to show where people sit.
 Department	= This is a selector that lets you filter to show a single department (or All Departments).
 Guess		= This is a selector of what name you have to enter to collect the card in the Memory Game (absent in other modes); it determines sorting order in Flash Cards and Yearbook modes: 
 			First & Last 
@@ -60,6 +61,12 @@ Sort by* 	= This is a selector that determines sorting order in Flash Cards and 
 			Department 
 			Tenure Most
 			Tenure Least	
+Find by		= Map mode only. This is a selector that determines what to type in to highlight faces in Map mode:
+			First & Last 
+			First 
+			Last 
+			Department 
+			("Tenure Most" and "Tenure Least" appear but are not compatible with Map mode)
 Tenure Filter	= This is a selector that lets you show only the N most or least tenured people by adjusting a slider to adjust N
 			All 		(shows all people regardless of tenure and hides slider)
 			Most 		(shows N most tenured people and reveals slider to control N)
@@ -80,3 +87,4 @@ Version History
 2.2	Added margins on top and sides of screen so cards don't rest against edges of screen.
 2.3	Added Tenure Filter with slider. Moved "Case Sensitive" toggle to right side and slid Selector buttons left. Made the Guess/Sort selector change based on mode between "Guess" and "Sort by". Added "Tenure Least" to sort order options.
 2.4	Added "OGs" and "Newbies" shortcuts to Tenure filter. These set up the Tenure filter (and "Sort By" setting if not in Memory Game mode) to show the 10% of employees with most or least tenure.
+3.0	Added "Map" mode, which shows faces displayed on a blueprint of the office to show where people sit.
