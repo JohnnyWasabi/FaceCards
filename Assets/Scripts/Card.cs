@@ -144,9 +144,9 @@ public class Card : MonoBehaviour {
 		if (waggleState != WaggleState.stopped)
 		{
 			float timeDelta = Time.time - timeWaggleAnchor;
-			float radians = timeDelta * (2f*Mathf.PI * 1.75f);
+			float radians = timeDelta * (2f * Mathf.PI * 1.0f);// 1.75f);
 			float sinWaggle = Mathf.Sin(radians);
-			float tiltDegs = sinWaggle * 45f;
+			float tiltDegs = sinWaggle * 30f;// 45f;
 			Vector3 eulers = transform.localRotation.eulerAngles;
 			transform.localRotation = Quaternion.Euler(eulers.x, eulers.y, tiltDegs);
 			
