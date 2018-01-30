@@ -20,6 +20,7 @@ public class FaceCards : StateMachine {
 
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
+	int iProjFilter = 0;
 	int countTenureMembers = 1;  // 1..TotalFaces; Minimum number of people to include in filter. This determines the date to use (to get that many people) and in turn determines the actual number shown (because some people were hired on the same date).
 	int _countDeptTotal = 0;     // How many people are included by current Department filter setting.
 	int countDeptTotal { get { return _countDeptTotal; } set { _countDeptTotal = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }     // How many people are included by current Department filter setting.
@@ -46,8 +47,12 @@ public class FaceCards : StateMachine {
 
 	// Departments
 	GUIContent[] comboBoxList;
-	private ComboBox comboBoxControl;// = new ComboBox();
+	private ComboBox comboBoxControl;
 	private GUIStyle listStyle = new GUIStyle();
+
+	// Projects
+	GUIContent[] comboBoxListProjects;
+	private ComboBox comboBoxControlProjects;
 
 	// Guess Name
 	GUIContent[] comboBoxListNameGuess;
@@ -939,19 +944,21 @@ public class FaceCards : StateMachine {
 
 		// What part of name they need to enter
 		xComboBox += comboSpacing;
-		comboBoxListNameGuess = new GUIContent[4];
+		comboBoxListNameGuess = new GUIContent[5];
 		comboBoxListNameGuess[0] = new GUIContent("First & Last");
 		comboBoxListNameGuess[1] = new GUIContent("First Name");
 		comboBoxListNameGuess[2] = new GUIContent("Last Name");
 		comboBoxListNameGuess[3] = new GUIContent("Department");
+		comboBoxListNameGuess[4] = new GUIContent("Project");
 
-		comboBoxListNameSort = new GUIContent[6];
+		comboBoxListNameSort = new GUIContent[7];
 		comboBoxListNameSort[0] = new GUIContent("First & Last");
 		comboBoxListNameSort[1] = new GUIContent("First Name");
 		comboBoxListNameSort[2] = new GUIContent("Last Name");
 		comboBoxListNameSort[3] = new GUIContent("Department");
-		comboBoxListNameSort[4] = new GUIContent("Tenure Most");
-		comboBoxListNameSort[5] = new GUIContent("Tenure Least");
+		comboBoxListNameSort[4] = new GUIContent("Project");
+		comboBoxListNameSort[5] = new GUIContent("Tenure Most");
+		comboBoxListNameSort[6] = new GUIContent("Tenure Least");
 		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListNameGuess[0], comboBoxListNameGuess, "button", "box", listStyle, "Guess:");
 
 		xComboBox += comboSpacing;
@@ -961,6 +968,15 @@ public class FaceCards : StateMachine {
 		comboBoxListMode[2] = new GUIContent("Yearbook*");
 		comboBoxListMode[3] = new GUIContent("Map");
 		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
+
+		xComboBox += comboSpacing;
+		comboBoxListProjects = new GUIContent[SpotManager.projects.Count+1];
+		comboBoxListProjects[0] = new GUIContent("All");
+		for (int i = 0; i < SpotManager.projects.Count; i++)
+		{
+			comboBoxListProjects[i+1] = new GUIContent(SpotManager.projects[i]);
+		}
+		comboBoxControlProjects = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListProjects[0], comboBoxListProjects, "button", "box", listStyle, "Project:");
 
 		xComboBox += comboSpacing;
 		comboBoxListTenure = new GUIContent[5];
@@ -1004,6 +1020,8 @@ public class FaceCards : StateMachine {
 			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
 			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			xCombo += comboSpacing;
+			comboBoxControlProjects.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
 			comboBoxControlTenure.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 		}
@@ -1138,6 +1156,14 @@ public class FaceCards : StateMachine {
             return true;
         return false;
     }
+	bool ProjectMatchesProjects(string project, string projects)
+	{
+		if (project == projects)
+			return true;
+		if (projects.Contains(project))
+			return true;
+		return false;
+	}
 	void FilterByDepartment(int ifilter)
 	{
 		iDeptFilter = ifilter;
@@ -1153,11 +1179,25 @@ public class FaceCards : StateMachine {
 				}
 			}
 		}
-		// Bring back ones from inactive list if match current dept selected.
+		if (iProjFilter > 0)
+		{
+			// Remove excluded faces from the active list.
+			for (int i = faceSprites.Count - 1; i >= 0; i--)
+			{
+				FaceSprite fs = faceSprites[i];
+				if (!ProjectMatchesProjects(SpotManager.projects[iProjFilter - 1], fs.projects))
+				{
+					FilterOutFace(fs);
+				}
+			}
+		}
+		// Bring back ones from inactive list if match current dept selected AND project selected.
 		for (int i = faceSpritesFiltered.Count - 1; i >= 0; i--)
 		{
 			FaceSprite fs = faceSpritesFiltered[i];
-			if (iDeptFilter == 0 || DeptMatchesRole(roles[iDeptFilter-1], fs.role))
+			if ( (iDeptFilter == 0 || DeptMatchesRole(roles[iDeptFilter-1], fs.role))
+				&& (iProjFilter == 0 || ProjectMatchesProjects(SpotManager.projects[iProjFilter - 1], fs.projects))
+				)
 			{
 				faceSpritesFiltered.Remove(fs);
 				totalGuessNameChars += fs.fullName.Length;
@@ -1302,7 +1342,9 @@ public class FaceCards : StateMachine {
 						idString = SpotManager.GetFullFaceID(nameParts[4]);
 					}
 
-					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], dateTime, idString, sprite, texture);
+					string projectsString = SpotManager.GetProjectsOfFaceID(idString);
+
+					FaceSprite faceSprite = new FaceSprite(nameParts[0], nameParts[1], nameParts[2], projectsString, dateTime, idString, sprite, texture);
 					if (faceSprite != null)
 					{
 						int indexOrder = faceSprites.Count;
@@ -1480,7 +1522,18 @@ public class FaceCards : StateMachine {
                             return string.Compare(fs1.role + fs1.lastName + fs1.firstName, fs2.role + fs2.lastName + fs2.firstName);
                     }
                     return string.Compare(fs1.role, fs2.role); // This should actually never get reached.
-			case 4: // Tenure Most (date of hire, earlier dates first)
+			case 4: // Project 
+					// Sort secondarily by the previous sorting criteria.
+				switch (iGuessnamePrevious)
+				{
+				case 0: // Full Name
+				case 1: // First Name
+					return string.Compare(fs1.role + fs1.fullName, fs2.role + fs2.fullName);
+				case 2: // Last Name
+					return string.Compare(fs1.role + fs1.lastName + fs1.firstName, fs2.role + fs2.lastName + fs2.firstName);
+				}
+				return string.Compare(fs1.projects, fs2.projects); // This should actually never get reached.
+			case 5: // Tenure Most (date of hire, earlier dates first)
 				{
 					int diff = System.DateTime.Compare(fs1.dateTime, fs2.dateTime);
 					if (diff == 0)
@@ -1489,7 +1542,7 @@ public class FaceCards : StateMachine {
 					}
 					return diff;
 				}
-			case 5: // Tenure Least (date of hire, laster dates first)
+			case 6: // Tenure Least (date of hire, laster dates first)
 				{
 					int diff = System.DateTime.Compare(fs2.dateTime, fs1.dateTime);
 					if (diff == 0)
@@ -1711,6 +1764,22 @@ public class FaceCards : StateMachine {
 				RestartCurrentMode();
 			}
 
+			// Project Selector
+			selectedItemIndex = comboBoxControlProjects.Show();
+			if (selectedItemIndex != iProjFilter)
+			{
+				iProjFilter = selectedItemIndex;
+				if (AreAllCollected())
+				{
+					if (fsCurrentUser != null)
+					{
+						ReturnFaceToYearbook(fsCurrentUser);
+					}
+				}
+				iProjFilter = selectedItemIndex;
+				RestartCurrentMode();
+			}
+
 			// Name part to Guess selector, or sort filter for Yearbook mode.
 			selectedItemIndex = comboBoxControlName.Show();
 			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
@@ -1749,7 +1818,7 @@ public class FaceCards : StateMachine {
 					comboBoxControlName.FlashLabelText();
 
 				gameMode = (GameMode)selectedItemIndex;
-				if (gameMode == GameMode.memoryGame)
+				if (gameMode == GameMode.memoryGame || gameMode == GameMode.map)
 				{ // Game Mode
 					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
 					{
@@ -1758,12 +1827,12 @@ public class FaceCards : StateMachine {
 						comboBoxControlName.FlashButtonText();
 					}
 					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
-					comboBoxControlName.comboLabel = "Guess:";
+					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : "Find by";
 				}
 				else // not Game Mode
 				{
 					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
-					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : ((gameMode == GameMode.map) ? "Find by" : "Sort by*:");
+					comboBoxControlName.comboLabel =  "Sort by*:";
 				}
 				switch (gameMode)
 				{

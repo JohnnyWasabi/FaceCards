@@ -12,11 +12,11 @@ public class SpotManager : MonoBehaviour {
 	public bool editSpots = false;
 
 	List<NumberedSpot> listSpots;
-	string[] rows;
 	string headingsSeats;
 	string filePath;
 	static Dictionary<string, Vector2> dictSeatIdToPos = new Dictionary<string, Vector2>();
 	static Dictionary<string, string> dictFaceIdToSeatID = new Dictionary<string, string>();
+	static Dictionary<string, string> dictFaceIdToProjects = new Dictionary<string, string>();
 	static Dictionary<string, string> dictConfig = new Dictionary<string, string>();
 	const string FaceIDReplacementToken = "<UNIQUE_ID>";
 	static public string FaceIDTemplate = FaceIDReplacementToken; // Defaults to replacement token f none present in config file so that the unique portion from the filename becomes the whole ID.
@@ -30,6 +30,7 @@ public class SpotManager : MonoBehaviour {
 	static float mapGridCellWidth;
 	static float mapGridCellHeight;
 
+	static public List<string> projects;
 	void Awake()
 	{
 		listSpots = new List<NumberedSpot>();
@@ -78,8 +79,10 @@ public class SpotManager : MonoBehaviour {
 
 		string[] seatCSVs = GetConfigValuesArray("Seats", dictConfig);
 		string[] seatingCSVs = GetConfigValuesArray("Seating", dictConfig);
+		string[] projectCSVs = GetConfigValuesArray("Projects", dictConfig);
 		AddHeadingsToDict("SeatsHeadings", dictConfig);
 		AddHeadingsToDict("SeatingHeadings", dictConfig);
+		AddHeadingsToDict("ProjectsHeadings", dictConfig);
 
 		// Read in the SeatID to map position mappings
 		foreach (string seatFile in seatCSVs)
@@ -118,6 +121,27 @@ public class SpotManager : MonoBehaviour {
 			);
 		}
 
+		// Read in projects mappings
+		projects = new List<string>();
+		foreach (string filename in projectCSVs)
+		{
+			AddKeyValuesFromCSVToDict(System.IO.Path.Combine(Application.streamingAssetsPath, filename),
+				(iRow, dictHeadingsToValues) =>
+				{
+					string strProjects = dictHeadingsToValues[dictConfig["ProjectsHeadings.Projects"]];
+					dictFaceIdToProjects[dictHeadingsToValues[dictConfig["ProjectsHeadings.FaceID"]]] = strProjects;
+					string[] projectStrings = strProjects.Split(new string[] { "/", "," }, System.StringSplitOptions.None);
+					foreach (string projStr in projectStrings)
+					{
+						string projStrTrimmed = projStr.Trim();
+						if (!projects.Contains(projStrTrimmed))
+						{
+							projects.Add(projStrTrimmed);
+						}
+					}
+				}
+			);
+		}
 
 		if (editSpots)
 			idSpotPlacing = listSpots[iSpotEdit].id;
@@ -137,6 +161,15 @@ public class SpotManager : MonoBehaviour {
 	static public string GetFullFaceID(string uniquePortion)
 	{
 		return FaceIDTemplate.Replace(FaceIDReplacementToken, uniquePortion);
+	}
+	static public string GetProjectsOfFaceID(string faceId)
+	{
+		string projects;
+		if (dictFaceIdToProjects.TryGetValue(faceId, out projects))
+		{
+			return projects;
+		}
+		return "";
 	}
 	public static Vector2 GetSpotPos(string faceId)
 	{

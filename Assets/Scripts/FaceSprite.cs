@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class FaceSprite : System.IComparable
 {
-	public FaceSprite(string first, string last, string role, System.DateTime date, string idStr, Sprite sprite, Texture2D texture)
+	public FaceSprite(string first, string last, string role, string projects, System.DateTime date, string idStr, Sprite sprite, Texture2D texture)
 	{
-		guessNames = new string[6];
+		guessNames = new string[7];
 		firstName = first;
 		lastName = last;
 		fullName = first + " " + last;
@@ -14,6 +14,7 @@ public class FaceSprite : System.IComparable
 		id = idStr;
 		dateHired = date.Year.ToString() + "-" + date.Month.ToString("00") + "-" + date.Day.ToString("00");
 		this.role = role;
+		this.projects = projects;
 		this.sprite = sprite;
 		this.texture = texture;
 		RandomizeOrder();
@@ -27,12 +28,13 @@ public class FaceSprite : System.IComparable
 
 	public System.DateTime dateTime;	// Date endoced in file name, or if non present then from system file creation time.
 	public string[] guessNames;
+	public string fullName		{ get { return guessNames[0]; } set { guessNames[0] = value; } }
 	public string firstName		{ get { return guessNames[1]; } set { guessNames[1] = value; } }
 	public string lastName		{ get { return guessNames[2]; } set { guessNames[2] = value; } }
-	public string fullName		{ get { return guessNames[0]; } set { guessNames[0] = value; } }
 	public string role			{ get { return guessNames[3]; } set { guessNames[3] = value; } }
-	public string dateHired		{ get { return guessNames[4]; } set { guessNames[4] = value; } }
-	public string id			{ get { return guessNames[5]; } set { guessNames[5] = value; } }
+	public string projects		{ get { return guessNames[4]; } set { guessNames[4] = value; } }
+	public string dateHired		{ get { return guessNames[5]; } set { guessNames[5] = value; } }
+	public string id			{ get { return guessNames[6]; } set { guessNames[6] = value; } }
 	// The actual string they need to guess.
 	public string guessName		{ get { return guessNames[iGuessNameIndex]; } set { } }
 	public Sprite sprite;

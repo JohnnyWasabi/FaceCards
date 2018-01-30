@@ -21,8 +21,12 @@
 
 Seats=Seats.csv
 SeatsHeadings = SeatID:SeatID, XPos:X, YPos:Y
+
 Seating = user_locations.csv, user_locations_contractors.csv
 SeatingHeadings = SeatID: physicalDeliveryOfficeName, FaceID:objectSid
+
+Projects = user_projects.csv
+ProjectsHeadings = Projects: projects, FaceID:objectSid
 
 // The <UNIQUE_ID> part is replaced with the unique portion of the ID from the filename.
 FaceIDTemplate=S-1-5-21-3939536698-307175389-1584766368-<UNIQUE_ID>
