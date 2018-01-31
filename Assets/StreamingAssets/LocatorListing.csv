@@ -1,136 +1,135 @@
-Name,Row, Col,Location
-Andrew Luby,25,29,Y 29
-Daryl Wong,13,18,M 18
-Scott Army,11,7,K 7
-Chris Ballinger,14,20,N 20
-Paul Laska,13,18,M 18
-Samantha Robbins,5,15,E 15
-Julius Hipolito,20,30,T 30
-Gaby Gonzalez,21,40,U 40
-Nikita Taranduke,10,23,J 23
-Kitty Lee,13,23,M 23
-Brett Mitchell,10,28,J 28
-Jason Hazelroth,7,24,G 24
-Matt Phillips,13,22,M 22
-Mike Winfield,5,11,E 11
-Glen Darroch,26,31,Z 31
-Leo Simkin,10,20,J 20
-Myles Salholm,18,40,R 40
-Andreea Enache-Thune,7,19,G 19
-Sean Creveling,7,30,G 30
-Craig Drageset,10,22,J 22
-Sergio Correa,17,28,Q 28
-Max Sena,2,15,B 15
-Josh Carlos,20,40,T 40
-Jose Gomez,5,16,E 16
-Yvonne Chung,25,35,Y 35
-Kaysaun Franklin,14,24,N 24
-Frank Chen,14,16,N 16
-Colby Marchi,13,14,M 14
-Nick Storm,13,30,M 30
-Kimie Kim-Mizutani,15,38,O 38
-David Kim,15,7,O 7
-Galen Davis,13,10,M 10
-Jessica Ferrarella,4,9,D 9
-Matt Campbell,21,25,U 25
-Chris Wade,11,19,K 19
-Eric McNine,8,7,H 7
-Jason Neal,13,14,M 14
-Adam Schuman,9,28,I 28
-Rick Winter,10,7,J 7
-Mark Gabby-Li,13,30,M 30
-Anabel Sarango,14,12,N 12
-Frank Occhiato,26,25,Z 25
-Laurent Horisberger,2,13,B 13
-Chris Masterton,9,20,I 20
-Jeremy Rice,19,21,S 21
-Alberto Terrones,24,22,X 22
-Jason Beck,8,33,H 33
-Matthew Yefima,17,20,Q 20
-Koy Van Oteghem,26,33,Z 33
-Will Hurd,12,6,L 6
-Scott Ballinger,15,22,O 22
-Ken Cheung,15,13,O 13
-Masana Pawlan,8,20,H 20
-Justin Hilton,19,33,S 33
-Ron Bitzer,2,31,B 31
-Patrick Ghiocel,6,13,F 13
-Steve Merritt,15,30,O 30
-Shelby Peterson,3,16,C 16
-Doug Damron,19,29,S 29
-Izzy Benavente,21,32,U 32
-Josh Mikkelsen,14,36,N 36
-Jaime Roman,14,24,N 24
-Robb Zindt,13,9,M 9
-Dylan Cockerham,18,30,R 30
-Jonathan Barreras,19,36,S 36
-Danny Mak,8,28,H 28
-Haydn Dalton,2,27,B 27
-Marwan Nazanda,21,33,U 33
-Tom Vu,13,26,M 26
-Nathan Moore,7,29,G 29
-Handerson Lee,6,15,F 15
-John Plou,17,21,Q 21
-Danny Huynh,21,29,U 29
-Neil Lintag,15,8,O 8
-Violet Krueger,6,20,F 20
-Matthew Pauley,13,8,M 8
-Brad Hendricks,3,20,C 20
-Jenni Mares,6,34,F 34
-Rio Velarde,5,14,E 14
-Stephen Pettinati,3,12,C 12
-Dillon Tang,8,34,H 34
-Craig Ostrander,4,28,D 28
-Matt Fagan,13,7,M 7
-Mimi Black,21,14,U 14
-Jeff Koyama,2,11,B 11
-Codey Robinson,15,14,O 14
-Nolan Carnahan,21,24,U 24
-Ron Mar,10,18,J 18
-Josh Edwards,7,22,G 22
-Allan Veletanlic,7,23,G 23
-Chris Turnley,17,32,Q 32
-John Bingham,5,16,E 16
-Donovan McCartney,15,26,O 26
-Jeff Zugale,21,28,U 28
-Carlos Collazo,19,20,S 20
-Mike Popovich,9,6,I 6
-Jonathan Rucker,15,18,O 18
-John Alvarado,25,37,Y 37
-Beth Hendricks,18,26,R 26
-Ken Dopher,26,27,Z 27
-Colin Payette,5,9,E 9
-Patrick Hegarty,8,18,H 18
-Matthew Fawcett,3,23,C 23
-Dave Baker,1,29,A 29
-Robby Wong,15,18,O 18
-Eric Ruff,9,31,I 31
-Josh Turner,14,8,N 8
-Aaron Aikman,9,24,I 24
-Corey Lightner,17,33,Q 33
-Shelley Lovejoy,26,23,Z 23
-Brandon Ly,19,24,S 24
-Susan Won,15,23,O 23
-Isias Llamas,17,29,Q 29
-Kurt Caron,17,39,Q 39
-Dominic Camargo,6,21,F 21
-Julio Jerez,3,10,C 10
-Jeff Rosenberger,3,15,C 15
-Josh Shucker,3,14,C 14
-Alan Lee,2,25,B 25
-Chris Toft,17,25,Q 25
-Jonathan Rebar,19,32,S 32
-Todd Morgan,26,40,Z 40
-Andrew Ang,3,11,C 11
-Jake Friedman,14,20,N 20
-Chris Sosa,20,34,T 34
-Dell Siefert,8,23,H 23
-Jolene Goya,10,7,J 7
-Alex Dubnik,14,16,N 16
-Drew Bradford,14,40,N 40
-Dustin Mesa,13,26,M 26
-Andy Klinzing,5,10,E 10
-Mey Helm,18,22,R 22
-Dimitri Del Castillo,3,9,C 9
-Marc Hall,5,12,E 12
-Jimmy Rivas,17,24,Q 24
+Name,Row, Col
+Allan Veletanlic,7,22,
+Matthew Yefima,17,18,
+Craig Drageset,10,20,
+Ken Dopher,26,26,
+Jake Friedman,14,18,
+Eric McNine,8,3,
+Chris Masterton,9,17,
+Danny Huynh,21,28,
+Marc Hall,5,9,
+Sergio Correa,17,26,
+Laurent Horisberger,2,10,
+Leo Simkin,10,17,
+Danny Mak,8,27,
+Masana Pawlan,8,18,
+Paul Laska,13,16,
+Scott Ballinger,15,19,
+Frank Chen,14,14,
+Daryl Wong,13,15,
+Andrew Ang,3,8,
+Robby Wong,15,16,
+Max Sena,2,13,
+Josh Carlos,20,40,
+Robb Zindt,13,6,
+Jose Gomez,5,13,
+Kimie Kim-Mizutani,15,37,
+Susan Won,15,21,
+Anabel Sarango,14,9,
+Marwan Nazanda,21,32,
+Todd Morgan,26,39,
+Justin Hilton,19,32,
+Mimi Black,20,5,
+Frank Occhiato,26,23,
+Colby Marchi,13,10,
+Matt Campbell,21,23,
+Andy Klinzing,5,6,
+Matt Phillips,13,19,
+Scott Army,11,3,
+Myles Salholm,18,40,
+Mey Helm,18,20,
+Jolene Goya,10,3,
+Jeff Zugale,21,27,
+Galen Davis,13,7,
+Violet Krueger,6,17,
+Dillon Tang,8,33,
+Dave Baker,1,27,
+Matthew Pauley,13,4,
+Izzy Benavente,21,31,
+Mike Popovich,9,2,
+Ron Mar,10,16,
+Craig Ostrander,4,27,
+Josh Mikkelsen,14,35,
+Tom Vu,13,24,
+Gaby Gonzalez,21,40,
+Kaysaun Franklin,14,22,
+Adam Schuman,9,26,
+Dylan Cockerham,18,29,
+Nathan Moore,7,28,
+Jessica Ferrarella,4,5,
+Codey Robinson,15,11,
+Julius Hipolito,20,28,
+Brandon Ly,19,22,
+Jimmy Rivas,17,22,
+Kurt Caron,17,38,
+Dominic Camargo,6,19,
+Nikita Taranduke,10,21,
+Jeremy Rice,19,19,
+Eric Ruff,9,29,
+Aaron Aikman,9,22,
+Jason Beck,8,32,
+Andreea Enache-Thune,7,17,
+Jonathan Rebar,19,31,
+Ron Bitzer,2,30,
+Yvonne Chung,25,34,
+Isias Llamas,17,28,
+Chris Ballinger,14,17,
+Matt Fagan,13,3,
+Jeff Rosenberger,3,12,
+Dell Siefert,8,21,
+Colin Payette,5,5,
+Jaime Roman,14,23,
+Jason Hazelroth,7,22,
+Mark Gabby-Li,13,28,
+Nick Storm,13,29,
+Will Hurd,12,2,
+Jason Neal,13,11,
+John Plou,17,19,
+Josh Edwards,7,20,
+Andrew Luby,25,28,
+Kitty Lee,13,21,
+Josh Turner,14,5,
+Drew Bradford,14,40,
+Dimitri Del Castillo,3,5,
+Doug Damron,19,28,
+Patrick Hegarty,8,16,
+David Kim,15,3,
+Koy Van Oteghem,26,32,
+Dustin Mesa,13,25,
+Carlos Collazo,19,18,
+Donovan McCartney,15,25,
+Matthew Fawcett,3,21,
+Chris Wade,11,16,
+Ken Cheung,15,10,
+Neil Lintag,15,4,
+John Alvarado,25,37,
+Jeff Koyama,2,7,
+Jonathan Rucker,15,15,
+Stephen Pettinati,3,9,
+Shelby Peterson,3,13,
+Mike Winfield,5,8,
+Brett Mitchell,10,26,
+Jenni Mares,6,33,
+Shelley Lovejoy,26,21,
+Chris Sosa,20,33,
+Rio Velarde,5,11,
+Corey Lightner,17,32,
+Alex Dubnik,14,13,
+Haydn Dalton,2,25,
+Samantha Robbins,5,12,
+Chris Turnley,17,31,
+Josh Shucker,3,11,
+Julio Jerez,3,6,
+Sean Creveling,7,29,
+Alberto Terrones,24,20,
+Beth Hendricks,18,25,
+Brad Hendricks,3,18,
+Patrick Ghiocel,6,10,
+Alan Lee,2,23,
+Nolan Carnahan,21,23,
+Rick Winter,10,3,
+Jonathan Barreras,19,35,
+Steve Merritt,15,28,
+Handerson Lee,6,13,
+Glen Darroch,26,30,
+Chris Toft,17,23,
