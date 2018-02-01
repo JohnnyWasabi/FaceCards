@@ -793,14 +793,17 @@ public class FaceCards : StateMachine {
 	{
 		if (Input.GetKeyDown(KeyCode.F12))
 		{
+			SortByGuessName(false, 0);
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			sb.Append("Name,Row, Col\n");
+			sb.Append("Name,Row, Col, Row float, Col float\n");
 			foreach (FaceSprite fs in faceSprites)
 			{
 				Vector2 loc = SpotManager.GetGridXY(fs.id);
 				sb.Append(fs.fullName); sb.Append(",");
 				sb.Append((Mathf.FloorToInt(loc.y) + 1).ToString()); sb.Append(",");
 				sb.Append((Mathf.FloorToInt(loc.x) + 1).ToString()); sb.Append(",");
+				sb.Append((loc.y + 1).ToString()); sb.Append(",");
+				sb.Append((loc.x + 1).ToString()); sb.Append(",");
 				sb.Append("\n");
 			}
 			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "LocatorListing.csv"), sb.ToString());
@@ -839,8 +842,9 @@ public class FaceCards : StateMachine {
 				}
 				guiTextName.color = countNameSearchMatches > 0 ? (countNameSearchMatches == 1 ? Color.green : Color.white) : Color.red;
 			}
-
 		}
+		guiTextNofM.text = (guiTextName.text.Length == 0 || countNameSearchMatches == 1) ? "" : countNameSearchMatches.ToString() + " matches";
+
 		float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
 		if (wheelDelta != 0)
 		{
@@ -1500,11 +1504,12 @@ public class FaceCards : StateMachine {
 			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
 		}
 	}
-	public void SortByGuessName()
+	public void SortByGuessName(bool arrange = false, int forceGuessNameIndex = -1)
 	{
+		int iSortIndex = (forceGuessNameIndex >= 0) ? forceGuessNameIndex : FaceSprite.iGuessNameIndex;
 		faceSprites.Sort(delegate (FaceSprite fs1, FaceSprite fs2)
 		{
-			switch (FaceSprite.iGuessNameIndex)
+			switch (iSortIndex)
 			{
 			case 0: // Full Name
             case 1: // First Name
@@ -1554,6 +1559,8 @@ public class FaceCards : StateMachine {
 			}
             return (fs1.card.indexOrder - fs2.card.indexOrder); // This should actually never get reached.
 		});
+
+		if (arrange)
 		for (int i = 0; i < faceSprites.Count; i++)
 		{
 			faceSprites[i].card.indexOrder = i;
