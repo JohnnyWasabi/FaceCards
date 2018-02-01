@@ -34,7 +34,7 @@ FaceIDTemplate=S-1-5-21-3939536698-307175389-1584766368-<UNIQUE_ID>
 // Pixel coord of start of map grid in the blueprint image
 MapGridUpperLeftX=65
 MapGridUpperLeftY=100
-MapGridWidth=3716
-MapGridHeight=2125
+MapGridWidth=3628
+MapGridHeight=2030
 MapGridRows=26
 MapGridCols=36
