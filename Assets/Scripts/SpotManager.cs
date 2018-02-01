@@ -204,10 +204,12 @@ public class SpotManager : MonoBehaviour {
 		string[] rows = csvFile.Split(new string[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
 		Dictionary<string, string> dictHeadingToVal = new Dictionary<string, string>();
 		string[] headings = rows[0].Split(new char[] { ',' }, System.StringSplitOptions.None);
+		headings = UnQuoteStringArray(headings);
 
 		for (int iRow = 1; iRow < rows.Length; iRow++)
 		{
 			string[] cols = rows[iRow].Split(new char[] { ',' }, System.StringSplitOptions.None);
+			cols = UnQuoteStringArray(cols);
 			if (cols.Length <= headings.Length)
 			{
 				for (int c = 0; c < cols.Length; c++)
@@ -218,6 +220,22 @@ public class SpotManager : MonoBehaviour {
 			}
 		}
 		return rows[0];
+	}
+	static string[] UnQuoteStringArray(string[] strings)
+	{
+		if (strings == null)
+			return null;
+
+		for (int i = 0; i < strings.Length; i++)
+			strings[i] = UnQuote(strings[i]);
+
+		return strings;
+	}
+	static string UnQuote(string src, char quoteChar = '"')
+	{
+		if (src != null && src.Length >= 2 && src[0] == quoteChar && src[src.Length - 1] == quoteChar)
+			src = src.Substring(1, src.Length - 2);
+		return src;
 	}
 
 	static string[] GetConfigValuesArray(string key, Dictionary<string,string> dict, char delimiterChar = ',')
