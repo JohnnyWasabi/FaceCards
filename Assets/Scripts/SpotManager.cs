@@ -116,7 +116,8 @@ public class SpotManager : MonoBehaviour {
 			AddKeyValuesFromCSVToDict(System.IO.Path.Combine(Application.streamingAssetsPath, seatingFile),
 				(iRow, dictHeadingsToValues) =>
 				{
-					dictFaceIdToSeatID[dictHeadingsToValues[dictConfig["SeatingHeadings.FaceID"]]] = dictHeadingsToValues[dictConfig["SeatingHeadings.SeatID"]];
+					string[] seats = dictHeadingsToValues[dictConfig["SeatingHeadings.SeatID"]].Split(new string[] { "/", "," }, System.StringSplitOptions.None);
+					dictFaceIdToSeatID[dictHeadingsToValues[dictConfig["SeatingHeadings.FaceID"]]] = seats[0];
 				}
 			);
 		}
