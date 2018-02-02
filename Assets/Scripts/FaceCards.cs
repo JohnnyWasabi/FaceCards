@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -11,12 +12,12 @@ public class FaceCards : StateMachine {
 	const float btnWidth = 64;
 	const float btnHSpacing = 4;
 	const float btnWidthSpaced = (btnWidth + btnHSpacing);
-    const float comboButtonWidth = 120;
+	const float comboButtonWidth = 120;
 	const float comboSpacing = comboButtonWidth + btnHSpacing * 2;
 	const float xStartComboBoxes = btnHSpacing;
 	const string msgVictory = "YOU WON!";
 
-	public ColorPicker bgColorPicker;	// Background color picker
+	public ColorPicker bgColorPicker;   // Background color picker
 
 	List<string> roles;
 	int iDeptFilter = 0;    // 0 = all departments included. > 0 means a single department roles[iDeptFilter-1] is included.
@@ -35,11 +36,11 @@ public class FaceCards : StateMachine {
 	GameMode gameMode = GameMode.memoryGame;
 	int iTenureFilter = 0;
 	float _valTenureSlider = 0;
-	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }	  // 0.0 .. 1.0  slider value that determines countTenureMembers.
+	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }      // 0.0 .. 1.0  slider value that determines countTenureMembers.
 	float valTenureSliderLastRelease = 0;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
 	float _valMapScaleSlider = 1;
-	float valMapScaleSlider {  get { return _valMapScaleSlider; } set { _valMapScaleSlider = value;  } }
+	float valMapScaleSlider { get { return _valMapScaleSlider; } set { _valMapScaleSlider = value; } }
 	float valMapScaleSliderLastRelease = 1;   // Keeps track of valTenureSlider on mouse Up so we only update the game when the player releases the slider.
 
 
@@ -67,7 +68,7 @@ public class FaceCards : StateMachine {
 	GUIContent[] comboBoxListTenure;
 	private ComboBox comboBoxControlTenure;
 
-	public int debugMaxCards = 0;	// greater than 0 the set limit on number of cards.
+	public int debugMaxCards = 0;   // greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
 	public List<FaceSprite> faceSprites;
 	public List<FaceSprite> faceSpritesFiltered;
@@ -75,14 +76,14 @@ public class FaceCards : StateMachine {
 	public GUIText guiTextName;
 	public GUIText guiTextNofM;
 	public GUIText guiTextBadChar;
-    public GUIText guiTextRole;
+	public GUIText guiTextRole;
 	public GameObject goHangMan;
 	public GUIText guiTextTheMan;
 	public GUIText guiTextGallows;
 
-    int iGuessnamePrevious = 0;
+	int iGuessnamePrevious = 0;
 
-    const float timeTransitionShowFace = 0.5f;
+	const float timeTransitionShowFace = 0.5f;
 
 	int typedGood;
 	int typedBad;
@@ -98,9 +99,9 @@ public class FaceCards : StateMachine {
 	private GUIStyle guiStyleStats = new GUIStyle(); //create a new variable
 	private GUIStyle guiStyleScore = new GUIStyle(); //create a new variable
 	float secondsCursorOn = 1f;
-    float secondsCursorOff = 1f;
-    float secondsBlinkCycle = 0;
-    public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
+	float secondsCursorOff = 1f;
+	float secondsBlinkCycle = 0;
+	public Color cursorColor = new Color(182f / 255f, 1f, 1f, 1f);
 
 	private GUIStyle guiStyleVersion = new GUIStyle(); //create a new variable
 
@@ -110,7 +111,7 @@ public class FaceCards : StateMachine {
 	public float secondsKeyRepeatInterval = 0.03333f;
 	float keyRepeatDelay;  // initial delay
 
-	bool isFlashcardsMode {  get { return gameMode == GameMode.flashCards; } }
+	bool isFlashcardsMode { get { return gameMode == GameMode.flashCards; } }
 	bool isYearBookMode { get { return gameMode == GameMode.yearBook; } }
 	bool caseSensitive;
 
@@ -147,7 +148,7 @@ public class FaceCards : StateMachine {
 	public static int ControlBarHeight;
 
 	float scaleMapMax = 1.0f;
-	float scaleMapMin = 0.5f;	// Typically set to fit-to-screen scale
+	float scaleMapMin = 0.5f;   // Typically set to fit-to-screen scale
 
 	// These are assigned from the actual loaded map data.
 	static public int pixelTileWidth = 24;
@@ -158,8 +159,13 @@ public class FaceCards : StateMachine {
 	public int mapHeight;
 	CenterMap centerMap;
 
+	public static Action OnGuessSelectorChanged;
+
 	void Awake()
 	{
+		guiTextTheMan.text = "";
+		guiTextGallows.text = "";
+
 		ControlBarHeight = (int)cubeBG.transform.localScale.y;
 
 		mapDataMap = MapReader.GetMapFromFile("Floorplan.tmx");   // Dirt layer
@@ -211,9 +217,9 @@ public class FaceCards : StateMachine {
 		scaleMap = valMapScaleSlider = scaleMapMin;
 
 		float mapMarginHeight = (ScreenPlayAreaHeight - (mapHeight * scaleMap)) * 0.5f;
-		float mapMarginWidth  = (ScreenPlayAreaWidth  - (mapWidth  * scaleMap)) * 0.5f;
+		float mapMarginWidth = (ScreenPlayAreaWidth - (mapWidth * scaleMap)) * 0.5f;
 		xMapUL = Mathf.FloorToInt(-Screen.width * 0.5f + mapMarginWidth);
-		yMapUL = Mathf.FloorToInt(Screen.height * 0.5f - mapMarginHeight); 
+		yMapUL = Mathf.FloorToInt(Screen.height * 0.5f - mapMarginHeight);
 		xMapBR = xMapUL + (mapDataMap.Width - 1) * pixelTileWidth;
 		yMapBR = yMapUL - (mapDataMap.Height - 1) * pixelTileHeight;
 
@@ -231,15 +237,15 @@ public class FaceCards : StateMachine {
 		keyRepeatDelay = secondsKeyRepeatStartDelay;
 
 		guiStyleStats.font = guiTextName.font;
-        guiStyleStats.fontSize = guiTextName.fontSize;
-        guiStyleStats.normal.textColor = cursorColor;
+		guiStyleStats.fontSize = guiTextName.fontSize;
+		guiStyleStats.normal.textColor = cursorColor;
 
 		guiStyleScore.font = guiStyleStats.font;
 		guiStyleScore.fontSize = guiStyleStats.fontSize;
 		guiStyleScore.normal.textColor = guiStyleStats.normal.textColor;
 		guiStyleScore.alignment = TextAnchor.UpperCenter;
 
-        guiTextName.text = "Loading ...";
+		guiTextName.text = "Loading ...";
 		guiTextBadChar.text = "";
 
 		guiStyleVersion.font = guiTextName.font;
@@ -264,12 +270,12 @@ public class FaceCards : StateMachine {
 		FaceSprite.spriteCardFrontFrame.texture.filterMode = FilterMode.Point;
 
 		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
-		
+
 		faceSprites = new List<FaceSprite>();
 		faceSpritesFiltered = new List<FaceSprite>();
-        doneLoading = false;
-        yield return StartCoroutine(LoadFaces());
-		SetupRolesComboBox();
+		doneLoading = false;
+		yield return StartCoroutine(LoadFaces());
+		SetupComboBoxes();
 
 
 		guiTextName.text = "Type Full Name Here";
@@ -311,7 +317,7 @@ public class FaceCards : StateMachine {
 	#region STATE_Loading
 	/************************************************************************************************************************************/
 	State stateLoading;
-	public void Loading_Enter(State prevState)	{ doneLoading = false; }
+	public void Loading_Enter(State prevState) { doneLoading = false; }
 	public void Loading_Exit(State nextState) { }
 	public State Loading_Update()
 	{
@@ -325,10 +331,16 @@ public class FaceCards : StateMachine {
 	#region STATE_MemoryGame
 	/************************************************************************************************************************************/
 	State stateMemoryGame;
-	public void MemoryGame_Enter(State prevState) {  }
-	public void MemoryGame_Exit(State nextState) { }
-	public State MemoryGame_Update()
-	{
+	public void MemoryGame_Enter(State prevState) {
+		guiTextBadChar.color = Color.red;
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
+	}
+	public void MemoryGame_Exit(State nextState) {
+		guiTextTheMan.text = "";
+		guiTextGallows.text = "";
+	}
+public State MemoryGame_Update()
+{
 		if (Input.inputString.Length > 0 && !AreAllCollected())
 		{
 			guiTextBadChar.text = "";
@@ -395,7 +407,7 @@ public class FaceCards : StateMachine {
 				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
 				guiTextName.text = faceSpriteCrnt.guessName;
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 			}
 		}
 		else if (GetKeyRepeatable(KeyCode.RightArrow))
@@ -461,6 +473,9 @@ public class FaceCards : StateMachine {
 			}
 		}
 
+		guiTextTheMan.text = TheManBody[indexHangMan];
+		guiTextGallows.enabled = (indexHangMan > 0);
+
 		return null;
 	}
 	#endregion STATE_MemoryGame
@@ -468,7 +483,9 @@ public class FaceCards : StateMachine {
 	#region STATE_FlashCards
 	/************************************************************************************************************************************/
 	State stateFlashCards;
-	public void FlashCards_Enter(State prevState) { }
+	public void FlashCards_Enter(State prevState) {
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
+	}
 	public void FlashCards_Exit(State nextState) { }
 	public State FlashCards_Update()
 	{
@@ -540,7 +557,7 @@ public class FaceCards : StateMachine {
 				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
 				guiTextName.text = faceSpriteCrnt.guessName;
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 			}
 		}
 		else if (GetKeyRepeatable(KeyCode.RightArrow))
@@ -612,7 +629,10 @@ public class FaceCards : StateMachine {
 	#region STATE_Yearbook
 	/************************************************************************************************************************************/
 	State stateYearbook;
-	public void Yearbook_Enter(State prevState) { }
+	public void Yearbook_Enter(State prevState) {
+		ChangeToFromYearBookMode();
+		RestartCurrentMode();
+	}
 	public void Yearbook_Exit(State nextState) { }
 	public State Yearbook_Update()
 	{
@@ -684,7 +704,7 @@ public class FaceCards : StateMachine {
 				faceSpriteCrnt.countRevealed += faceSpriteCrnt.guessName.Length - guiTextName.text.Length;
 				guiTextName.text = faceSpriteCrnt.guessName;
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-				guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+				guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 			}
 		}
 		else if (GetKeyRepeatable(KeyCode.RightArrow))
@@ -762,6 +782,11 @@ public class FaceCards : StateMachine {
 	bool isMouseMapPanning;
 	int countNameSearchMatches;
 	int prefixLenMatchMuliple;
+	FaceSprite fsMatched;
+	string nextMatchLetters;
+	Dictionary<char, int> dictNextCharMatchCount = new Dictionary<char, int>();
+	System.Text.StringBuilder sbNextChars = new System.Text.StringBuilder();
+	string nextCharsForBlank;
 
 	public void SetParentAllFaces(Transform transParent, bool worldPositionStays = true)
 	{
@@ -783,11 +808,30 @@ public class FaceCards : StateMachine {
 		SetParentAllFaces(goMapParent.transform);
 		countNameSearchMatches = 0;
 		prefixLenMatchMuliple = 0;
+		nextMatchLetters = "";
+		guiTextBadChar.color = Color.green;
+
+		FaceSprite fsMatched;
+		WaggleMatchingFaces("", out fsMatched, out nextCharsForBlank, false);
+		guiTextBadChar.text = nextCharsForBlank;
+
+		OnGuessSelectorChanged += MapViewHandleGuessSelectorChanged;
+	}
+	void MapViewHandleGuessSelectorChanged()
+	{
+		FaceSprite fsMatched;
+		WaggleMatchingFaces("", out fsMatched, out nextCharsForBlank, false);
+		guiTextBadChar.text = nextCharsForBlank;
+
 	}
 	public void MapView_Exit(State nextState) {
 		SetParentAllFaces(null);
-		string match;
-		WaggleMatchingFaces("", out match);
+		FaceSprite fsMatched;
+		string nextMatchChars;
+		WaggleMatchingFaces("", out fsMatched, out nextMatchChars, false);
+		guiTextBadChar.color = Color.red;
+
+		OnGuessSelectorChanged -= MapViewHandleGuessSelectorChanged;
 	}
 	public State MapView_Update()
 	{
@@ -830,8 +874,11 @@ public class FaceCards : StateMachine {
 					guiTextName.text += c;
 					//guiTextName.color = IsHangManDead() ? Color.yellow : Color.white;
 				}
-				string match;
-				countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out match);
+				countNameSearchMatches = 0;
+				fsMatched = null;
+				if (guiTextName.text.Length > 0)
+					countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
+				string match = (fsMatched != null) ? fsMatched.guessName : "";
 				if (countNameSearchMatches != 1)
 				{
 					prefixLenMatchMuliple = guiTextName.text.Length;
@@ -843,9 +890,12 @@ public class FaceCards : StateMachine {
 				guiTextName.color = countNameSearchMatches > 0 ? (countNameSearchMatches == 1 ? Color.green : Color.white) : Color.red;
 			}
 		}
-		guiTextNofM.text = (guiTextName.text.Length == 0 || countNameSearchMatches == 1) ? "" : countNameSearchMatches.ToString() + " matches";
+		guiTextRole.text = (guiTextName.text.Length == 0 || countNameSearchMatches != 1 || FaceSprite.iGuessNameIndex >= FaceSprite.iGuessRole) ? "" : fsMatched.role;
+		guiTextNofM.text = (guiTextName.text.Length == 0) ? "" : ( (countNameSearchMatches == 1 && FaceSprite.iGuessNameIndex < FaceSprite.iGuessRole) ? fsMatched.projects : countNameSearchMatches.ToString() + " matches");
+		guiTextBadChar.text = (guiTextName.text.Length == 0) ? nextCharsForBlank :  ((countNameSearchMatches > 1) ? nextMatchLetters : "");
 
-		float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
+
+	float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
 		if (wheelDelta != 0)
 		{
 			float slider = (valMapScaleSlider - scaleMapMin)/(1.0f - scaleMapMin);
@@ -881,22 +931,49 @@ public class FaceCards : StateMachine {
 #endif
 		return null;
 	}
-	int WaggleMatchingFaces(string prefix, out string match)
+	int WaggleMatchingFaces(string prefix, out FaceSprite faceSpriteMatched, out string nextMatchChars, bool doWaggle = true)
 	{
 		int count = 0;
-		match = "";
+		faceSpriteMatched = null;
+		nextMatchChars = "";
+		dictNextCharMatchCount.Clear();
+		sbNextChars.Length = 0;
 		foreach (FaceSprite fs in faceSprites)
 		{
-			if (prefix.Length > 0 && fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
+			if (prefix.Length >= 0 && fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
 			{
 				++count;
-				fs.card.StartWaggle();
-				match = fs.guessName;
+				if (doWaggle)
+					fs.card.StartWaggle();
+				else
+					fs.card.StopWaggle();
+				//match = fs.guessName;
+				faceSpriteMatched = fs;
+				if (fs.guessName.Length > prefix.Length)
+				{
+					char nextChar = fs.guessName[prefix.Length];
+					if (nextChar == ' ') nextChar = '␣';
+					if (nextMatchChars.IndexOf(nextChar) < 0)
+						nextMatchChars += nextChar;
+					int countNextChar = 1;
+					if (dictNextCharMatchCount.ContainsKey(nextChar))
+						countNextChar = dictNextCharMatchCount[nextChar] + 1;
+					dictNextCharMatchCount[nextChar] = countNextChar;
+				}
 			}
 			else
 				fs.card.StopWaggle();
 
 		}
+		List<KeyValuePair<char, int>> listNextChars = new List<KeyValuePair<char, int>>(dictNextCharMatchCount);
+		listNextChars.Sort((kv1, kv2) => kv1.Key - kv2.Key);
+		foreach(KeyValuePair<char,int> kv in listNextChars)
+		{
+			sbNextChars.Append(kv.Value == 1 ? "<color=lime>" : "<color=magenta>");
+			sbNextChars.Append(kv.Key);
+			sbNextChars.Append("</color>");
+		}
+		nextMatchChars = sbNextChars.ToString();
 		return count;
 	}
 #endregion STATE_MapView
@@ -924,7 +1001,7 @@ public class FaceCards : StateMachine {
 
 	public bool AreAllCollected() { return FaceSprite.GetNumCollected()  == faceSprites.Count; }
 
-	void SetupRolesComboBox()
+	void SetupComboBoxes()
 	{
 		float xComboBox = xStartComboBoxes;
 
@@ -1048,7 +1125,7 @@ public class FaceCards : StateMachine {
 		faceSpriteCrnt = (fsToUse != null) ? fsToUse : faceSprites[iFaceSprite];
 		if (refreshText)
 		{
-			if (FaceSprite.iGuessNameIndex >= 4)
+			if (FaceSprite.iGuessNameIndex >= FaceSprite.iGuessProjects)
 			{
 				guiTextName.text = faceSpriteCrnt.fullName;
 				guiTextNofM.text = faceSpriteCrnt.dateHired; 
@@ -1067,7 +1144,7 @@ public class FaceCards : StateMachine {
 			}
 			guiTextName.color = new Color(1, 1, 1, 1);
 			//guiTextRole.text = (faceSpriteCrnt.collected || showAllFaces) ? (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role) :  "";
-			guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+			guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 
 		}
 		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
@@ -1145,9 +1222,9 @@ public class FaceCards : StateMachine {
 				ShowNextFace();
 			}
 		}
-		if (gameMode == GameMode.memoryGame && FaceSprite.iGuessNameIndex >= 4) // !isYearBookMode && !showAllFaces
+		if (gameMode == GameMode.memoryGame && FaceSprite.iGuessNameIndex > FaceSprite.iGuessMax) // !isYearBookMode && !showAllFaces
 		{
-			FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
+			FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
 			comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
 		}
 	}
@@ -1615,7 +1692,7 @@ public class FaceCards : StateMachine {
 			if (guiTextName.text.Length == faceSpriteCrnt.guessName.Length)
 			{
 				guiTextName.color = IsHangManDead() ? Color.yellow : colorCorrect;
-                guiTextRole.text = (FaceSprite.iGuessNameIndex == 3 ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
+                guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
             }
         }
 	}
@@ -1729,8 +1806,8 @@ public class FaceCards : StateMachine {
 			}
 		}
 
-		guiTextTheMan.text = TheManBody[indexHangMan];
-		guiTextGallows.enabled = (indexHangMan > 0);
+		//guiTextTheMan.text = TheManBody[indexHangMan];
+		//guiTextGallows.enabled = (indexHangMan > 0);
 	}
 
 	void RestartCurrentMode()
@@ -1793,6 +1870,9 @@ public class FaceCards : StateMachine {
 			{
 				iGuessnamePrevious = FaceSprite.iGuessNameIndex;
 				FaceSprite.iGuessNameIndex = selectedItemIndex;
+
+				if (OnGuessSelectorChanged != null)
+					OnGuessSelectorChanged();
 				if (gameMode == GameMode.memoryGame) //(!showAllFaces && !isYearBookMode)
 				{
 					if (selectedItemIndex < 4)
@@ -1829,7 +1909,7 @@ public class FaceCards : StateMachine {
 				{ // Game Mode
 					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
 					{
-						FaceSprite.iGuessNameIndex = iGuessnamePrevious = 0;
+						FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
 						comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
 						comboBoxControlName.FlashButtonText();
 					}
@@ -1928,10 +2008,12 @@ public class FaceCards : StateMachine {
 
 			if (gameModeBefore != gameMode) //showAllFaces != showAllFacesBefore)
 			{
+#if false
 				if (gameMode == GameMode.yearBook || gameModeBefore == GameMode.yearBook)
 				{
 					ChangeToFromYearBookMode();
 				}
+#endif
 				if (gameMode == GameMode.memoryGame)
 					RestartGame();
 				else if (gameMode == GameMode.flashCards)
@@ -2013,7 +2095,7 @@ public class FaceCards : StateMachine {
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.0", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.1", guiStyleVersion);
 		}
     }
 }
