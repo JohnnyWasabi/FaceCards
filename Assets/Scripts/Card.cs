@@ -251,4 +251,14 @@ public class Card : MonoBehaviour {
 		isMoving = true;
 		
 	}
+
+	public bool IsWorldXYInCard(float xWorld, float yWorld)
+	{
+		Vector2 dimCardScaled = dimCard * transform.lossyScale.x;
+		float xMin = transform.position.x - dimCardScaled.x * 0.5f;
+		
+		return (xMin <= xWorld && xWorld <= xMin + dimCardScaled.x
+			&& transform.position.y <= yWorld && yWorld <= transform.position.y + dimCardScaled.y
+			);
+	}
 }

@@ -876,7 +876,7 @@ public State MemoryGame_Update()
 				}
 				countNameSearchMatches = 0;
 				fsMatched = null;
-				if (guiTextName.text.Length > 0)
+				//if (guiTextName.text.Length > 0)
 					countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
 				string match = (fsMatched != null) ? fsMatched.guessName : "";
 				if (countNameSearchMatches != 1)
@@ -887,15 +887,28 @@ public State MemoryGame_Update()
 				{
 					guiTextName.text = countNameSearchMatches == 1 ? match :  match.Substring(0, guiTextName.text.Length);
 				}
-				guiTextName.color = countNameSearchMatches > 0 ? (countNameSearchMatches == 1 ? Color.green : Color.white) : Color.red;
 			}
 		}
+		else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+		{
+			Vector3 clickWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			foreach (FaceSprite fs in faceSprites)
+			{
+				if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y))
+				{
+					guiTextName.text = fs.guessName;
+					countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
+					prefixLenMatchMuliple = 0;
+				}
+			}
+		}
+		guiTextName.color = countNameSearchMatches > 0 ? (countNameSearchMatches == 1 ? Color.green : Color.white) : Color.red;
 		guiTextRole.text = (guiTextName.text.Length == 0 || countNameSearchMatches != 1 || FaceSprite.iGuessNameIndex >= FaceSprite.iGuessRole) ? "" : fsMatched.role;
 		guiTextNofM.text = (guiTextName.text.Length == 0) ? "" : ( (countNameSearchMatches == 1 && FaceSprite.iGuessNameIndex < FaceSprite.iGuessRole) ? fsMatched.projects : countNameSearchMatches.ToString() + " matches");
 		guiTextBadChar.text = (guiTextName.text.Length == 0) ? nextCharsForBlank :  ((countNameSearchMatches > 1) ? nextMatchLetters : "");
 
 
-	float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
+		float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
 		if (wheelDelta != 0)
 		{
 			float slider = (valMapScaleSlider - scaleMapMin)/(1.0f - scaleMapMin);
@@ -905,6 +918,7 @@ public State MemoryGame_Update()
 
 //			centerMap.enabled = true;
 		}
+
 #if false
 		if (isMouseMapPanning)
 		{
@@ -929,7 +943,7 @@ public State MemoryGame_Update()
 			centerMap.enabled = false;
 		}
 #endif
-		return null;
+			return null;
 	}
 	int WaggleMatchingFaces(string prefix, out FaceSprite faceSpriteMatched, out string nextMatchChars, bool doWaggle = true)
 	{
@@ -938,9 +952,10 @@ public State MemoryGame_Update()
 		nextMatchChars = "";
 		dictNextCharMatchCount.Clear();
 		sbNextChars.Length = 0;
+		doWaggle = doWaggle && prefix.Length > 0;
 		foreach (FaceSprite fs in faceSprites)
 		{
-			if (prefix.Length >= 0 && fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
+			if (fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
 			{
 				++count;
 				if (doWaggle)
@@ -1952,16 +1967,16 @@ public State MemoryGame_Update()
 					{
 					case 3: // OGs
 						iTenureFilter = 1;
-						if (gameMode != GameMode.memoryGame)
-							comboBoxControlName.SelectedItemIndex = 4;
+						if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
+							comboBoxControlName.SelectedItemIndex = 5;
 						break;
 					case 4: // Newbies
 						iTenureFilter = 2;
-						if (gameMode != GameMode.memoryGame)
-							comboBoxControlName.SelectedItemIndex = 5;
+						if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
+							comboBoxControlName.SelectedItemIndex = 6;
 						break;
 					}
-					if (gameMode != GameMode.memoryGame)
+					if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
 						comboBoxControlName.FlashButtonText(0.75f);
 
 					comboBoxControlTenure.FlashButtonText(0.75f);
@@ -2048,14 +2063,17 @@ public State MemoryGame_Update()
 				mapRendererMap.goMap.SetActive(gameMode == GameMode.map);
 			}
 
-			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, 64, btnHeight), "Shuffle"))
+			if (gameMode != GameMode.map)
 			{
-				Randomize();
-				RestartGame(false);
-			}
-			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, 64, btnHeight), "Restart"))
-			{
-				RestartCurrentMode();
+				if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, 64, btnHeight), "Shuffle"))
+				{
+					Randomize();
+					RestartGame(false);
+				}
+				if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, 64, btnHeight), "Restart"))
+				{
+					RestartCurrentMode();
+				}
 			}
 
 			if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced, btnWidth, btnHeight), "Exit"))
@@ -2095,7 +2113,7 @@ public State MemoryGame_Update()
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.1", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.2", guiStyleVersion);
 		}
     }
 }
