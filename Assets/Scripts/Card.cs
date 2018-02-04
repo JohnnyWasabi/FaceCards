@@ -223,6 +223,8 @@ public class Card : MonoBehaviour {
 		UpdateSpriteObjScales(spriteRendererCard, true);
 		UpdateSpriteObjScales(spriteRendererFaceFrame, false);
 		UpdateSpriteObjScales(spriteRendererFace, false);
+		float scale = dimCard.x / YearBook.dimPhoto.x;
+		uiTextName.transform.localScale = new Vector3(scale, scale, 1);
 	}
 	public void UpdateSpriteObjScales(SpriteRenderer spriteRenderer, bool stretch)
 	{
@@ -252,9 +254,9 @@ public class Card : MonoBehaviour {
 		
 	}
 
-	public bool IsWorldXYInCard(float xWorld, float yWorld)
+	public bool IsWorldXYInCard(float xWorld, float yWorld, Vector2 dimCardToUse)
 	{
-		Vector2 dimCardScaled = dimCard * transform.lossyScale.x;
+		Vector2 dimCardScaled = dimCardToUse * transform.lossyScale.x;
 		float xMin = transform.position.x - dimCardScaled.x * 0.5f;
 		
 		return (xMin <= xWorld && xWorld <= xMin + dimCardScaled.x

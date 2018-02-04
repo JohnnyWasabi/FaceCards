@@ -787,6 +787,7 @@ public State MemoryGame_Update()
 	Dictionary<char, int> dictNextCharMatchCount = new Dictionary<char, int>();
 	System.Text.StringBuilder sbNextChars = new System.Text.StringBuilder();
 	string nextCharsForBlank;
+	FaceSprite fsMousedOver;
 
 	public void SetParentAllFaces(Transform transParent, bool worldPositionStays = true)
 	{
@@ -816,6 +817,7 @@ public State MemoryGame_Update()
 		guiTextBadChar.text = nextCharsForBlank;
 
 		OnGuessSelectorChanged += MapViewHandleGuessSelectorChanged;
+		fsMousedOver = null;
 	}
 	void MapViewHandleGuessSelectorChanged()
 	{
@@ -894,11 +896,40 @@ public State MemoryGame_Update()
 			Vector3 clickWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 			foreach (FaceSprite fs in faceSprites)
 			{
-				if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y))
+				if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, fs.card.dimCard))
 				{
 					guiTextName.text = fs.guessName;
 					countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
 					prefixLenMatchMuliple = 0;
+				}
+			}
+		}
+		else
+		{ // check for mouse over
+			Vector3 clickWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			if (fsMousedOver != null)
+			{
+				if (!fsMousedOver.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, YearBook.dimPhoto))
+				{
+					fsMousedOver.card.MoveTo(fsMousedOver.card.transform.localPosition, YearBook.dimPhoto, 0.25f);
+					fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = false; 
+					fsMousedOver.card.uiTextName.gameObject.SetActive(false);
+					fsMousedOver = null;
+				}
+			}
+			else
+			{
+				foreach (FaceSprite fs in faceSprites)
+				{
+					if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, YearBook.dimPhoto))
+					{
+						fsMousedOver = fs;
+						fsMousedOver.card.MoveTo(fsMousedOver.card.transform.localPosition, YearBook.dimPhoto * 2f, 0.25f);
+						fsMousedOver.card.uiTextName.text = fsMousedOver.fullName;
+						fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = true;
+						fsMousedOver.card.uiTextName.gameObject.SetActive(true);
+						break;
+					}
 				}
 			}
 		}
