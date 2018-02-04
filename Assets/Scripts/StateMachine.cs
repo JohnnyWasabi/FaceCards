@@ -20,7 +20,7 @@ public class StateMachine : MonoBehaviour
 		}
     }
 
-    public bool TransitionToState(State newState)
+	public bool TransitionToState(State newState, bool noStateReentry = false)
     {
         if (newState == null)
         {
@@ -40,7 +40,8 @@ public class StateMachine : MonoBehaviour
             {
                 return false;//overruled
             }
-            if (state == newState)
+
+            if (state == newState && noStateReentry)
             {
                 return false;
             }

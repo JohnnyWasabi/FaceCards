@@ -1,0 +1,14 @@
+TODO:
+-------------------------------------------
+
+
+
+
+-------------------------------------------
+Done:
+-------------------------------------------
+02/03/18 
+* Major refactor of code to fully use state machine for different modes.
+* Fix clicking on cards in Flashcards and Yearbook modes selects wrong cards.
+
+

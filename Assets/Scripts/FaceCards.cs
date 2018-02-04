@@ -31,8 +31,19 @@ public class FaceCards : StateMachine {
 		memoryGame,
 		flashCards,
 		yearBook,
-		map
+		mapView
 	}
+	public enum GuessFilter
+	{
+		firstAndLast,
+		firstName,
+		lastName,
+		department,
+		project,
+		tenureMost,
+		tenureLeast
+	}
+
 	GameMode gameMode = GameMode.memoryGame;
 	int iTenureFilter = 0;
 	float _valTenureSlider = 0;
@@ -46,27 +57,28 @@ public class FaceCards : StateMachine {
 
 	float score;
 
-	// Departments
-	GUIContent[] comboBoxList;
-	private ComboBox comboBoxControl;
-	private GUIStyle listStyle = new GUIStyle();
-
-	// Projects
-	GUIContent[] comboBoxListProjects;
-	private ComboBox comboBoxControlProjects;
+	// Game Mode
+	GUIContent[] comboBoxListMode;
+	private ComboBox comboBoxControl_Mode;// = new ComboBox();
 
 	// Guess Name
 	GUIContent[] comboBoxListNameGuess;
 	GUIContent[] comboBoxListNameSort;
-	private ComboBox comboBoxControlName;// = new ComboBox();
+	private ComboBox comboBoxControl_SearchKey;
 
-	// Game Mode
-	GUIContent[] comboBoxListMode;
-	private ComboBox comboBoxControlMode;// = new ComboBox();
+	// Departments
+	GUIContent[] comboBoxList;
+	private ComboBox comboBoxControl_DeptFilter;
+	private GUIStyle listStyle = new GUIStyle();
+
+	// Projects
+	GUIContent[] comboBoxListProjects;
+	private ComboBox comboBoxControl_ProjFilter;
 
 	// Tenure Filter mode:
 	GUIContent[] comboBoxListTenure;
 	private ComboBox comboBoxControlTenure;
+
 
 	public int debugMaxCards = 0;   // greater than 0 the set limit on number of cards.
 	public GameObject faceCardPrefab;
@@ -111,8 +123,11 @@ public class FaceCards : StateMachine {
 	public float secondsKeyRepeatInterval = 0.03333f;
 	float keyRepeatDelay;  // initial delay
 
-	bool isFlashcardsMode { get { return gameMode == GameMode.flashCards; } }
-	bool isYearBookMode { get { return gameMode == GameMode.yearBook; } }
+	bool isFlashcards { get { return gameMode == GameMode.flashCards; } }
+	bool isYearBook { get { return gameMode == GameMode.yearBook; } }
+	bool isMemoryGame { get { return gameMode == GameMode.memoryGame; } }
+	bool isMapView { get { return gameMode == GameMode.mapView; } }
+
 	bool caseSensitive;
 
 	public int widthCardSlot = 74;
@@ -159,7 +174,10 @@ public class FaceCards : StateMachine {
 	public int mapHeight;
 	CenterMap centerMap;
 
-	public static Action OnGuessSelectorChanged;
+	public static Action OnSearchKeyChanged;
+	public static Action OnFilterChanged;
+
+	public GameMode gameModeStart = GameMode.mapView;
 
 	void Awake()
 	{
@@ -278,13 +296,15 @@ public class FaceCards : StateMachine {
 		SetupComboBoxes();
 
 
+		gameMode = gameModeStart;
+		comboBoxControl_Mode.SelectedItemIndex = (int)gameModeStart;
+
 		guiTextName.text = "Type Full Name Here";
 		guiTextNofM.text = "";
 
 		if (faceSprites.Count > 0)
 		{
-			Invoke("Randomize", 1.00f);
-			Invoke("StartGame", 1.50f);
+			Invoke("StartGame", 1.0f); // 1.50f);
 		}
 		//Debug.Log("Num cards Collected = " + FaceSprite.GetNumCollected());
 
@@ -322,7 +342,7 @@ public class FaceCards : StateMachine {
 	public State Loading_Update()
 	{
 		if (doneLoading)
-			return stateMemoryGame;
+			return stateMapView; // stateMemoryGame;
 
 		return null;
 	}
@@ -332,13 +352,68 @@ public class FaceCards : StateMachine {
 	/************************************************************************************************************************************/
 	State stateMemoryGame;
 	public void MemoryGame_Enter(State prevState) {
-		guiTextBadChar.color = Color.red;
+		if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
+		{
+			FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
+			comboBoxControl_SearchKey.SelectedItemIndex = iGuessnamePrevious;
+			comboBoxControl_SearchKey.FlashButtonText();
+		}
+		comboBoxControl_SearchKey.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
+		comboBoxControl_SearchKey.comboLabel = "Guess:";
+
 		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
-	}
-	public void MemoryGame_Exit(State nextState) {
+
+		guiTextBadChar.color = Color.red;
+		guiTextBadChar.text = "";
+		guiTextName.text = "";
+		guiTextNofM.text = "";
+		ReturnFaceToYearbook(faceSpriteCrnt);
+
+		Randomize();
+		for (int i = 0; i < faceSprites.Count; i++)
+		{
+			faceSprites[i].card.FlipShowBack();
+			faceSprites[i].collected = false;
+			faceSprites[i].card.uiTextName.gameObject.SetActive(false);
+		}
+
+		if (!AreAllCollected())
+		{
+				iFaceSprite = faceSprites.Count - 1;
+				ShowNextFace();
+				typedGood = 0;
+				typedBad = 0;
+				typedGoodWrongCase = 0;
+				timeGameStarted = Time.time + timeTransitionShowFace;
+		}
+		OnFilterChanged += MemoryGame_OnFilterChanged;
+		OnSearchKeyChanged += MemoryGame_OnSearchKeyChanged;
+	} // MemoryGame_Enter
+	public void MemoryGame_Exit(State nextState)
+	{
+		OnFilterChanged -= MemoryGame_OnFilterChanged;
+		OnSearchKeyChanged -= MemoryGame_OnSearchKeyChanged;
 		guiTextTheMan.text = "";
 		guiTextGallows.text = "";
 	}
+
+	void MemoryGame_OnFilterChanged()
+	{
+		if (AreAllCollected())
+		{
+			if (fsCurrentUser != null)
+			{
+				ReturnFaceToYearbook(fsCurrentUser);
+			}
+		}
+	}
+
+	void MemoryGame_OnSearchKeyChanged()
+	{
+		Randomize();
+		RestartGame();
+	}
+
 public State MemoryGame_Update()
 {
 		if (Input.inputString.Length > 0 && !AreAllCollected())
@@ -484,9 +559,51 @@ public State MemoryGame_Update()
 	/************************************************************************************************************************************/
 	State stateFlashCards;
 	public void FlashCards_Enter(State prevState) {
+		comboBoxControl_SearchKey.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
+		comboBoxControl_SearchKey.comboLabel = "Sort by*:";
+
+
 		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
+
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.FlipShowFront();
+			fs.card.uiTextName.gameObject.SetActive(false);
+			fs.card.ArrangeOnYearbook();
+		}
+		foreach (FaceSprite fs in faceSpritesFiltered)
+		{
+			fs.card.uiTextName.gameObject.SetActive(false);
+		}
+		ReturnFaceToYearbook(faceSpriteCrnt);
+		SortByGuessName();
+
+		OnSearchKeyChanged += FlashCards_OnSearchKeyChanged;
+		OnFilterChanged += FlashCards_OnFilterChanged;
 	}
-	public void FlashCards_Exit(State nextState) { }
+	public void FlashCards_Exit(State nextState)
+	{
+		OnSearchKeyChanged -= FlashCards_OnSearchKeyChanged;
+		OnFilterChanged -= FlashCards_OnFilterChanged;
+	}
+	void FlashCards_OnSearchKeyChanged()
+	{
+		ReturnFaceToYearbook(faceSpriteCrnt);
+		guiTextName.text = "";
+		guiTextRole.text = "";
+
+		ApplyFilters();
+		SortByGuessName(true);
+	}
+	void FlashCards_OnFilterChanged()
+	{
+		ReturnFaceToYearbook(faceSpriteCrnt);
+		guiTextName.text = "";
+		guiTextRole.text = "";
+
+		ApplyFilters();
+		SortByGuessName(true);
+	}
 	public State FlashCards_Update()
 	{
 		if (Input.inputString.Length > 0 && !AreAllCollected())
@@ -530,7 +647,7 @@ public State MemoryGame_Update()
 		{
 			if (guiTextName.text == faceSpriteCrnt.guessName)
 			{
-				if (!IsHangManDead() && gameMode == GameMode.memoryGame) //!isFlashcardsMode)
+				if (!IsHangManDead() && isMemoryGame)
 				{
 					faceSpriteCrnt.collected = true;
 					guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
@@ -604,7 +721,7 @@ public State MemoryGame_Update()
 			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
 			if (clickedDisplayFace)
 			{
-				if (Input.GetMouseButtonDown(0) && (gameMode != GameMode.memoryGame || AreAllCollected())) //showAllFaces || isYearBookMode ||
+				if (Input.GetMouseButtonDown(0) && ( !isMemoryGame || AreAllCollected()))
 					ReturnFaceToYearbook(faceSpriteCrnt);
 			}
 			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
@@ -630,10 +747,48 @@ public State MemoryGame_Update()
 	/************************************************************************************************************************************/
 	State stateYearbook;
 	public void Yearbook_Enter(State prevState) {
-		ChangeToFromYearBookMode();
-		RestartCurrentMode();
+
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel, topMargin, sideMargin);
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.uiTextName.gameObject.SetActive(true);
+			fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
+			//fs.collected = true;
+			fs.card.FlipShowFront();
+		}
+		ApplyFilters();
+		SortByGuessName(true);
+
+		comboBoxControl_SearchKey.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
+		comboBoxControl_SearchKey.comboLabel = "Sort by*:";
+
+		OnSearchKeyChanged += Yearbook_OnSearchKeyChanged;
+		OnFilterChanged += Yearbook_OnFilterChanged;
 	}
-	public void Yearbook_Exit(State nextState) { }
+	public void Yearbook_Exit(State nextState)
+	{
+		OnSearchKeyChanged -= Yearbook_OnSearchKeyChanged;
+		OnFilterChanged -= Yearbook_OnFilterChanged;
+	}
+
+	void Yearbook_OnSearchKeyChanged()
+	{
+		ReturnFaceToYearbook(faceSpriteCrnt);
+		guiTextName.text = "";
+		guiTextRole.text = "";
+
+		ApplyFilters();
+		SortByGuessName(true);
+	}
+	void Yearbook_OnFilterChanged()
+	{
+		ReturnFaceToYearbook(faceSpriteCrnt);
+		guiTextName.text = "";
+		guiTextRole.text = "";
+
+		ApplyFilters();
+		SortByGuessName(true);
+	}
 	public State Yearbook_Update()
 	{
 		if (Input.inputString.Length > 0 && !AreAllCollected())
@@ -677,7 +832,7 @@ public State MemoryGame_Update()
 		{
 			if (guiTextName.text == faceSpriteCrnt.guessName)
 			{
-				if (!IsHangManDead() && gameMode == GameMode.memoryGame) //!isFlashcardsMode)
+				if (!IsHangManDead() && isMemoryGame)
 				{
 					faceSpriteCrnt.collected = true;
 					guiTextNofM.text = FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
@@ -751,7 +906,7 @@ public State MemoryGame_Update()
 			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
 			if (clickedDisplayFace)
 			{
-				if (Input.GetMouseButtonDown(0) && (gameMode != GameMode.memoryGame || AreAllCollected())) //showAllFaces || isYearBookMode ||
+				if (Input.GetMouseButtonDown(0) && ( !isMemoryGame || AreAllCollected()))
 					ReturnFaceToYearbook(faceSpriteCrnt);
 			}
 			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
@@ -805,6 +960,18 @@ public State MemoryGame_Update()
 	}
 
 	public void MapView_Enter(State prevState) {
+
+		if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
+		{
+			FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
+			comboBoxControl_SearchKey.SelectedItemIndex = iGuessnamePrevious;
+			comboBoxControl_SearchKey.FlashButtonText();
+		}
+		comboBoxControl_SearchKey.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
+		comboBoxControl_SearchKey.comboLabel = "Find by";
+
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
+
 		isMouseMapPanning = false;
 		SetParentAllFaces(goMapParent.transform);
 		countNameSearchMatches = 0;
@@ -816,24 +983,45 @@ public State MemoryGame_Update()
 		WaggleMatchingFaces("", out fsMatched, out nextCharsForBlank, false);
 		guiTextBadChar.text = nextCharsForBlank;
 
-		OnGuessSelectorChanged += MapViewHandleGuessSelectorChanged;
 		fsMousedOver = null;
-	}
-	void MapViewHandleGuessSelectorChanged()
-	{
-		FaceSprite fsMatched;
-		WaggleMatchingFaces("", out fsMatched, out nextCharsForBlank, false);
-		guiTextBadChar.text = nextCharsForBlank;
 
+		mapRendererMap.goMap.SetActive(true);
+
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.FlipShowFront();
+			fs.card.uiTextName.gameObject.SetActive(false);
+			fs.ArrangeOnMap();
+		}
+		foreach (FaceSprite fs in faceSpritesFiltered)
+		{
+			fs.card.uiTextName.gameObject.SetActive(false);
+		}
+		ReturnFaceToYearbook(faceSpriteCrnt);
+
+		OnSearchKeyChanged += MapView_OnSearchKeyChanged;
 	}
-	public void MapView_Exit(State nextState) {
+	public void MapView_Exit(State nextState)
+	{
+		OnSearchKeyChanged -= MapView_OnSearchKeyChanged;
+		mapRendererMap.goMap.SetActive(false);
 		SetParentAllFaces(null);
 		FaceSprite fsMatched;
 		string nextMatchChars;
 		WaggleMatchingFaces("", out fsMatched, out nextMatchChars, false);
 		guiTextBadChar.color = Color.red;
 
-		OnGuessSelectorChanged -= MapViewHandleGuessSelectorChanged;
+	}
+	void MapView_OnSearchKeyChanged()
+	{
+		FaceSprite fsMatched;
+		WaggleMatchingFaces("", out fsMatched, out nextCharsForBlank, false);
+		guiTextBadChar.text = nextCharsForBlank;
+
+		//ReturnFaceToYearbook(faceSpriteCrnt);
+		guiTextName.text = "";
+		guiTextRole.text = "";
+
 	}
 	public State MapView_Update()
 	{
@@ -1067,34 +1255,34 @@ public State MemoryGame_Update()
 		listStyle.padding.bottom = 4;
 
 
-		comboBoxControl = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle, "Department:");
+		comboBoxControl_DeptFilter = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxList[0], comboBoxList, "button", "box", listStyle, "Department:");
 
 		// What part of name they need to enter
 		xComboBox += comboSpacing;
 		comboBoxListNameGuess = new GUIContent[5];
-		comboBoxListNameGuess[0] = new GUIContent("First & Last");
-		comboBoxListNameGuess[1] = new GUIContent("First Name");
-		comboBoxListNameGuess[2] = new GUIContent("Last Name");
-		comboBoxListNameGuess[3] = new GUIContent("Department");
-		comboBoxListNameGuess[4] = new GUIContent("Project");
+		comboBoxListNameGuess[(int)GuessFilter.firstAndLast] = new GUIContent("First & Last");
+		comboBoxListNameGuess[(int)GuessFilter.firstName   ] = new GUIContent("First Name");
+		comboBoxListNameGuess[(int)GuessFilter.lastName    ] = new GUIContent("Last Name");
+		comboBoxListNameGuess[(int)GuessFilter.department  ] = new GUIContent("Department");
+		comboBoxListNameGuess[(int)GuessFilter.project     ] = new GUIContent("Project");
 
 		comboBoxListNameSort = new GUIContent[7];
-		comboBoxListNameSort[0] = new GUIContent("First & Last");
-		comboBoxListNameSort[1] = new GUIContent("First Name");
-		comboBoxListNameSort[2] = new GUIContent("Last Name");
-		comboBoxListNameSort[3] = new GUIContent("Department");
-		comboBoxListNameSort[4] = new GUIContent("Project");
-		comboBoxListNameSort[5] = new GUIContent("Tenure Most");
-		comboBoxListNameSort[6] = new GUIContent("Tenure Least");
-		comboBoxControlName = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListNameGuess[0], comboBoxListNameGuess, "button", "box", listStyle, "Guess:");
+		comboBoxListNameSort[(int)GuessFilter.firstAndLast] = new GUIContent("First & Last");
+		comboBoxListNameSort[(int)GuessFilter.firstName   ] = new GUIContent("First Name");
+		comboBoxListNameSort[(int)GuessFilter.lastName    ] = new GUIContent("Last Name");
+		comboBoxListNameSort[(int)GuessFilter.department  ] = new GUIContent("Department");
+		comboBoxListNameSort[(int)GuessFilter.project     ] = new GUIContent("Project");
+		comboBoxListNameSort[(int)GuessFilter.tenureMost  ] = new GUIContent("Tenure Most");
+		comboBoxListNameSort[(int)GuessFilter.tenureLeast ] = new GUIContent("Tenure Least");
+		comboBoxControl_SearchKey = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListNameGuess[0], comboBoxListNameGuess, "button", "box", listStyle, "Guess:");
 
 		xComboBox += comboSpacing;
 		comboBoxListMode = new GUIContent[4];
-		comboBoxListMode[0] = new GUIContent("Memory Game");
-		comboBoxListMode[1] = new GUIContent("Flash Cards*");
-		comboBoxListMode[2] = new GUIContent("Yearbook*");
-		comboBoxListMode[3] = new GUIContent("Map");
-		comboBoxControlMode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
+		comboBoxListMode[(int)GameMode.memoryGame] = new GUIContent("Memory Game");
+		comboBoxListMode[(int)GameMode.flashCards] = new GUIContent("Flash Cards*");
+		comboBoxListMode[(int)GameMode.yearBook] = new GUIContent("Yearbook*");
+		comboBoxListMode[(int)GameMode.mapView] = new GUIContent("Map");
+		comboBoxControl_Mode = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListMode[0], comboBoxListMode, "button", "box", listStyle, "Mode:");
 
 		xComboBox += comboSpacing;
 		comboBoxListProjects = new GUIContent[SpotManager.projects.Count+1];
@@ -1103,7 +1291,7 @@ public State MemoryGame_Update()
 		{
 			comboBoxListProjects[i+1] = new GUIContent(SpotManager.projects[i]);
 		}
-		comboBoxControlProjects = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListProjects[0], comboBoxListProjects, "button", "box", listStyle, "Project:");
+		comboBoxControl_ProjFilter = new ComboBox(new Rect(xComboBox, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight), comboBoxListProjects[0], comboBoxListProjects, "button", "box", listStyle, "Project:");
 
 		xComboBox += comboSpacing;
 		comboBoxListTenure = new GUIContent[5];
@@ -1125,8 +1313,21 @@ public State MemoryGame_Update()
 		typedGood = 0;
 		typedBad = 0;
 		typedGoodWrongCase = 0;
+
+		TransitionToNewMode(gameMode);
 	}
 
+	public void TransitionToNewMode(GameMode newMode)
+	{
+		gameMode = newMode;
+		switch (gameMode)
+		{
+		case GameMode.memoryGame: TransitionToState(stateMemoryGame); break;
+		case GameMode.flashCards: TransitionToState(stateFlashCards); break;
+		case GameMode.yearBook: TransitionToState(stateYearbook); break;
+		case GameMode.mapView: TransitionToState(stateMapView); break;
+		}
+	}
 	void UpdateGUITextPositions()
     {
 		transform.position = new Vector3(0, Screen.height *-0.5f + 90, 0);
@@ -1139,16 +1340,16 @@ public State MemoryGame_Update()
 		guiTextTheMan.pixelOffset = new Vector2(Screen.width * 0.64f, Screen.height * 0.5f + transform.position.y-16);
 		guiTextGallows.pixelOffset = new Vector2(guiTextTheMan.pixelOffset.x + 2, guiTextTheMan.pixelOffset.y);
 
-		if (comboBoxControl != null)
+		if (comboBoxControl_DeptFilter != null)
 		{
 			float xCombo = xStartComboBoxes;
-			comboBoxControlMode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			comboBoxControl_Mode.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControlName.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			comboBoxControl_SearchKey.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControl.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			comboBoxControl_DeptFilter.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
-			comboBoxControlProjects.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
+			comboBoxControl_ProjFilter.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 			xCombo += comboSpacing;
 			comboBoxControlTenure.Reposition(new Rect(xCombo, Screen.height - btnHeightSpaced, comboButtonWidth, btnHeight));
 		}
@@ -1178,8 +1379,8 @@ public State MemoryGame_Update()
 			}
 			else
 			{
-				guiTextName.text = (faceSpriteCrnt.collected || gameMode != GameMode.memoryGame) ? faceSpriteCrnt.guessName : "";
-				guiTextNofM.text = (gameMode != GameMode.memoryGame) ? faceSpriteCrnt.dateHired :  FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
+				guiTextName.text = (faceSpriteCrnt.collected || !isMemoryGame) ? faceSpriteCrnt.guessName : "";
+				guiTextNofM.text = ( !isMemoryGame) ? faceSpriteCrnt.dateHired :  FaceSprite.GetNumCollected() + "/" + faceSprites.Count.ToString();
 			}
 			guiTextBadChar.text = "";
 
@@ -1255,7 +1456,7 @@ public State MemoryGame_Update()
 				faceSprites[i].card.uiTextName.gameObject.SetActive(false);
 			}
 		}
-		if (!AreAllCollected() && gameMode == GameMode.memoryGame)  //!isYearBookMode)
+		if (!AreAllCollected() && isMemoryGame) 
 		{
 			if (clearCollected)
 			{ 
@@ -1268,10 +1469,10 @@ public State MemoryGame_Update()
 				ShowNextFace();
 			}
 		}
-		if (gameMode == GameMode.memoryGame && FaceSprite.iGuessNameIndex > FaceSprite.iGuessMax) // !isYearBookMode && !showAllFaces
+		if (isMemoryGame && FaceSprite.iGuessNameIndex > FaceSprite.iGuessMax) // !isYearBookMode && !showAllFaces
 		{
 			FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
-			comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
+			comboBoxControl_SearchKey.SelectedItemIndex = iGuessnamePrevious;
 		}
 	}
 
@@ -1291,9 +1492,8 @@ public State MemoryGame_Update()
 			return true;
 		return false;
 	}
-	void FilterByDepartment(int ifilter)
+	void ApplyFilters()
 	{
-		iDeptFilter = ifilter;
 		if (iDeptFilter > 0)
 		{
 			// Remove excluded faces from the active list.
@@ -1365,7 +1565,7 @@ public State MemoryGame_Update()
 		
 		iFaceSprite = faceSprites.Count - 1;
 		ShowNextFace();
-		if (isFlashcardsMode || gameMode == GameMode.map)
+		if (isFlashcards || gameMode == GameMode.yearBook)
 			ReturnFaceToYearbook(faceSpriteCrnt);
 	}
 
@@ -1376,7 +1576,7 @@ public State MemoryGame_Update()
 			ReturnFaceToYearbook(fs);
 			//fs.card.ArrangeOnYearbook(0.25f);
 		}
-		if (gameMode == GameMode.memoryGame)
+		if (isMemoryGame)
 			faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, 0.25f);
 	}
 
@@ -1496,6 +1696,7 @@ public State MemoryGame_Update()
 						faceSprite.card.SetHeight(heightFaceDealStartDisplay);
 						faceSprite.card.SetPos(transform.position);
 						faceSprite.card.ArrangeOnYearbook();
+						//ReturnFaceToYearbook(faceSprite);
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
 
@@ -1562,13 +1763,6 @@ public State MemoryGame_Update()
 						valTenureSliderLastRelease = valTenureSlider;
 						RestartCurrentMode();
 					}
-#if false
-					if (valMapScaleSlider != valMapScaleSliderLastRelease)
-					{
-						valMapScaleSliderLastRelease = valMapScaleSlider;
-						RestartCurrentMode();
-					}
-#endif
 				}
 			}
 			if (Screen.width != oldScreenWidth || Screen.height != oldScreenHeight)
@@ -1587,14 +1781,8 @@ public State MemoryGame_Update()
 
 					//Mouse is inside the screen by 1 pixel or more, so can't be outside of window, therefore is over the game screen
 					YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin); // make it update it's Screen-size based values.
-					if (!isYearBookMode)
-					{
-						Invoke("ArrangeFacesOnPage", 0.1f); // requires delay or it doesn't work. Don't know why.
-					}
-					else
-					{
-						ChangeToFromYearBookMode();
-					}
+					Invoke("ArrangeFacesOnPage", 0.1f); // requires delay or it doesn't work. Don't know why.
+
 					needScreenLayoutUpdate = false;
 				}
 			}
@@ -1606,27 +1794,6 @@ public State MemoryGame_Update()
 		UpdateHangMan();
 	}
 
-
-	void ChangeToFromYearBookMode()
-	{
-		if (isYearBookMode)
-		{
-			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel, topMargin, sideMargin);
-			foreach (FaceSprite fs in faceSprites)
-			{
-				fs.card.uiTextName.gameObject.SetActive(true);
-				fs.card.uiTextName.text = fs.fullName + "\n" + fs.role;
-				//fs.collected = true;
-				fs.card.FlipShowFront();
-			}
-			SortByGuessName();
-			RestartGame(false);
-		}
-		else
-		{
-			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthCardSlot, heightPaddingCardSlot, topMargin, sideMargin);
-		}
-	}
 	public void SortByGuessName(bool arrange = false, int forceGuessNameIndex = -1)
 	{
 		int iSortIndex = (forceGuessNameIndex >= 0) ? forceGuessNameIndex : FaceSprite.iGuessNameIndex;
@@ -1707,17 +1874,17 @@ public State MemoryGame_Update()
 	{
         guiTextName.text = "";
         guiTextRole.text = "";
-		if (gameMode != GameMode.memoryGame)
+		if (!isMemoryGame)
 			guiTextNofM.text = "";
 
-		if (!fs.collected && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode
+		if (!fs.collected && isMemoryGame) //!showAllFaces && !isYearBookMode
 			fs.card.FlipShowBack();
 		else
 			fs.card.FlipShowFront();
 
 		if (fs.card.indexOrder == -1)
 			fs.card.MoveTo(transform.position, Vector2.zero, 0.5f);
-		else if (gameMode == GameMode.map)
+		else if (isMapView)
 			fs.ArrangeOnMap();
 		else
 			fs.card.ArrangeOnYearbook();
@@ -1858,138 +2025,58 @@ public State MemoryGame_Update()
 
 	void RestartCurrentMode()
 	{
-		FilterByDepartment(iDeptFilter);
-		switch (gameMode)
-		{
-		case GameMode.memoryGame:
-			RestartGame();
-			break;
-		case GameMode.flashCards:
-			SortByGuessName();
-			break;
-		case GameMode.yearBook:
-			ChangeToFromYearBookMode();
-			break;
-		case GameMode.map:
-			break;
-		}
+		ApplyFilters();
+		TransitionToNewMode(gameMode);
 	}
 	void OnGUI()
 	{
  		if (doneLoading && !bgColorPicker.IsActive())
 		{
+			int selectedItemIndex;
+			bool didFilterChange = false;
 
-			// Department Selector
-			int selectedItemIndex = comboBoxControl.Show();
-			if (selectedItemIndex != iDeptFilter)
+			GameMode gameModeBefore = gameMode;
+			selectedItemIndex = comboBoxControl_Mode.Show();
+			if (selectedItemIndex != (int)gameMode)
 			{
-				if (AreAllCollected())
-				{
-					if (fsCurrentUser != null)
-					{
-						ReturnFaceToYearbook(fsCurrentUser);
-					}
-				}
-				iDeptFilter = selectedItemIndex;
-				RestartCurrentMode();
+				if (isMemoryGame || selectedItemIndex == (int)GameMode.memoryGame)   // Flash change of Guess/SortBy selector if moving to or from Memory Game mode (i.e. if the selector is changing, don't flash between yearbook and flashcards swaps)
+					comboBoxControl_SearchKey.FlashLabelText();
+				gameMode = (GameMode)selectedItemIndex;
+				TransitionToNewMode(gameMode);
 			}
 
-			// Project Selector
-			selectedItemIndex = comboBoxControlProjects.Show();
-			if (selectedItemIndex != iProjFilter)
-			{
-				iProjFilter = selectedItemIndex;
-				if (AreAllCollected())
-				{
-					if (fsCurrentUser != null)
-					{
-						ReturnFaceToYearbook(fsCurrentUser);
-					}
-				}
-				iProjFilter = selectedItemIndex;
-				RestartCurrentMode();
-			}
-
-			// Name part to Guess selector, or sort filter for Yearbook mode.
-			selectedItemIndex = comboBoxControlName.Show();
+			// Search Key
+			selectedItemIndex = comboBoxControl_SearchKey.Show();
 			if (selectedItemIndex != FaceSprite.iGuessNameIndex)
 			{
 				iGuessnamePrevious = FaceSprite.iGuessNameIndex;
 				FaceSprite.iGuessNameIndex = selectedItemIndex;
 
-				if (OnGuessSelectorChanged != null)
-					OnGuessSelectorChanged();
-				if (gameMode == GameMode.memoryGame) //(!showAllFaces && !isYearBookMode)
-				{
-					if (selectedItemIndex < 4)
-					{
-						Randomize();
-						RestartGame();
-					}
-				}
-				else
-				{
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					guiTextName.text = "";
-					guiTextRole.text = "";
-
-				}
-				if (isFlashcardsMode || isYearBookMode)
-					SortByGuessName();
-				if (selectedItemIndex == 4 &&  gameMode == GameMode.memoryGame) //!isYearBookMode && !showAllFaces)
-				{
-					FaceSprite.iGuessNameIndex = iGuessnamePrevious;
-					comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
-				}
+				if (OnSearchKeyChanged != null)
+					OnSearchKeyChanged();
 			}
 
-			GameMode gameModeBefore = gameMode;
-			selectedItemIndex = comboBoxControlMode.Show();
-			if (selectedItemIndex != (int)gameMode)
+			// Department Filter
+			selectedItemIndex = comboBoxControl_DeptFilter.Show();
+			if (selectedItemIndex != iDeptFilter)
 			{
-				if (gameMode == GameMode.memoryGame || selectedItemIndex == (int)GameMode.memoryGame)	// Flash change of Guess/SortBy selector if moving to or from Memory Game mode (i.e. if the selector is changing, don't flash between yearbook and flashcards swaps)
-					comboBoxControlName.FlashLabelText();
+				didFilterChange = true;
+				iDeptFilter = selectedItemIndex;
+			}
 
-				gameMode = (GameMode)selectedItemIndex;
-				if (gameMode == GameMode.memoryGame || gameMode == GameMode.map)
-				{ // Game Mode
-					if (FaceSprite.iGuessNameIndex >= comboBoxListNameGuess.Length)
-					{
-						FaceSprite.iGuessNameIndex = iGuessnamePrevious = FaceSprite.iGuessFullName;
-						comboBoxControlName.SelectedItemIndex = iGuessnamePrevious;
-						comboBoxControlName.FlashButtonText();
-					}
-					comboBoxControlName.UpdateContent(comboBoxListNameGuess[FaceSprite.iGuessNameIndex], comboBoxListNameGuess);
-					comboBoxControlName.comboLabel = (gameMode == GameMode.memoryGame) ? "Guess:" : "Find by";
-				}
-				else // not Game Mode
-				{
-					comboBoxControlName.UpdateContent(comboBoxListNameSort[FaceSprite.iGuessNameIndex], comboBoxListNameSort);
-					comboBoxControlName.comboLabel =  "Sort by*:";
-				}
-				switch (gameMode)
-				{
-				case GameMode.memoryGame:	TransitionToState(stateMemoryGame); break;
-				case GameMode.flashCards:	TransitionToState(stateFlashCards); break;
-				case GameMode.yearBook:		TransitionToState(stateYearbook); break;
-				case GameMode.map:			TransitionToState(stateMapView); break;
-				}
-			}
-#if false
-			//*************** Map Scale slider
-			if (!comboBoxControlMode.isComboBoxOpen && gameMode == GameMode.map)
+			// Project Filter
+			selectedItemIndex = comboBoxControl_ProjFilter.Show();
+			if (selectedItemIndex != iProjFilter)
 			{
-				Rect rectMapScaleSlider = comboBoxControlMode.rectPosition;
-				rectMapScaleSlider.y -= 32;
-				valMapScaleSlider = GUI.HorizontalSlider(rectMapScaleSlider, valMapScaleSlider, scaleMapMin, scaleMapMax);
-				scaleMap = valMapScaleSlider;
+				didFilterChange = true;
+				iProjFilter = selectedItemIndex;
 			}
-#endif
 
 			// *************** TENURE
 			selectedItemIndex = comboBoxControlTenure.Show();
 			if (selectedItemIndex != iTenureFilter)
 			{
+				didFilterChange = true;
 				iTenureFilter = selectedItemIndex;
 				if (iTenureFilter >= 3)
 				{
@@ -1998,22 +2085,21 @@ public State MemoryGame_Update()
 					{
 					case 3: // OGs
 						iTenureFilter = 1;
-						if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
-							comboBoxControlName.SelectedItemIndex = 5;
+						if (!isMemoryGame && !isMapView)
+							comboBoxControl_SearchKey.SelectedItemIndex = 5;
 						break;
 					case 4: // Newbies
 						iTenureFilter = 2;
-						if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
-							comboBoxControlName.SelectedItemIndex = 6;
+						if (!isMemoryGame && !isMapView)
+							comboBoxControl_SearchKey.SelectedItemIndex = 6;
 						break;
 					}
-					if (gameMode != GameMode.memoryGame && gameMode != GameMode.map)
-						comboBoxControlName.FlashButtonText(0.75f);
+					if (!isMemoryGame && !isMapView)
+						comboBoxControl_SearchKey.FlashButtonText(0.75f);
 
 					comboBoxControlTenure.FlashButtonText(0.75f);
 					comboBoxControlTenure.SelectedItemIndex = iTenureFilter;
 				}
-				RestartCurrentMode();
 			}
 
 			if (!comboBoxControlTenure.isComboBoxOpen && iTenureFilter != 0)
@@ -2028,7 +2114,14 @@ public State MemoryGame_Update()
 					GUI.Label(rectTenureSlider, new GUIContent(countTenureMembers.ToString()));
 			}
 
+			if (didFilterChange)
+			{
+				if (OnFilterChanged != null)
+					OnFilterChanged();
+				RestartCurrentMode();
+			}
 
+			// Cursor
 			rectText = guiTextName.GetScreenRect(Camera.main);
 			if (guiTextName.text.Length == 0)
 			{
@@ -2043,7 +2136,7 @@ public State MemoryGame_Update()
             }
             guiStyleStats.normal.textColor = cursorColor;
             string cursorStr = (secondsBlinkCycle > secondsCursorOn) ? " " : "|";
-			if (gameMode == GameMode.map || (!AreAllCollected() && timeGameStarted <= Time.time && gameMode == GameMode.memoryGame)) //!showAllFaces && !isYearBookMode)
+			if (isMapView || (!AreAllCollected() && timeGameStarted <= Time.time && isMemoryGame))
 			{
 				GUI.Label(new Rect(rectText.x + rectText.width, rectText.y, 16, 32), cursorStr, guiStyleStats);
 				guiTextBadChar.pixelOffset = new Vector2(rectText.x + rectText.width + 16, Screen.height - rectText.y);
@@ -2052,49 +2145,7 @@ public State MemoryGame_Update()
 			const float caseBtnWidth = 110;
 			caseSensitive = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
-			if (gameModeBefore != gameMode) //showAllFaces != showAllFacesBefore)
-			{
-#if false
-				if (gameMode == GameMode.yearBook || gameModeBefore == GameMode.yearBook)
-				{
-					ChangeToFromYearBookMode();
-				}
-#endif
-				if (gameMode == GameMode.memoryGame)
-					RestartGame();
-				else if (gameMode == GameMode.flashCards)
-				{
-					foreach (FaceSprite fs in faceSprites)
-					{
-						fs.card.FlipShowFront();
-						fs.card.uiTextName.gameObject.SetActive(false);
-						fs.card.ArrangeOnYearbook();
-					}
-					foreach (FaceSprite fs in faceSpritesFiltered)
-					{
-						fs.card.uiTextName.gameObject.SetActive(false);
-					}
-					ReturnFaceToYearbook(faceSpriteCrnt);
-					SortByGuessName();
-				}
-				else if (gameMode == GameMode.map)
-				{
-					foreach (FaceSprite fs in faceSprites)
-					{
-						fs.card.FlipShowFront();
-						fs.card.uiTextName.gameObject.SetActive(false);
-						fs.ArrangeOnMap();
-					}
-					foreach (FaceSprite fs in faceSpritesFiltered)
-					{
-						fs.card.uiTextName.gameObject.SetActive(false);
-					}
-					ReturnFaceToYearbook(faceSpriteCrnt);
-				}
-				mapRendererMap.goMap.SetActive(gameMode == GameMode.map);
-			}
-
-			if (gameMode != GameMode.map)
+			if (!isMapView)
 			{
 				if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, 64, btnHeight), "Shuffle"))
 				{
@@ -2113,7 +2164,7 @@ public State MemoryGame_Update()
 			}
 
 			// Stats
-			if (timeGameStarted <= Time.time && gameMode == GameMode.memoryGame) //!showAllFaces && !isYearBookMode)
+			if (timeGameStarted <= Time.time && isMemoryGame)
 			{
 				// Accuracy
 				int typedTotal = typedGood + typedBad + typedGoodWrongCase;
