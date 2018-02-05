@@ -89,3 +89,4 @@ Version History
 2.4	Added "OGs" and "Newbies" shortcuts to Tenure filter. These set up the Tenure filter (and "Sort By" setting if not in Memory Game mode) to show the 10% of employees with most or least tenure.
 3.0	Added "Map" mode, which shows faces displayed on a blueprint of the office to show where people sit.
 3.1	Updates for changes to user_locations file format (quotes and multiple seats separated by /). Shows number of matches in Map mode. Show projects in Map mode if full name selected. Show possible next letters to type in Map mode.
+3.2	Map mode changes: Click on face to select that person (types in their name or whatever the "Find by" data is). Mousing over pic enlarges and shows name. 

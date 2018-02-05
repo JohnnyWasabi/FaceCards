@@ -2195,7 +2195,7 @@ public State MemoryGame_Update()
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.2", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.3", guiStyleVersion);
 		}
     }
 }
