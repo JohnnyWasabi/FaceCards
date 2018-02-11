@@ -1688,7 +1688,6 @@ public State MemoryGame_Update()
                                     roles.Add(rolePart);
                             }
                         }
-
                         GameObject goFaceCard = Instantiate(faceCardPrefab);
 						faceSprite.card = goFaceCard.GetComponent<Card>();
 						faceSprite.card.indexOrder = indexOrder;
@@ -1700,6 +1699,12 @@ public State MemoryGame_Update()
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
 
+						CircleCard cc = faceSprite.card.pog.circleCard;
+						if (cc)
+						{
+							cc.SetDonutMeshColors(SpotManager.GetColorsOfDept(nameParts[2]));
+						}
+						faceSprite.card.pog.gameObject.SetActive(false);
 
 						totalGuessNameChars += faceSprite.fullName.Length;
 					}

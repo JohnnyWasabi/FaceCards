@@ -15,7 +15,8 @@ public class Card : MonoBehaviour {
 	public SpriteRenderer spriteRendererCard;		// SpriteRenderer of the card (could be front side or backside), drawn behind face and face-frame
 	public SpriteRenderer spriteRendererFace;		// SpriteRenderer for person's face on the front of the card
 	public SpriteRenderer spriteRendererFaceFrame;   // SpriteRenderer for frame drawn on front of card over the person's face (like a picture frame).
-	public UnityEngine.UI.Text uiTextName; 
+	public UnityEngine.UI.Text uiTextName;
+	public Pog pog;
 
 	[HideInInspector]
 	public Sprite spriteFace;

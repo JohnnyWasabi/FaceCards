@@ -11,20 +11,17 @@ public class CircleCard : MonoBehaviour
 	public int numCircleVerts = 41;
 	public float radiusInner = 40;
 	public float radiusOuter = 60;
-	Mesh plane;
-	Vector3[] verts;
-	Vector2[] uvs;
-	int[] tris;
+	Mesh mesh;
 
 	// Use this for initialization
-	void Start ()
+	void Awake ()
 	{
-		Mesh plane = new Mesh();
-
 		if (radiusInner > 0)
 			CreateDonutMesh(radiusInner, radiusOuter, numCircleVerts);
 		else
 			CreateCircleMesh(radiusOuter, numCircleVerts);
+
+		//SetDonutMeshColors(new Color32[] { new Color32(255, 255, 0, 255), new Color32(0, 255, 0, 255), new Color32(0,0,255,255)  });
 	}
 
 
@@ -35,7 +32,7 @@ public class CircleCard : MonoBehaviour
 
 	void CreateCircleMesh(float radius, int numVerts)
 	{
-		Mesh plane = new Mesh();
+		mesh = new Mesh();
 		Vector3[] verts = new Vector3[numVerts];
 		Vector2[] uvs = new Vector2[numVerts];
 		int[] tris = new int[(numVerts * 3)];
@@ -69,21 +66,42 @@ public class CircleCard : MonoBehaviour
 		tris[lastTriangleIndex + 1] = numVerts - 1;
 		tris[lastTriangleIndex + 2] = 1;
 
-		plane.vertices = verts;
-		plane.SetUVs(0, new List<Vector2>(uvs));
-		plane.SetTriangles(tris, 0);
-		plane.RecalculateNormals();
+		mesh.vertices = verts;
+		mesh.SetUVs(0, new List<Vector2>(uvs));
+		mesh.SetTriangles(tris, 0);
+		mesh.RecalculateNormals();
 
 		MeshFilter meshFilter = GetComponent<MeshFilter>();
-		meshFilter.mesh = plane;
+		meshFilter.mesh = mesh;
 	}
+	public void SetDonutMeshColors(Color32[] colorsNew)
+	{
+		int totalVerts = mesh.vertices.Length;
+		Color32[] colors = new Color32[totalVerts];
 
+		int vertsPerColor = totalVerts / colorsNew.Length;
+
+		int indexColor = 0;
+		int count = 0 - totalVerts % colorsNew.Length; // add the extra verts that don't divide evenly to the first color by backing up the initial count negative.
+		for (int i = 0; i < totalVerts; i++)
+		{
+			colors[i] = colorsNew[indexColor];
+			if (++count >= vertsPerColor)
+			{
+				count = 0;
+				++indexColor;
+			}
+		}
+		mesh.colors32 = colors;
+	}
 	void CreateDonutMesh(float radiusInner, float radiusOuter, int numOuterVerts)
 	{
-		Mesh plane = new Mesh();
-		Vector3[] verts = new Vector3[numOuterVerts*2];
-		Vector2[] uvs = new Vector2[numOuterVerts*2];
-		int[] tris = new int[(numOuterVerts*2 * 3)];
+		mesh = new Mesh();
+		int totalVerts = numOuterVerts * 2;
+		Vector3[] verts = new Vector3[totalVerts];
+		Vector2[] uvs = new Vector2[totalVerts];
+		Color32[] colors = new Color32[totalVerts];
+		int[] tris = new int[(totalVerts * 3)];
 
 		//In the beginning we set up for everything we’ll need later.We get an array of Vector3(3 floats) to use for every point as well as arrays for uv coordinates and triangles.
 		// The first vert is in the center of the triangle  
@@ -114,6 +132,14 @@ public class CircleCard : MonoBehaviour
 			tris[index + 5] = iv + 3;
 		}
 
+		byte blue = (byte)Random.Range(0, 256);
+		for (int i = 0; i < verts.Length; i++)
+		{
+			if (i < verts.Length/2)
+				colors[i] = new Color32(255, 0, 0, 255);
+			else
+				colors[i] = new Color32(0, 0, 255, 255);
+		}
 		// The last triangle has to wrap around to the first vert so we do this last and outside the lop  
 		int lastTriangleIndex = tris.Length - 2*3;
 		int iVert = verts.Length - 2;
@@ -125,13 +151,14 @@ public class CircleCard : MonoBehaviour
 		tris[lastTriangleIndex + 4] = iVert + 1;
 		tris[lastTriangleIndex + 5] = 1;
 
-		plane.vertices = verts;
-		plane.SetUVs(0, new List<Vector2>(uvs));
-		plane.SetTriangles(tris, 0);
-		plane.RecalculateNormals();
+		mesh.vertices = verts;
+		mesh.SetUVs(0, new List<Vector2>(uvs));
+		mesh.colors32 = colors;
+		mesh.SetTriangles(tris, 0);
+		mesh.RecalculateNormals();
 
 		MeshFilter meshFilter = GetComponent<MeshFilter>();
-		meshFilter.mesh = plane;
+		meshFilter.mesh = mesh;
 	}
 
 }

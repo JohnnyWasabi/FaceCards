@@ -18,6 +18,7 @@ public class SpotManager : MonoBehaviour {
 	static Dictionary<string, string> dictFaceIdToSeatID = new Dictionary<string, string>();
 	static Dictionary<string, string> dictFaceIdToProjects = new Dictionary<string, string>();
 	static Dictionary<string, string> dictConfig = new Dictionary<string, string>();
+	static Dictionary<string, Color32> dictDeptToColor = new Dictionary<string, Color32>();
 	const string FaceIDReplacementToken = "<UNIQUE_ID>";
 	static public string FaceIDTemplate = FaceIDReplacementToken; // Defaults to replacement token f none present in config file so that the unique portion from the filename becomes the whole ID.
 
@@ -77,14 +78,9 @@ public class SpotManager : MonoBehaviour {
 		mapGridCellHeight = (float)mapGridHeight / (float)mapGridRows;												
 
 
-		string[] seatCSVs = GetConfigValuesArray("Seats", dictConfig);
-		string[] seatingCSVs = GetConfigValuesArray("Seating", dictConfig);
-		string[] projectCSVs = GetConfigValuesArray("Projects", dictConfig);
-		AddHeadingsToDict("SeatsHeadings", dictConfig);
-		AddHeadingsToDict("SeatingHeadings", dictConfig);
-		AddHeadingsToDict("ProjectsHeadings", dictConfig);
-
 		// Read in the SeatID to map position mappings
+		string[] seatCSVs = GetConfigValuesArray("Seats", dictConfig);
+		AddHeadingsToDict("SeatsHeadings", dictConfig);
 		foreach (string seatFile in seatCSVs)
 		{
 			filePath = System.IO.Path.Combine(Application.streamingAssetsPath, seatFile);
@@ -110,7 +106,10 @@ public class SpotManager : MonoBehaviour {
 				}
 			);
 		}
+
 		// Read in the FaceID to SeatID mappings
+		string[] seatingCSVs = GetConfigValuesArray("Seating", dictConfig);
+		AddHeadingsToDict("SeatingHeadings", dictConfig);
 		foreach (string seatingFile in seatingCSVs)
 		{
 			AddKeyValuesFromCSVToDict(System.IO.Path.Combine(Application.streamingAssetsPath, seatingFile),
@@ -123,6 +122,8 @@ public class SpotManager : MonoBehaviour {
 		}
 
 		// Read in projects mappings
+		string[] projectCSVs = GetConfigValuesArray("Projects", dictConfig);
+		AddHeadingsToDict("ProjectsHeadings", dictConfig);
 		projects = new List<string>();
 		foreach (string filename in projectCSVs)
 		{
@@ -143,6 +144,28 @@ public class SpotManager : MonoBehaviour {
 				}
 			);
 		}
+
+		// Read in department colors
+		string[] deptColorCSVs = GetConfigValuesArray("DeptColors", dictConfig);
+		AddHeadingsToDict("DeptColorsHeadings", dictConfig);
+		foreach (string filename in deptColorCSVs)
+		{
+			AddKeyValuesFromCSVToDict(System.IO.Path.Combine(Application.streamingAssetsPath, filename),
+				(iRow, dictHeadingsToValues) =>
+				{
+					string strDept = dictHeadingsToValues[dictConfig["DeptColorsHeadings.Dept"]];
+					string strRed = dictHeadingsToValues[dictConfig["DeptColorsHeadings.Red"]];
+					string strGreen = dictHeadingsToValues[dictConfig["DeptColorsHeadings.Green"]];
+					string strBlue = dictHeadingsToValues[dictConfig["DeptColorsHeadings.Blue"]];
+					byte red, green, blue;
+					byte.TryParse(strRed, out red);
+					byte.TryParse(strGreen, out green);
+					byte.TryParse(strBlue, out blue);
+					dictDeptToColor[strDept.ToLower()] = new Color32(red, green, blue, 255);
+				}
+			);
+		}
+
 
 		if (editSpots)
 			idSpotPlacing = listSpots[iSpotEdit].id;
@@ -171,6 +194,21 @@ public class SpotManager : MonoBehaviour {
 			return projects;
 		}
 		return "";
+	}
+	static public Color32[] GetColorsOfDept(string deptConcat)
+	{
+		string[] depts = deptConcat.Split(new char[] { '-' }, System.StringSplitOptions.None);
+		Color32[] colors = new Color32[depts.Length];
+		int i = 0;
+		foreach(string dept in depts)
+		{
+			Color32 color;
+			if (dictDeptToColor.TryGetValue(dept.ToLower(), out color))
+			{
+				colors[i++] = color;
+			}
+		}
+		return colors;
 	}
 	public static Vector2 GetSpotPos(string faceId)
 	{
