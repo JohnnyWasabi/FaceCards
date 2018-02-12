@@ -90,3 +90,4 @@ Version History
 3.0	Added "Map" mode, which shows faces displayed on a blueprint of the office to show where people sit.
 3.1	Updates for changes to user_locations file format (quotes and multiple seats separated by /). Shows number of matches in Map mode. Show projects in Map mode if full name selected. Show possible next letters to type in Map mode.
 3.2	Map mode changes: Click on face to select that person (types in their name or whatever the "Find by" data is). Mousing over pic enlarges and shows name. 
+3.4	Added POG frame around images in Map mode (and optional in Yearbook mode). Added screenshot feature (F12 key) that saves to StreamingAssets/Ouput folder.

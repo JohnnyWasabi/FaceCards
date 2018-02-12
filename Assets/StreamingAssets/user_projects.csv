@@ -1,4 +1,4 @@
-﻿name,projects,objectSid
+name,projects,objectSid
 Aaron Aikman,Blade & Soul/Super Mass,S-1-5-21-3939536698-307175389-1584766368-3801
 Adam Schuman,Super Mass,S-1-5-21-3939536698-307175389-1584766368-1682
 Alan Lee,Avengers/Blade & Soul/Borderlands/Super Mass/SG&A,S-1-5-21-3939536698-307175389-1584766368-1158
@@ -16,8 +16,8 @@ Brandon Ly,Borderlands,S-1-5-21-3939536698-307175389-1584766368-3420
 Brett Mitchell,Super Mass,S-1-5-21-3939536698-307175389-1584766368-1882
 Carlos Collazo,Sims/Tools,S-1-5-21-3939536698-307175389-1584766368-3448
 Chris Masterton,Super Mass,S-1-5-21-3939536698-307175389-1584766368-3542
-Chris Toft,Super Mass/SG&A,S-1-5-21-3939536698-307175389-1584766368-1749
 Chris Sosa,Sunset,S-1-5-21-3939536698-307175389-1584766368-4104
+Chris Toft,Super Mass/SG&A,S-1-5-21-3939536698-307175389-1584766368-1749
 Chris Turnley,Sunset,S-1-5-21-3939536698-307175389-1584766368-3426
 Christopher Ballinger,Borderlands,S-1-5-21-3939536698-307175389-1584766368-1612
 Christopher Wade,Borderlands,S-1-5-21-3939536698-307175389-1584766368-1614
@@ -34,6 +34,7 @@ Daryl Wong,Borderlands,S-1-5-21-3939536698-307175389-1584766368-3591
 David Baker,SG&A,S-1-5-21-3939536698-307175389-1584766368-1632
 David Kim,Borderlands,S-1-5-21-3939536698-307175389-1584766368-3538
 Dell Siefert,SG&A,S-1-5-21-3939536698-307175389-1584766368-3580
+Derek Warner,Super Mass,#N/A
 Dimitri DelCastillo,Blade & Soul,S-1-5-21-3939536698-307175389-1584766368-3384
 Dominic Camargo,SG&A,S-1-5-21-3939536698-307175389-1584766368-1164
 Donovan McCartney,Borderlands,S-1-5-21-3939536698-307175389-1584766368-1829
@@ -102,7 +103,7 @@ Mey Helm,Sims,S-1-5-21-3939536698-307175389-1584766368-3595
 Mike Popovich,Blade & Soul/Borderlands,S-1-5-21-3939536698-307175389-1584766368-1626
 Mike Winfield,Blade & Soul,S-1-5-21-3939536698-307175389-1584766368-1176
 Miriam Black,SG&A,S-1-5-21-3939536698-307175389-1584766368-3570
-Myles Salholm,Borderlands,S-1-5-21-3939536698-307175389-1584766368-2714
+Nathan Moore,Super Mass,S-1-5-21-3939536698-307175389-1584766368-3525
 Nathan Moore,Super Mass,S-1-5-21-3939536698-307175389-1584766368-3525
 Neil Lintang,Blade & Soul/Borderlands,S-1-5-21-3939536698-307175389-1584766368-3594
 Nick Storm,Borderlands/Tools/WWE,S-1-5-21-3939536698-307175389-1584766368-2692
@@ -124,10 +125,25 @@ Sergio Correa,Sunset,S-1-5-21-3939536698-307175389-1584766368-3535
 Shelby Peterson,Blade & Soul,S-1-5-21-3939536698-307175389-1584766368-1618
 Shelley Lovejoy,SG&A,S-1-5-21-3939536698-307175389-1584766368-1708
 Stephen Pettinati,Blade & Soul,S-1-5-21-3939536698-307175389-1584766368-3450
-Steve Merritt,WWE,S-1-5-21-3939536698-307175389-1584766368-3723
+Steve Merritt,Blade & Soul,S-1-5-21-3939536698-307175389-1584766368-3723
 Susan Won,Super Mass,S-1-5-21-3939536698-307175389-1584766368-3510
+Thom May,Super Mass,S-1-5-21-3939536698-307175389-1584766368-3849
 Todd Morgan,Blade & Soul/Sims/Sunset/SG&A,S-1-5-21-3939536698-307175389-1584766368-3408
 Tom Vu,Borderlands,S-1-5-21-3939536698-307175389-1584766368-3417
 Violet Krueger,SG&A,S-1-5-21-3939536698-307175389-1584766368-3389
 William Hurd,Borderlands,S-1-5-21-3939536698-307175389-1584766368-3399
 Yvonne Chung,Blade & Soul/Borderlands/Sunset,S-1-5-21-3939536698-307175389-1584766368-1179
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A
+0,Avengers/Blade & Soul/Borderlands/Sims/Sunset/Super Mass/Tools/WWE/SG&A,#N/A

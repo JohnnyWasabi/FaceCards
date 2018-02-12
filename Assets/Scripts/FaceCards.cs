@@ -1286,7 +1286,7 @@ public State MemoryGame_Update()
 		listNextChars.Sort((kv1, kv2) => kv1.Key - kv2.Key);
 		foreach(KeyValuePair<char,int> kv in listNextChars)
 		{
-			sbNextChars.Append(kv.Value == 1 ? "<color=lime>" : "<color=magenta>");
+			sbNextChars.Append(kv.Value == 1 ? "<color=lime>" : "<color=yellow>");
 			sbNextChars.Append(kv.Key);
 			sbNextChars.Append("</color>");
 		}
@@ -2299,7 +2299,7 @@ public State MemoryGame_Update()
 			}
 
 			// Version
-			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.3", guiStyleVersion);
+			GUI.Label(new Rect(Screen.width-40 - btnWidthSpaced, Screen.height-16, 48, 16), "V 3.4", guiStyleVersion);
 		}
     }
 }
