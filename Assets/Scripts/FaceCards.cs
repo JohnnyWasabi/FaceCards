@@ -1194,7 +1194,7 @@ public State MemoryGame_Update()
 					{
 						fsMousedOver = fs;
 						Vector3 newLocalPos = fsMousedOver.card.transform.localPosition;
-						newLocalPos.z = -2f;
+						newLocalPos.z = -5f;
 						fsMousedOver.card.MoveTo(newLocalPos, YearBook.dimPhoto * 2f, 0.25f);
 						fsMousedOver.card.uiTextName.text = fsMousedOver.fullName;
 						fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = true;
