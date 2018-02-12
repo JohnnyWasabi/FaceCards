@@ -601,6 +601,12 @@ public State MemoryGame_Update()
 
 		OnSearchKeyChanged += FlashCards_OnSearchKeyChanged;
 		OnFilterChanged += FlashCards_OnFilterChanged;
+
+		guiTextBadChar.color = Color.red;
+		guiTextBadChar.text = "";
+		guiTextName.text = "";
+		guiTextNofM.text = "";
+
 	}
 	public void FlashCards_Exit(State nextState)
 	{
@@ -1471,7 +1477,7 @@ public State MemoryGame_Update()
 			guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 
 		}
-		faceSpriteCrnt.card.MoveTo(transform.position, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
+		faceSpriteCrnt.card.MoveTo(transform.position + ((showPogs && isYearBook) ? new Vector3(0,16,0) : Vector3.zero), YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
 		faceSpriteCrnt.card.FlipShowFront();
     }
 
@@ -2228,8 +2234,10 @@ public State MemoryGame_Update()
 			}
 
 			const float caseBtnWidth = 110;
-			caseSensitive = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
-
+			if (gameMode == GameMode.memoryGame)
+			{
+				caseSensitive = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
+			}
 			if (gameMode == GameMode.yearBook)
 			{
 				bool oldShowPogs = showPogs;
@@ -2237,6 +2245,8 @@ public State MemoryGame_Update()
 				if (showPogs != oldShowPogs)
 				{
 					SetPogsActive(showPogs);
+					if (isYearBook || isFlashcards)
+						DisplayFaceSprite();
 				}
 			}
 			if (!isMapView)
