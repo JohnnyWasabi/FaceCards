@@ -165,7 +165,8 @@ public class Card : MonoBehaviour {
 
 	public void SetPos(Vector3 pos)
 	{
-		transform.localPosition = new Vector3(pos.x, pos.y, -(dimCard.x/1000f));
+		//transform.localPosition = new Vector3(pos.x, pos.y, -(dimCard.x/1000f));
+		transform.localPosition = pos; // new Vector3(pos.x, pos.y, -(dimCard.x/1000f));
 	}
 	public Vector3 GetPos()
 	{

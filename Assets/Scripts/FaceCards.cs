@@ -44,7 +44,7 @@ public class FaceCards : StateMachine {
 		tenureLeast
 	}
 
-	GameMode gameMode = GameMode.memoryGame;
+	GameMode gameMode = GameMode.yearBook;
 	int iTenureFilter = 0;
 	float _valTenureSlider = 0;
 	float valTenureSlider { get { return _valTenureSlider; } set { _valTenureSlider = value; countTenureMembers = (int)Mathf.Clamp(countDeptTotal * valTenureSlider, 1, countDeptTotal); } }      // 0.0 .. 1.0  slider value that determines countTenureMembers.
@@ -177,7 +177,7 @@ public class FaceCards : StateMachine {
 	public static Action OnSearchKeyChanged;
 	public static Action OnFilterChanged;
 
-	public GameMode gameModeStart = GameMode.mapView;
+	public GameMode gameModeStart;
 
 	void Awake()
 	{
@@ -943,6 +943,8 @@ public State MemoryGame_Update()
 	System.Text.StringBuilder sbNextChars = new System.Text.StringBuilder();
 	string nextCharsForBlank;
 	FaceSprite fsMousedOver;
+	Vector3 mouseoverPosMapOld; // previous frame mouse (for detecting idle and hiding pointer when over a picture)
+	float secsMouseOverHideDelay;
 
 	public void SetParentAllFaces(Transform transParent, bool worldPositionStays = true)
 	{
@@ -989,12 +991,17 @@ public State MemoryGame_Update()
 
 		foreach (FaceSprite fs in faceSprites)
 		{
+			fs.card.pog.gameObject.SetActive(true);
+			fs.card.pog.SetTopText(fs.firstName);
+			fs.card.pog.SetBottomText(fs.lastName);
+
 			fs.card.FlipShowFront();
 			fs.card.uiTextName.gameObject.SetActive(false);
 			fs.ArrangeOnMap();
 		}
 		foreach (FaceSprite fs in faceSpritesFiltered)
 		{
+			fs.card.pog.gameObject.SetActive(true);
 			fs.card.uiTextName.gameObject.SetActive(false);
 		}
 		ReturnFaceToYearbook(faceSpriteCrnt);
@@ -1011,6 +1018,14 @@ public State MemoryGame_Update()
 		WaggleMatchingFaces("", out fsMatched, out nextMatchChars, false);
 		guiTextBadChar.color = Color.red;
 
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.pog.gameObject.SetActive(false);
+		}
+		foreach (FaceSprite fs in faceSpritesFiltered)
+		{
+			fs.card.pog.gameObject.SetActive(false);
+		}
 	}
 	void MapView_OnSearchKeyChanged()
 	{
@@ -1082,15 +1097,34 @@ public State MemoryGame_Update()
 		else if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
 		{
 			Vector3 clickWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			bool clickedFace = false;
 			foreach (FaceSprite fs in faceSprites)
 			{
 				if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, fs.card.dimCard))
 				{
-					guiTextName.text = fs.guessName;
-					countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
-					prefixLenMatchMuliple = 0;
+					clickedFace = true;
+					if (guiTextName.text == fs.guessName)
+					{ // clicked on already clicked on person so deselect all
+						guiTextName.text = "";
+						countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters, false);
+						prefixLenMatchMuliple = 0;
+					}
+					else // clicked on new unselected person, so select them
+					{
+						guiTextName.text = fs.guessName;
+						countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters);
+						prefixLenMatchMuliple = 0;
+					}
+					break;
 				}
 			}
+			if (!clickedFace && Input.mousePosition.y > ControlBarHeight)
+			{ // clicked on empty area, unselect all
+				guiTextName.text = "";
+				countNameSearchMatches = WaggleMatchingFaces(guiTextName.text, out fsMatched, out nextMatchLetters, false);
+				prefixLenMatchMuliple = 0;
+			}
+
 		}
 		else
 		{ // check for mouse over
@@ -1099,10 +1133,27 @@ public State MemoryGame_Update()
 			{
 				if (!fsMousedOver.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, YearBook.dimPhoto))
 				{
-					fsMousedOver.card.MoveTo(fsMousedOver.card.transform.localPosition, YearBook.dimPhoto, 0.25f);
+					Vector3 newLocalPos = fsMousedOver.card.transform.localPosition;
+					newLocalPos.z = 0f;
+					fsMousedOver.card.MoveTo(newLocalPos, YearBook.dimPhoto, 0.25f);
 					fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = false; 
-					fsMousedOver.card.uiTextName.gameObject.SetActive(false);
+					//fsMousedOver.card.uiTextName.gameObject.SetActive(false);
 					fsMousedOver = null;
+				}
+				else
+				{
+					if (Input.mousePosition == mouseoverPosMapOld)
+					{
+						secsMouseOverHideDelay += Time.deltaTime;
+						if (secsMouseOverHideDelay > 0.2f)
+							Cursor.visible = false;
+					}
+					else
+					{
+						secsMouseOverHideDelay = 0;
+						Cursor.visible = true;
+					}
+					mouseoverPosMapOld = Input.mousePosition;
 				}
 			}
 			else
@@ -1112,10 +1163,12 @@ public State MemoryGame_Update()
 					if (fs.card.IsWorldXYInCard(clickWorld.x, clickWorld.y, YearBook.dimPhoto))
 					{
 						fsMousedOver = fs;
-						fsMousedOver.card.MoveTo(fsMousedOver.card.transform.localPosition, YearBook.dimPhoto * 2f, 0.25f);
+						Vector3 newLocalPos = fsMousedOver.card.transform.localPosition;
+						newLocalPos.z = -2f;
+						fsMousedOver.card.MoveTo(newLocalPos, YearBook.dimPhoto * 2f, 0.25f);
 						fsMousedOver.card.uiTextName.text = fsMousedOver.fullName;
 						fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = true;
-						fsMousedOver.card.uiTextName.gameObject.SetActive(true);
+						//fsMousedOver.card.uiTextName.gameObject.SetActive(true);
 						break;
 					}
 				}
@@ -1699,11 +1752,9 @@ public State MemoryGame_Update()
 						faceSprite.card.FlipShowBack(1.0f);
 						faceSprite.card.uiTextName.gameObject.SetActive(false);
 
-						CircleCard cc = faceSprite.card.pog.circleCard;
-						if (cc)
-						{
-							cc.SetDonutMeshColors(SpotManager.GetColorsOfDept(nameParts[2]));
-						}
+						faceSprite.card.pog.SetColors(SpotManager.GetColorsOfDept(nameParts[2]));
+						faceSprite.card.pog.SetTopText(faceSprite.firstName);
+						faceSprite.card.pog.SetBottomText(faceSprite.lastName);
 						faceSprite.card.pog.gameObject.SetActive(false);
 
 						totalGuessNameChars += faceSprite.fullName.Length;

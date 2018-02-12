@@ -7,11 +7,12 @@ public class CircleText : MonoBehaviour {
 	public float radius = 45;
 	private TextMeshPro m_TextMeshPro;
 	private TextContainer m_TextContainer;
-
+	string textBefore;
 	void Awake()
 	{
 		m_TextMeshPro = GetComponent<TextMeshPro>();
 		m_TextContainer = GetComponent <TextContainer>();
+		textBefore = m_TextMeshPro.text;
 	//	m_TextMeshPro.ForceMeshUpdate();
 	}
 	// Use this for initialization
@@ -19,8 +20,15 @@ public class CircleText : MonoBehaviour {
 		//StartCoroutine(CircleText());
 		EncircleText();
 	}
-	
-	void EncircleText()
+	void Update()
+	{
+		if (m_TextMeshPro.text != textBefore)
+		{
+			textBefore = m_TextMeshPro.text;
+			EncircleText();
+		}
+	}
+	public void EncircleText()
 	{
 		m_TextMeshPro.ForceMeshUpdate();
 		int characterCount = m_TextMeshPro.textInfo.characterCount;
@@ -41,7 +49,7 @@ public class CircleText : MonoBehaviour {
 			vertices[vertexIndex + 2] += -offset;
 			vertices[vertexIndex + 3] += -offset;
 
-			float arclen = (charMidBaseLine.x - transform.position.x);
+			float arclen = (charMidBaseLine.x - transform.localPosition.x);
 			float angle = arclen * arcLenToAngle; 
 			float dy = Mathf.Cos(angle * Mathf.Deg2Rad) * -radius;
 			float dx = Mathf.Sin(angle * Mathf.Deg2Rad) * radius;
@@ -62,8 +70,5 @@ public class CircleText : MonoBehaviour {
 		}
 		m_TextMeshPro.UpdateVertexData();
 	}
-	// Update is called once per frame
-	void Update () {
-		//EncircleText();
-	}
+
 }
