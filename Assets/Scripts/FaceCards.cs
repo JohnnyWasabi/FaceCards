@@ -129,6 +129,7 @@ public class FaceCards : StateMachine {
 	bool isMapView { get { return gameMode == GameMode.mapView; } }
 
 	bool caseSensitive;
+	bool showPogs;
 
 	public int widthCardSlot = 74;
 	public int heightPaddingCardSlot = 8;
@@ -137,6 +138,7 @@ public class FaceCards : StateMachine {
 	public int heightYearBookNameLabel = 32;
 	public int topMargin = 12;  // margin space at top of screen above cards
 	public int sideMargin = 12;
+	public int superSizeScreenShot = 4;
 
 
 	float totalGuessNameChars;  // Total chars in the all the names to be guessed.
@@ -328,6 +330,25 @@ public class FaceCards : StateMachine {
 			}
 		}
 
+	}
+
+	void SetPogsActive(bool active)
+	{
+		foreach (FaceSprite fs in faceSprites)
+		{
+			fs.card.pog.gameObject.SetActive(active);
+			if (active)
+			{
+				fs.card.pog.SetTopText(fs.firstName);
+				fs.card.pog.SetBottomText(fs.lastName);
+			}
+			fs.card.uiTextName.gameObject.SetActive(!active);
+		}
+		foreach (FaceSprite fs in faceSpritesFiltered)
+		{
+			fs.card.pog.gameObject.SetActive(active);
+			fs.card.uiTextName.gameObject.SetActive(!active);
+		}
 	}
 
 	#region STATES
@@ -764,11 +785,14 @@ public State MemoryGame_Update()
 
 		OnSearchKeyChanged += Yearbook_OnSearchKeyChanged;
 		OnFilterChanged += Yearbook_OnFilterChanged;
+
+		SetPogsActive(showPogs);
 	}
 	public void Yearbook_Exit(State nextState)
 	{
 		OnSearchKeyChanged -= Yearbook_OnSearchKeyChanged;
 		OnFilterChanged -= Yearbook_OnFilterChanged;
+		SetPogsActive(false);
 	}
 
 	void Yearbook_OnSearchKeyChanged()
@@ -1040,7 +1064,7 @@ public State MemoryGame_Update()
 	}
 	public State MapView_Update()
 	{
-		if (Input.GetKeyDown(KeyCode.F12))
+		if (Input.GetKeyDown(KeyCode.F10))
 		{
 			SortByGuessName(false, 0);
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -1055,7 +1079,7 @@ public State MemoryGame_Update()
 				sb.Append((loc.x + 1).ToString()); sb.Append(",");
 				sb.Append("\n");
 			}
-			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "LocatorListing.csv"), sb.ToString());
+			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "Output/LocatorListing.csv"), sb.ToString());
 
 		}
 
@@ -1842,6 +1866,11 @@ public State MemoryGame_Update()
 					needScreenLayoutUpdate = false;
 				}
 			}
+
+			if (Input.GetKeyDown(KeyCode.F12))
+			{
+				ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Application.streamingAssetsPath, "Output/ScreenCapture.png"), superSizeScreenShot);
+			}
 		}
 
 		if (!AreAllCollected())
@@ -2201,6 +2230,15 @@ public State MemoryGame_Update()
 			const float caseBtnWidth = 110;
 			caseSensitive = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, caseBtnWidth, btnHeight), caseSensitive, "Case-sensitive");
 
+			if (gameMode == GameMode.yearBook)
+			{
+				bool oldShowPogs = showPogs;
+				showPogs = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), showPogs, "Show Pogs");
+				if (showPogs != oldShowPogs)
+				{
+					SetPogsActive(showPogs);
+				}
+			}
 			if (!isMapView)
 			{
 				if (GUI.Button(new Rect(Screen.width - btnWidthSpaced, Screen.height - btnHeightSpaced * 3, 64, btnHeight), "Shuffle"))
