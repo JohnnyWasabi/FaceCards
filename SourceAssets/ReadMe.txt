@@ -74,6 +74,7 @@ Tenure Filter	= This is a selector that lets you show only the N most or least t
 			OGs*		(shortcut to select "Most" and set N to 10% of total people, and in non-Memory-Game modes sets "Sort by*" selector to "Tenure Most")
 			Newbies*	(shortcut to select "Least" and set N to 10% of total people, and in non-Memory-Game modes sets "Sort by*" selector to "Tenure Least")
 Case-sensitive	= Toggle between case-sensitive or case-insensitive name-entry. When case-insensitive, wrong case still counts against accuracy, but not for hangman.
+Show Pogs	= Toggle between square-framed faces(with names beneath) and Pog-framed faces (with names around border) that are color-coded by department.  This is only available in Yearbook mode. 
 Shuffle		= Shuffles the cards and redeals the 1st card (does not restart game).
 Restart		= Shuffles the cards and restarts the game.
 Exit		= Quits the app without a confirmation (because this is a deadly game).
@@ -91,3 +92,5 @@ Version History
 3.1	Updates for changes to user_locations file format (quotes and multiple seats separated by /). Shows number of matches in Map mode. Show projects in Map mode if full name selected. Show possible next letters to type in Map mode.
 3.2	Map mode changes: Click on face to select that person (types in their name or whatever the "Find by" data is). Mousing over pic enlarges and shows name. 
 3.4	Added POG frame around images in Map mode (and optional in Yearbook mode). Added screenshot feature (F12 key) that saves to StreamingAssets/Ouput folder.
+3.41	Bug fixes, new pog colors.  Pog resizing and seating position adjustments to avoid overlapping pogs in map view. Pog spacing adjusted in yearbook mode to fit more closely together.
+
