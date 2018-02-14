@@ -136,6 +136,9 @@ public class FaceCards : StateMachine {
 
 	public int widthYearbookNameLabel = 140;
 	public int heightYearBookNameLabel = 32;
+	public int diameterPogDisplay = 110;
+	public float scaleMapViewPog = 0.8f;
+	public float scaleMapViewPogBig = 2.25f;
 	public int topMargin = 12;  // margin space at top of screen above cards
 	public int sideMargin = 12;
 	public int superSizeScreenShot = 4;
@@ -334,6 +337,15 @@ public class FaceCards : StateMachine {
 
 	void SetPogsActive(bool active)
 	{
+		if (isYearBook)
+		{
+			YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height,
+				((showPogs) ? diameterPogDisplay : widthYearbookNameLabel),
+				((showPogs) ? diameterPogDisplay - FaceSprite.spriteCardBack.texture.height : heightYearBookNameLabel),
+				topMargin, sideMargin);
+
+			SortByGuessName(true);
+		}
 		foreach (FaceSprite fs in faceSprites)
 		{
 			fs.card.pog.gameObject.SetActive(active);
@@ -775,7 +787,10 @@ public State MemoryGame_Update()
 	State stateYearbook;
 	public void Yearbook_Enter(State prevState) {
 
-		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, widthYearbookNameLabel, heightYearBookNameLabel, topMargin, sideMargin);
+		YearBook.Init(FaceSprite.spriteCardBack.texture.width, FaceSprite.spriteCardBack.texture.height, 
+			((showPogs) ? diameterPogDisplay : widthYearbookNameLabel), 
+			((showPogs) ? diameterPogDisplay - FaceSprite.spriteCardBack.texture.height : heightYearBookNameLabel), 
+			topMargin, sideMargin);
 		foreach (FaceSprite fs in faceSprites)
 		{
 			fs.card.uiTextName.gameObject.SetActive(true);
@@ -926,11 +941,11 @@ public State MemoryGame_Update()
 			Vector2 displayFaceSize = YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay;
 			float xMouseWorld = Input.mousePosition.x - Screen.width * 0.5f;
 			float yMouseWorld = Input.mousePosition.y - Screen.height * 0.5f;
-			bool clickedDisplayFace = (transform.position.x == faceSpriteCrnt.card.transform.position.x && transform.position.y == faceSpriteCrnt.card.transform.position.y)
-				&& (xMouseWorld >= transform.position.x - displayFaceSize.x * 0.5f
-					&& xMouseWorld <= transform.position.x + displayFaceSize.x * 0.5f
-					&& yMouseWorld <= transform.position.y + displayFaceSize.y
-					&& yMouseWorld >= transform.position.y
+			bool clickedDisplayFace = (posDockDisplayedFaceSprite.x == faceSpriteCrnt.card.transform.position.x && posDockDisplayedFaceSprite.y == faceSpriteCrnt.card.transform.position.y)
+				&& (xMouseWorld >= faceSpriteCrnt.card.transform.position.x - displayFaceSize.x * 0.5f
+					&& xMouseWorld <= faceSpriteCrnt.card.transform.position.x + displayFaceSize.x * 0.5f
+					&& yMouseWorld <= faceSpriteCrnt.card.transform.position.y + displayFaceSize.y
+					&& yMouseWorld >= faceSpriteCrnt.card.transform.position.y
 				);
 			//Debug.Log("MouseWorld=" + xMouseWorld + ", " + yMouseWorld + "HitDisplayPic=" + clickedDisplayFace);
 			int index = YearBook.IndexAtScreenXY((int)Input.mousePosition.x, (int)Input.mousePosition.y);
@@ -939,7 +954,7 @@ public State MemoryGame_Update()
 				if (Input.GetMouseButtonDown(0) && ( !isMemoryGame || AreAllCollected()))
 					ReturnFaceToYearbook(faceSpriteCrnt);
 			}
-			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != transform.position.x || faceSpriteCrnt.card.transform.position.y != transform.position.y))) // && index != iFaceSprite)
+			else if (index >= 0 && index < faceSprites.Count && (index != iFaceSprite || (faceSpriteCrnt.card.transform.position.x != posDockDisplayedFaceSprite.x || faceSpriteCrnt.card.transform.position.y != posDockDisplayedFaceSprite.y))) // && index != iFaceSprite)
 			{
 				if (Input.GetMouseButtonDown(0))
 				{
@@ -1021,6 +1036,7 @@ public State MemoryGame_Update()
 
 		foreach (FaceSprite fs in faceSprites)
 		{
+			fs.card.transform.localScale = new Vector3(scaleMapViewPog, scaleMapViewPog, 1);
 			fs.card.pog.gameObject.SetActive(true);
 			fs.card.pog.SetTopText(fs.firstName);
 			fs.card.pog.SetBottomText(fs.lastName);
@@ -1031,6 +1047,7 @@ public State MemoryGame_Update()
 		}
 		foreach (FaceSprite fs in faceSpritesFiltered)
 		{
+			fs.card.transform.localScale = new Vector3(scaleMapViewPog, scaleMapViewPog, 1);
 			fs.card.pog.gameObject.SetActive(true);
 			fs.card.uiTextName.gameObject.SetActive(false);
 		}
@@ -1050,10 +1067,12 @@ public State MemoryGame_Update()
 
 		foreach (FaceSprite fs in faceSprites)
 		{
+			fs.card.transform.localScale = Vector3.one;
 			fs.card.pog.gameObject.SetActive(false);
 		}
 		foreach (FaceSprite fs in faceSpritesFiltered)
 		{
+			fs.card.transform.localScale = Vector3.one;
 			fs.card.pog.gameObject.SetActive(false);
 		}
 	}
@@ -1169,6 +1188,8 @@ public State MemoryGame_Update()
 					fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = false; 
 					//fsMousedOver.card.uiTextName.gameObject.SetActive(false);
 					fsMousedOver = null;
+					Cursor.visible = true;
+					secsMouseOverHideDelay = 0;
 				}
 				else
 				{
@@ -1195,7 +1216,7 @@ public State MemoryGame_Update()
 						fsMousedOver = fs;
 						Vector3 newLocalPos = fsMousedOver.card.transform.localPosition;
 						newLocalPos.z = -5f;
-						fsMousedOver.card.MoveTo(newLocalPos, YearBook.dimPhoto * 2f, 0.25f);
+						fsMousedOver.card.MoveTo(newLocalPos, YearBook.dimPhoto * scaleMapViewPogBig, 0.25f);
 						fsMousedOver.card.uiTextName.text = fsMousedOver.fullName;
 						fsMousedOver.card.uiTextName.gameObject.GetComponent<UnityEngine.UI.Outline>().enabled = true;
 						//fsMousedOver.card.uiTextName.gameObject.SetActive(true);
@@ -1447,6 +1468,7 @@ public State MemoryGame_Update()
 
 
 	}
+	Vector3 posDockDisplayedFaceSprite;
 	void DisplayFaceSprite(FaceSprite fsToUse = null, bool refreshText = true)
 	{
         if (faceSprites.Count <= 0)
@@ -1477,7 +1499,8 @@ public State MemoryGame_Update()
 			guiTextRole.text = (FaceSprite.iGuessNameIndex == FaceSprite.iGuessRole ? faceSpriteCrnt.fullName : faceSpriteCrnt.role);
 
 		}
-		faceSpriteCrnt.card.MoveTo(transform.position + ((showPogs && isYearBook) ? new Vector3(0,16,0) : Vector3.zero), YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
+		posDockDisplayedFaceSprite = transform.position + ((showPogs && isYearBook) ? new Vector3(0, 20, 0) : Vector3.zero);
+		faceSpriteCrnt.card.MoveTo(posDockDisplayedFaceSprite, YearBook.aspectCorrectHeight1 * heightFaceGuessDislplay, timeTransitionShowFace);
 		faceSpriteCrnt.card.FlipShowFront();
     }
 
@@ -1961,6 +1984,10 @@ public State MemoryGame_Update()
 		}
 		return false;
 	}
+	bool IsAFaceDockDisplayed()
+	{
+		return (isYearBook || isFlashcards) && guiTextName.text != "";
+	}
 	void ReturnFaceToYearbook(FaceSprite fs)
 	{
         guiTextName.text = "";
@@ -2245,7 +2272,7 @@ public State MemoryGame_Update()
 				if (showPogs != oldShowPogs)
 				{
 					SetPogsActive(showPogs);
-					if (isYearBook || isFlashcards)
+					if (IsAFaceDockDisplayed()) // (isYearBook || isFlashcards)
 						DisplayFaceSprite();
 				}
 			}
