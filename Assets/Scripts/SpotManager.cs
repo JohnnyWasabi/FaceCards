@@ -223,7 +223,15 @@ public class SpotManager : MonoBehaviour {
 		}
 		return Vector2.zero;
 	}
-
+	public static string GetSeatID(string faceId)
+	{
+		string seatId;
+		if (dictFaceIdToSeatID.TryGetValue(faceId, out seatId))
+		{
+			return seatId;
+		}
+		return "null";
+	}
 	// returns 0-based x (column) and y (row) grid cell index. Upper left grid is 0,0
 	public static Vector2 GetGridXY(string faceId)
 	{

@@ -1093,7 +1093,7 @@ public State MemoryGame_Update()
 		{
 			SortByGuessName(false, 0);
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			sb.Append("Name,Row, Col, Row float, Col float\n");
+			sb.Append("Name,Row,Col,Row float,Col float,SeatID\n");
 			foreach (FaceSprite fs in faceSprites)
 			{
 				Vector2 loc = SpotManager.GetGridXY(fs.id);
@@ -1102,6 +1102,7 @@ public State MemoryGame_Update()
 				sb.Append((Mathf.FloorToInt(loc.x) + 1).ToString()); sb.Append(",");
 				sb.Append((loc.y + 1).ToString()); sb.Append(",");
 				sb.Append((loc.x + 1).ToString()); sb.Append(",");
+				sb.Append(SpotManager.GetSeatID(fs.id)); sb.Append(",");
 				sb.Append("\n");
 			}
 			System.IO.File.WriteAllText(System.IO.Path.Combine(Application.streamingAssetsPath, "Output/LocatorListing.csv"), sb.ToString());
