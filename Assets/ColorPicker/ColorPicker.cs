@@ -290,6 +290,22 @@ public class ColorPicker : MonoBehaviour {
 					receiver.SendMessage(colorSetFunctionName, SelectedColor, SendMessageOptions.DontRequireReceiver);
 				}
 			}
+			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + sizeFull + (-20 - 8) * 3, 60, 20), "White"))
+			{
+				if (receiver)
+				{
+					NotifyColor(Color.white);
+					receiver.SendMessage(colorSetFunctionName, SelectedColor, SendMessageOptions.DontRequireReceiver);
+				}
+			}
+			if (GUI.Button(new Rect(startPos.x + sizeCurr + 10, startPos.y + sizeFull + (-20 - 8) * 4, 60, 20), "Black"))
+			{
+				if (receiver)
+				{
+					NotifyColor(Color.black);
+					receiver.SendMessage(colorSetFunctionName, SelectedColor, SendMessageOptions.DontRequireReceiver);
+				}
+			}
 			GUIStyle labelStyleRGBA = new GUIStyle(GUI.skin.label);
 			labelStyleRGBA.normal.textColor = Color.white;
 			float startXValLetters = startXSliders + widthSliders + 8;

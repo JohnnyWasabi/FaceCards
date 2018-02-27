@@ -93,4 +93,4 @@ Version History
 3.2	Map mode changes: Click on face to select that person (types in their name or whatever the "Find by" data is). Mousing over pic enlarges and shows name. 
 3.4	Added POG frame around images in Map mode (and optional in Yearbook mode). Added screenshot feature (F12 key) that saves to StreamingAssets/Ouput folder.
 3.41	Bug fixes, new pog colors.  Pog resizing and seating position adjustments to avoid overlapping pogs in map view. Pog spacing adjusted in yearbook mode to fit more closely together.
-
+3.42	Added "White" color button to color picker. Added SeatID to Locations output file.
