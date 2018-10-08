@@ -300,9 +300,9 @@ public class FaceCards : StateMachine {
 		yield return StartCoroutine(LoadFaces());
 		SetupComboBoxes();
 
-
-		gameMode = gameModeStart;
-		comboBoxControl_Mode.SelectedItemIndex = (int)gameModeStart;
+		showPogs = PlayerPrefs.GetInt("YearBook_ShowPogs", 1) != 0 ? true : false;
+		gameMode = (GameMode)PlayerPrefs.GetInt("GameModeStart", (int)gameModeStart);
+		comboBoxControl_Mode.SelectedItemIndex = (int)gameMode;
 
 		guiTextName.text = "Type Full Name Here";
 		guiTextNofM.text = "";
@@ -1432,6 +1432,7 @@ public class FaceCards : StateMachine {
 	public void TransitionToNewMode(GameMode newMode)
 	{
 		gameMode = newMode;
+		PlayerPrefs.SetInt("GameModeStart", (int)gameMode);
 		switch (gameMode)
 		{
 		case GameMode.memoryGame: TransitionToState(stateMemoryGame); break;
@@ -2288,6 +2289,7 @@ public class FaceCards : StateMachine {
 				showPogs = GUI.Toggle(new Rect(/*btnHSpacing*/Screen.width - 120 - btnWidthSpaced, Screen.height - btnHeightSpaced * 2, caseBtnWidth, btnHeight), showPogs, "Show Pogs");
 				if (showPogs != oldShowPogs)
 				{
+					PlayerPrefs.SetInt("YearBook_ShowPogs", showPogs ? 1 : 0);
 					SetPogsActive(showPogs);
 					if (IsAFaceDockDisplayed()) // (isYearBook || isFlashcards)
 						DisplayFaceSprite();
