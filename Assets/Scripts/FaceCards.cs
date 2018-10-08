@@ -447,8 +447,8 @@ public class FaceCards : StateMachine {
 		RestartGame();
 	}
 
-public State MemoryGame_Update()
-{
+	public State MemoryGame_Update()
+	{
 		if (Input.inputString.Length > 0 && !AreAllCollected())
 		{
 			guiTextBadChar.text = "";
@@ -582,7 +582,14 @@ public State MemoryGame_Update()
 		}
 
 		guiTextTheMan.text = TheManBody[indexHangMan];
-		guiTextGallows.enabled = (indexHangMan > 0);
+		bool enableGallows = (indexHangMan > 0);
+		if (enableGallows != guiTextGallows.enabled)
+		{
+			if (enableGallows)
+				ShowGallows();
+			else
+				HideGallows();
+		}
 
 		return null;
 	}
@@ -1508,6 +1515,15 @@ public State MemoryGame_Update()
     void ShowGallows()
 	{
 		guiTextGallows.enabled = true;
+		guiTextGallows.text =	      " ╒══╗\n"+
+								"          ║\n"+
+								"          ║\n"+
+								"          ║\n"+
+								    "    ══╩══";
+	}
+	void HideGallows()
+	{
+		guiTextGallows.enabled = false;
 	}
     void ShowNextFace()
 	{

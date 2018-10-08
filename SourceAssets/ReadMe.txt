@@ -40,6 +40,8 @@ Left Arrow	= Erase last letter from name entry. In case you want to back up and 
 Backspace 	= Effectively nothing, except clear the display of the last wrong letter you typed. 
 PageUp 		= Show previous person
 PageDown 	= Show next person.
+F10		= From Map screen, output LocatorListing.csv file to StreamingAssets/Output/ folder (which must already exist). 
+F12		= Output ScreenCapture.png (a high def screen render) file to StreamingAssets/Output/ folder (which must already exist). 
 
 Buttons:
 --------
