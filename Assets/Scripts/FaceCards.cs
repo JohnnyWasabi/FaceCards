@@ -1282,13 +1282,16 @@ public class FaceCards : StateMachine {
 		faceSpriteMatched = null;
 		nextMatchChars = "";
 		dictNextCharMatchCount.Clear();
+		Dictionary<char, string> dictNextCharName = new Dictionary<char, string>();
 		sbNextChars.Length = 0;
 		doWaggle = doWaggle && prefix.Length > 0;
+		string lastGuessName = "";
 		foreach (FaceSprite fs in faceSprites)
 		{
 			if (fs.guessName.StartsWith(prefix, true, System.Globalization.CultureInfo.InvariantCulture))
 			{
-				++count;
+				if (fs.guessName != lastGuessName)
+					++count;
 				if (doWaggle)
 					fs.card.StartWaggle();
 				else
@@ -1301,11 +1304,20 @@ public class FaceCards : StateMachine {
 					if (nextChar == ' ') nextChar = '␣';
 					if (nextMatchChars.IndexOf(nextChar) < 0)
 						nextMatchChars += nextChar;
-					int countNextChar = 1;
 					if (dictNextCharMatchCount.ContainsKey(nextChar))
-						countNextChar = dictNextCharMatchCount[nextChar] + 1;
-					dictNextCharMatchCount[nextChar] = countNextChar;
+					{
+						if (fs.guessName != dictNextCharName[nextChar])
+						{
+							dictNextCharMatchCount[nextChar]++;
+						}
+					}
+					else
+					{
+						dictNextCharMatchCount[nextChar] = 1;
+						dictNextCharName[nextChar] = fs.guessName;
+					}
 				}
+				lastGuessName = fs.guessName;
 			}
 			else
 				fs.card.StopWaggle();
